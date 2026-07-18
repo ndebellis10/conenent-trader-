@@ -289,6 +289,14 @@ export default function AppLayout() {
             <Logo size={32} showText={false} />
           </div>
 
+          {/* Ask Alan — first in the rail */}
+          <RailBtn
+            icon={AlanMascot}
+            label="Ask Alan"
+            isActive={activeRail === 'faith-ai'}
+            onClick={() => { setActiveRail('faith-ai'); navigate('/app/faith-ai') }}
+          />
+
           <RailBtn
             icon={BarChart2}
             label="Trading"
@@ -323,14 +331,6 @@ export default function AppLayout() {
               onClick={() => { setActiveRail('admin-users'); navigate('/app/admin-users') }}
             />
           )}
-
-          {/* Ask Alan — all users */}
-          <RailBtn
-            icon={AlanMascot}
-            label="Ask Alan"
-            isActive={activeRail === 'faith-ai'}
-            onClick={() => { setActiveRail('faith-ai'); navigate('/app/faith-ai') }}
-          />
 
           <div style={{ flex: 1 }} />
 

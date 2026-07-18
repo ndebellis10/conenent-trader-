@@ -394,7 +394,8 @@ export default function FaithAI() {
   const userId = viewingUser?.id || null
   const stats  = useMemo(() => computeStats(trades), [trades])
 
-  const displayName = viewingUser?.name || user?.name || (user?.email || '').split('@')[0] || 'trader'
+  // Prefer the display name the trader set in Settings
+  const displayName = settings?.name || viewingUser?.name || user?.name || (user?.email || '').split('@')[0] || 'trader'
 
   // Ask from the home hub: jump to Chat and hand the question to ChatTab.
   const askAlan = (text) => {

@@ -7,13 +7,13 @@ import { VERSES } from '../lib/verses'
    Purely decorative: aria-hidden and pointer-events: none. */
 
 const COUNT = 7
-const MIN_SPEED = 14  // px per second
-const MAX_SPEED = 34
+const MIN_SPEED = 45  // px per second — brisk enough to read as drifting
+const MAX_SPEED = 85
 
 const rand = (min, max) => min + Math.random() * (max - min)
 const sign = () => (Math.random() < 0.5 ? -1 : 1)
 
-export default function FloatingVerses({ count = COUNT, opacity = 0.13 }) {
+export default function FloatingVerses({ count = COUNT, opacity = 0.34 }) {
   const hostRef  = useRef(null)
   const nodeRefs = useRef([])
   const stateRef = useRef([])
@@ -41,14 +41,25 @@ export default function FloatingVerses({ count = COUNT, opacity = 0.13 }) {
     const seed = () => {
       const W = host.clientWidth
       const H = host.clientHeight
-      stateRef.current = nodes.map(node => {
+
+      // Lay them out one-per-cell on a grid so nothing starts stacked and
+      // unreadable. They drift and cross later — that's the point — but the
+      // first impression is always legible.
+      const cols = Math.ceil(Math.sqrt(nodes.length))
+      const rows = Math.ceil(nodes.length / cols)
+      const cellW = W / cols
+      const cellH = H / rows
+
+      stateRef.current = nodes.map((node, i) => {
         const w = node.offsetWidth
         const h = node.offsetHeight
+        const cx = (i % cols) * cellW
+        const cy = Math.floor(i / cols) * cellH
         const speed = rand(MIN_SPEED, MAX_SPEED)
         const angle = rand(0.4, 1.2) // keep it diagonal, like the DVD logo
         return {
-          x: rand(0, Math.max(1, W - w)),
-          y: rand(0, Math.max(1, H - h)),
+          x: Math.min(Math.max(0, W - w), cx + rand(0, Math.max(1, cellW - w))),
+          y: Math.min(Math.max(0, H - h), cy + rand(0, Math.max(1, cellH - h))),
           vx: Math.cos(angle) * speed * sign(),
           vy: Math.sin(angle) * speed * sign(),
           w, h,

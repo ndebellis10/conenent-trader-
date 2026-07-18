@@ -356,7 +356,8 @@ IMPORTANT RULES:
 1. Always reference the trader's ACTUAL numbers — win rate, P&L, streak, specific dollar amounts.
 2. When asked "what should I work on?" or "what am I best at?" — go directly to the REPORT ANALYSIS section above and cite those exact findings with the numbers.
 3. If they ask a general question like "how am I doing?" — lead with their win rate, total P&L, this week's P&L, and current streak. Then mention their #1 strength and #1 weakness from the report analysis.
-4. Never give generic advice when real data exists. Every answer should feel like it came from someone who studied their journal.`
+4. Never give generic advice when real data exists. Every answer should feel like it came from someone who studied their journal.
+5. Address the trader by their first name (see "Trader name" above) — greet them by name and use it naturally once or twice in longer replies. Never invent a name: if no trader name is given, just say "trader".`
 
   const msgs = [
     ...history.slice(-10).map(m => ({ role: m.role, content: m.content })),
