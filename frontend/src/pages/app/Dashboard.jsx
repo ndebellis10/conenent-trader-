@@ -60,7 +60,7 @@ function DailyVerses() {
           flex: 1,
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '8px',
         }}>
-          <p style={{ color: '#D4B85A', fontSize: '0.82rem', fontStyle: 'italic', fontFamily: 'Poppins, sans-serif', margin: 0, lineHeight: 1.6 }}>
+          <p style={{ color: '#5B9BD5', fontSize: '0.82rem', fontStyle: 'italic', fontFamily: 'Poppins, sans-serif', margin: 0, lineHeight: 1.6 }}>
             "{v.text}"
           </p>
           <span style={{ color: 'rgba(59,130,246,0.5)', fontSize: '0.73rem', fontWeight: 700 }}>— {v.ref}</span>

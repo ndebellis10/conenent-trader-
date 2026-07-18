@@ -206,7 +206,7 @@ function FeedbackCard({ data }) {
       <div style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 8, padding: '14px 16px', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <BookOpen size={16} color="#3B82F6" style={{ flexShrink: 0, marginTop: 2 }} />
         <div>
-          <p style={{ color: '#D4B85A', fontStyle: 'italic', fontFamily: 'Poppins, sans-serif', fontSize: '0.875rem', lineHeight: 1.6, margin: '0 0 4px' }}>"{data.scripture}"</p>
+          <p style={{ color: '#5B9BD5', fontStyle: 'italic', fontFamily: 'Poppins, sans-serif', fontSize: '0.875rem', lineHeight: 1.6, margin: '0 0 4px' }}>"{data.scripture}"</p>
           <span style={{ color: 'rgba(59,130,246,0.55)', fontSize: '0.75rem', fontWeight: 700 }}>— {data.scriptureRef}</span>
         </div>
       </div>
@@ -343,7 +343,7 @@ function PatternSummaryTab({ trades, userId }) {
             <span style={{ color: '#3B82F6', fontSize: '1.4rem', lineHeight: 1, opacity: 0.7, flexShrink: 0 }}>✝</span>
             <div>
               <div style={{ color: '#888', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Scripture for this Season</div>
-              <p style={{ color: '#D4B85A', fontStyle: 'italic', fontFamily: 'Poppins, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, margin: '0 0 6px' }}>"{result.scripture}"</p>
+              <p style={{ color: '#5B9BD5', fontStyle: 'italic', fontFamily: 'Poppins, sans-serif', fontSize: '0.9rem', lineHeight: 1.7, margin: '0 0 6px' }}>"{result.scripture}"</p>
               <span style={{ color: 'rgba(59,130,246,0.55)', fontSize: '0.78rem', fontWeight: 700 }}>— {result.scriptureRef}</span>
             </div>
           </div>
