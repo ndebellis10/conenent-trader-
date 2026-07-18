@@ -14,6 +14,7 @@ import { useGoalStore } from '../../store/goalStore'
 import { useAuthStore } from '../../store/authStore'
 import TradeCalendar from '../../components/app/TradeCalendar'
 import FaithScore from '../../components/app/FaithScore'
+import NewsPanel from '../../components/app/NewsPanel'
 import GaugeKPIs from '../../components/app/GaugeKPIs'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, subDays, startOfWeek, addDays, startOfDay, endOfDay } from 'date-fns'
 import DateRangePicker from '../../components/app/DateRangePicker'
@@ -718,7 +719,7 @@ export default function Dashboard() {
 
       {/* ── Charts + Breakdown row ── */}
       {stats && <>
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '12px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '12px', alignItems: 'stretch' }}>
 
         {/* Left column: Equity Curve + Performance Breakdown */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -773,6 +774,12 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Today's USD News — between the breakdown and the Faith Score */}
+          <NewsPanel />
+
+          {/* Faith Score — fills remaining left-column space */}
+          <FaithScore trades={trades} />
+
         </div>
 
         {/* Right column: distribution + goals stacked */}
@@ -825,9 +832,6 @@ export default function Dashboard() {
 
         </div>
       </div>
-
-      {/* ── Faith Score ── */}
-      <FaithScore trades={trades} />
 
       {/* ── Trade Calendar ── */}
       <TradeCalendar trades={trades} />

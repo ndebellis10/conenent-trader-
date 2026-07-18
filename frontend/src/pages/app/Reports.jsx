@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTradeStore } from '../../store/tradeStore'
+import { avgTradeDuration, formatDuration } from '../../lib/tradeTime'
 import { format } from 'date-fns'
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -365,6 +366,7 @@ function SummaryTab({ trades }) {
       avgDayPnl, avgDailyVol,
       loggedDays: days.length, maxDDDay, avgDDDay, avgDailyWL,
       avgR, wins: wins.length, losses: losses.length,
+      holdTime: avgTradeDuration(trades),
     }
   }, [trades])
 
@@ -376,7 +378,7 @@ function SummaryTab({ trades }) {
     { label: 'Trade Expectancy',     value: `${s.expectancy >= 0 ? '+' : ''}$${s.expectancy.toFixed(2)}`, color: s.expectancy >= 0 ? '#4CAF7D' : '#E05252' },
     { label: 'Avg Daily Win/Loss',   value: s.avgDailyWL,                                              color: parseFloat(s.avgDailyWL) >= 1 ? '#4CAF7D' : '#E05252' },
     { label: 'Avg Trade Win/Loss',   value: s.avgWinLoss.toFixed(2),                                   color: s.avgWinLoss >= 1 ? '#4CAF7D' : '#E05252' },
-    { label: 'Avg Hold Time',        value: '—',                                                        color: '#555' },
+    { label: 'Avg Hold Time',        value: s.holdTime.ms != null ? formatDuration(s.holdTime.ms) : '—', color: s.holdTime.ms != null ? '#F5F5F5' : '#555' },
     { label: 'Avg Net Trade P&L',    value: `${s.avgNetTrade >= 0 ? '+' : ''}$${s.avgNetTrade.toFixed(2)}`, color: s.avgNetTrade >= 0 ? '#4CAF7D' : '#E05252' },
     { label: 'Avg Daily Net P&L',    value: `${s.avgDayPnl >= 0 ? '+' : ''}$${s.avgDayPnl.toFixed(2)}`,   color: s.avgDayPnl >= 0 ? '#4CAF7D' : '#E05252' },
     { label: 'Avg Planned R',        value: '—',                                                        color: '#555' },
@@ -786,6 +788,7 @@ function ExecutionQualityReport({ trades }) {
             { label: 'Avg Entry Quality',value: entryQ.tradesWithData ? `${entryQ.avg.toFixed(1)}/10` : '—', sub: `${entryQ.tradesWithData} rated`, color: entryQ.avg >= 7 ? '#4CAF7D' : entryQ.avg >= 5 ? '#3B82F6' : entryQ.tradesWithData ? '#E05252' : '#444' },
             { label: 'Avg Exit Quality', value: exitQ.tradesWithData  ? `${exitQ.avg.toFixed(1)}/10`  : '—', sub: `${exitQ.tradesWithData} rated`,  color: exitQ.avg  >= 7 ? '#4CAF7D' : exitQ.avg  >= 5 ? '#3B82F6' : exitQ.tradesWithData  ? '#E05252' : '#444' },
             { label: 'Execution Issues', value: flawed.length,                sub: flawed.length ? `${((flawed.length/trades.length)*100).toFixed(0)}% of trades` : 'none detected', color: flawed.length === 0 ? '#4CAF7D' : flawed.length < 5 ? '#3B82F6' : '#E05252' },
+            (() => { const h = avgTradeDuration(trades); return { label: 'Avg Time in Trade', value: h.ms != null ? formatDuration(h.ms) : '—', sub: h.counted ? `${h.counted} trade${h.counted !== 1 ? 's' : ''} timed` : 'add entry/exit times', color: h.ms != null ? '#3B82F6' : '#444' } })(),
           ].map(({ label, value, sub, color }) => (
             <div key={label} style={{ background: '#1A1A1A', borderRadius: '10px', border: `1px solid ${color}40`, padding: '14px 16px' }}>
               <div style={{ color: '#A0A0A0', fontSize: '0.63rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', fontWeight: 600 }}>{label}</div>
@@ -933,6 +936,93 @@ function ExecutionQualityReport({ trades }) {
           </span>
         </div>
       )}
+
+      <DayOfWeekBreakdown trades={trades} />
+    </div>
+  )
+}
+
+/* ── Performance by day of week — best / worst / every other day ── */
+const DOW_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+function DayOfWeekBreakdown({ trades }) {
+  const rows = useMemo(() => {
+    const buckets = DOW_LABELS.map((label, i) => ({ label, dow: i, trades: 0, wins: 0, losses: 0, pnl: 0, days: new Set() }))
+    for (const t of trades) {
+      const d = new Date(t.date || t.createdAt)
+      if (isNaN(d.getTime())) continue
+      const b = buckets[d.getDay()]
+      b.trades += 1
+      b.pnl += parseFloat(t.netPnl) || 0
+      if (t.result === 'Win') b.wins += 1
+      else if (t.result === 'Loss') b.losses += 1
+      b.days.add(String(t.date || '').slice(0, 10))
+    }
+    return buckets
+      .map(b => ({
+        ...b,
+        winRate:  b.wins + b.losses ? Math.round((b.wins / (b.wins + b.losses)) * 100) : 0,
+        avgPnl:   b.trades ? b.pnl / b.trades : 0,
+        sessions: b.days.size,
+      }))
+      // Mon-first ordering, Sunday last
+      .sort((a, b) => ((a.dow + 6) % 7) - ((b.dow + 6) % 7))
+  }, [trades])
+
+  const active = rows.filter(r => r.trades > 0)
+  if (!active.length) return null
+
+  const best  = active.reduce((a, b) => (b.pnl > a.pnl ? b : a))
+  const worst = active.reduce((a, b) => (b.pnl < a.pnl ? b : a))
+  const maxAbs = Math.max(...active.map(r => Math.abs(r.pnl))) || 1
+
+  const money = v => `${v >= 0 ? '+' : '-'}$${Math.abs(v).toFixed(2)}`
+
+  return (
+    <div style={{ background: '#1E1E1E', borderRadius: '10px', border: '1px solid #2A2A2A', padding: '20px 22px' }}>
+      <h3 style={{ color: '#F5F5F5', fontSize: '0.95rem', fontWeight: 600, margin: '0 0 4px' }}>Performance by Day of Week</h3>
+      <p style={{ color: '#555', fontSize: '0.78rem', margin: '0 0 18px' }}>Which days you actually make money on.</p>
+
+      {/* Best / worst callouts */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 20 }}>
+        {[
+          { tag: 'Most profitable day',  row: best,  color: '#4CAF7D' },
+          { tag: 'Least profitable day', row: worst, color: '#E05252' },
+        ].map(({ tag, row, color }) => (
+          <div key={tag} style={{ background: '#191919', border: `1px solid ${color}33`, borderRadius: 10, padding: '14px 16px' }}>
+            <div style={{ color: '#555', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{tag}</div>
+            <div style={{ color: '#F5F5F5', fontSize: '1.05rem', fontWeight: 700, marginTop: 4 }}>{row.label}</div>
+            <div style={{ fontFamily: 'JetBrains Mono, monospace', color, fontSize: '0.9rem', fontWeight: 700, marginTop: 2 }}>{money(row.pnl)}</div>
+            <div style={{ color: '#666', fontSize: '0.74rem', marginTop: 3 }}>{row.trades} trade{row.trades !== 1 ? 's' : ''} · {row.winRate}% win</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Every day */}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {rows.map((r, i) => {
+          const pos = r.pnl >= 0
+          const color = r.trades === 0 ? '#555' : pos ? '#4CAF7D' : '#E05252'
+          return (
+            <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', borderTop: i ? '1px solid #252525' : 'none', opacity: r.trades ? 1 : 0.45 }}>
+              <div style={{ width: 88, flexShrink: 0, color: '#C0C0C0', fontSize: '0.82rem', fontWeight: 600 }}>{r.label}</div>
+              <div style={{ width: 74, flexShrink: 0, color: '#777', fontSize: '0.76rem' }}>
+                {r.trades ? `${r.trades} trade${r.trades !== 1 ? 's' : ''}` : 'no trades'}
+              </div>
+              <div style={{ width: 58, flexShrink: 0, color: r.trades ? '#999' : '#555', fontSize: '0.76rem', fontFamily: 'JetBrains Mono, monospace' }}>
+                {r.trades ? `${r.winRate}%` : '—'}
+              </div>
+              {/* P&L bar */}
+              <div style={{ flex: 1, minWidth: 60, height: 6, background: '#242424', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ width: `${(Math.abs(r.pnl) / maxAbs) * 100}%`, height: '100%', background: color, borderRadius: 3, transition: 'width 0.3s' }} />
+              </div>
+              <div style={{ width: 92, flexShrink: 0, textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.82rem', fontWeight: 700, color }}>
+                {r.trades ? money(r.pnl) : '—'}
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

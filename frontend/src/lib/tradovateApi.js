@@ -117,6 +117,8 @@ export function mapFillsToTrades(fills, existingIds = []) {
             timeframe: 'Day Trade',
             entryPrice: String(entry.price),
             exitPrice: String(price),
+            entryTime: entry.time,
+            exitTime: fill.timestamp,
             positionSize: String(matchQty),
             commission: '0',
             netPnl: pnl,

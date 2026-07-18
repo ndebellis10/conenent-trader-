@@ -4,13 +4,14 @@
  */
 import { useState, useMemo, useRef, useEffect } from 'react'
 import AlanMascot from '../../components/AlanMascot'
+import AskAlanHome from '../../components/app/AskAlanHome'
 import { useTradeStore }  from '../../store/tradeStore'
 import { useGoalStore }   from '../../store/goalStore'
 import { useAdminStore }  from '../../store/adminStore'
 import { useAuth }        from '../../contexts/AuthContext'
 import { faithAiApi }     from '../../lib/api'
 import { format, subDays } from 'date-fns'
-import { Sparkles, ChevronDown, ChevronUp, Loader2, RefreshCw, BookOpen, Send, MessageSquare, TrendingUp } from 'lucide-react'
+import { Sparkles, ChevronDown, ChevronUp, Loader2, RefreshCw, BookOpen, Send, MessageSquare, TrendingUp, Home } from 'lucide-react'
 
 const safeDate = d => { const dt = new Date(d || Date.now()); return isNaN(dt.getTime()) ? new Date() : dt }
 const RESULT_COLOR = { Win: '#4CAF7D', Loss: '#E05252', Breakeven: '#888' }
@@ -66,14 +67,22 @@ function makeInitMessage(trades, stats) {
 }
 
 /* ── Chat tab ─────────────────────────────────────────────── */
-function ChatTab({ trades, stats, goals, completions, settings, playbook }) {
+function ChatTab({ trades, stats, goals, completions, settings, playbook, seed }) {
   const [messages,  setMessages]  = useState(() => [{ role: 'assistant', content: makeInitMessage(trades, stats) }])
   const [input,     setInput]     = useState('')
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState(null)
   const bottomRef = useRef(null)
+  const sentSeedRef = useRef(0)
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+
+  // A question asked from the home hub arrives as { text, n }; fire it once per bump.
+  useEffect(() => {
+    if (!seed?.n || seed.n === sentSeedRef.current) return
+    sentSeedRef.current = seed.n
+    if (seed.text) send(seed.text)
+  }, [seed])
 
   async function send(text) {
     const msg = (text || input).trim()
@@ -368,18 +377,35 @@ export default function FaithAI() {
   const { trades, settings, playbook } = useTradeStore()
   const { goals, completions }         = useGoalStore()
   const viewingUser                    = useAdminStore(s => s.viewingUser)
-  const { isAdmin }                    = useAuth()
-  const [tab, setTab]                  = useState('chat')
+  const { isAdmin, user }              = useAuth()
+  const [tab, setTab]                  = useState('home')
+  const [seed, setSeed]                = useState({ text: '', n: 0 })
 
   const userId = viewingUser?.id || null
   const stats  = useMemo(() => computeStats(trades), [trades])
 
-  const tabBtn = active => ({
-    padding: '9px 18px', borderRadius: 8,
+  const displayName = viewingUser?.name || user?.name || (user?.email || '').split('@')[0] || 'trader'
+
+  // Ask from the home hub: jump to Chat and hand the question to ChatTab.
+  const askAlan = (text) => {
+    setTab('chat')
+    if (text) setSeed(s => ({ text, n: s.n + 1 }))
+  }
+
+  const NAV = [
+    { id: 'home',    label: 'Home',           icon: Home },
+    { id: 'chat',    label: 'Chat',           icon: MessageSquare },
+    { id: 'coach',   label: 'Trade Coach',    icon: Sparkles },
+    { id: 'summary', label: '30-Day Summary', icon: TrendingUp },
+  ]
+
+  const navBtn = active => ({
+    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+    padding: '10px 12px', borderRadius: 9, textAlign: 'left',
     border:     active ? '1px solid rgba(59,130,246,0.4)' : '1px solid transparent',
     background: active ? 'rgba(59,130,246,0.12)' : 'transparent',
-    color:      active ? '#3B82F6' : '#555',
-    cursor: 'pointer', fontSize: '0.83rem', fontWeight: 700, transition: 'all 0.15s',
+    color:      active ? '#3B82F6' : '#8A8A8A',
+    cursor: 'pointer', fontSize: '0.84rem', fontWeight: 700, transition: 'all 0.15s',
   })
 
   return (
@@ -404,24 +430,43 @@ export default function FaithAI() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 6 }}>
-        <button style={tabBtn(tab === 'chat')}    onClick={() => setTab('chat')}>
-          <MessageSquare size={13} style={{ marginRight: 6, verticalAlign: 'middle' }} />Chat
-        </button>
-        <button style={tabBtn(tab === 'coach')}   onClick={() => setTab('coach')}>
-          <Sparkles size={13} style={{ marginRight: 6, verticalAlign: 'middle' }} />Trade Coach
-        </button>
-        <button style={tabBtn(tab === 'summary')} onClick={() => setTab('summary')}>
-          <TrendingUp size={13} style={{ marginRight: 6, verticalAlign: 'middle' }} />30-Day Summary
-        </button>
-      </div>
+      {/* Side nav + content */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 200px) minmax(0, 1fr)', gap: 16, alignItems: 'start' }}>
 
-      {/* Content */}
-      <div style={{ background: '#222', border: '1px solid #2A2A2A', borderRadius: 14, overflow: 'hidden' }}>
-        {tab === 'chat' && <ChatTab trades={trades} stats={stats} goals={goals} completions={completions} settings={settings} playbook={playbook} />}
-        {tab === 'coach' && <TradeCoachTab trades={trades} userId={userId} />}
-        {tab === 'summary' && <div style={{ padding: 24 }}><PatternSummaryTab trades={trades} userId={userId} /></div>}
+        {/* Side tab rail */}
+        <nav style={{ background: '#1E1E1E', border: '1px solid #2A2A2A', borderRadius: 14, padding: 10, display: 'flex', flexDirection: 'column', gap: 4, position: 'sticky', top: 16 }}>
+          {NAV.map(n => (
+            <button key={n.id} style={navBtn(tab === n.id)} onClick={() => setTab(n.id)}
+              onMouseEnter={e => { if (tab !== n.id) e.currentTarget.style.background = 'rgba(59,130,246,0.05)' }}
+              onMouseLeave={e => { if (tab !== n.id) e.currentTarget.style.background = 'transparent' }}>
+              <n.icon size={15} style={{ flexShrink: 0 }} />{n.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Content */}
+        <div style={{ minWidth: 0 }}>
+          {tab === 'home' && (
+            <AskAlanHome name={displayName} onAsk={askAlan} onTab={setTab} />
+          )}
+
+          {/* Chat stays mounted so the conversation survives tab switches */}
+          <div style={{ display: tab === 'chat' ? 'block' : 'none', background: '#222', border: '1px solid #2A2A2A', borderRadius: 14, overflow: 'hidden' }}>
+            <ChatTab trades={trades} stats={stats} goals={goals} completions={completions} settings={settings} playbook={playbook} seed={seed} />
+          </div>
+
+          {tab === 'coach' && (
+            <div style={{ background: '#222', border: '1px solid #2A2A2A', borderRadius: 14, overflow: 'hidden' }}>
+              <TradeCoachTab trades={trades} userId={userId} />
+            </div>
+          )}
+
+          {tab === 'summary' && (
+            <div style={{ background: '#222', border: '1px solid #2A2A2A', borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ padding: 24 }}><PatternSummaryTab trades={trades} userId={userId} /></div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

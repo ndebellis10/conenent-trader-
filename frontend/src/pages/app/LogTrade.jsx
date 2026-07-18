@@ -46,6 +46,16 @@ function findHeaderRow(allLines) {
   return 0
 }
 
+// Normalize a stored trade time (ISO timestamp or "HH:MM") for an <input type="time">
+function toTimeInput(value) {
+  if (!value) return ''
+  const raw = String(value)
+  if (/^\d{1,2}:\d{2}$/.test(raw)) return raw.padStart(5, '0')
+  const d = new Date(raw)
+  if (isNaN(d.getTime())) return ''
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
 // Parse any date string Tradovate might export (MM/DD/YYYY, YYYY-MM-DD, with time, etc.)
 function parseAnyDate(raw) {
   if (!raw) return new Date().toISOString().split('T')[0]
@@ -521,6 +531,8 @@ export default function LogTrade() {
 
   // Form fields — plain state, no react-hook-form
   const [date,          setDate]          = useState(new Date().toISOString().split('T')[0])
+  const [entryTime,     setEntryTime]     = useState('')
+  const [exitTime,      setExitTime]      = useState('')
   const [symbol,        setSymbol]        = useState('MNQ')
   const [direction,     setDirection]     = useState('Long')
   const [timeframe,     setTimeframe]     = useState('Day Trade')
@@ -610,7 +622,7 @@ export default function LogTrade() {
 
   const onSubmit = async () => {
     const data = {
-      date, symbol, direction, timeframe, assetClass,
+      date, entryTime, exitTime, symbol, direction, timeframe, assetClass,
       entryPrice, exitPrice, stopLoss, takeProfit,
       commission, positionSize, accountsTraded,
       followedPlan, movedStop, overRisked,
@@ -730,6 +742,9 @@ export default function LogTrade() {
   function loadTradeIntoForm(t) {
     if (!t) return
     setDate(t.date || new Date().toISOString().split('T')[0])
+    // Times may be ISO (imported) or already "HH:MM" (manually logged) — the input needs HH:MM
+    setEntryTime(toTimeInput(t.entryTime))
+    setExitTime(toTimeInput(t.exitTime))
     setSymbol(t.symbol || '')
     setDirection(t.direction || 'Long')
     setTimeframe(t.timeframe || 'Day Trade')
@@ -1064,6 +1079,18 @@ export default function LogTrade() {
             <div>
               <label style={{ color: '#A0A0A0', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>Date</label>
               <input value={date} onChange={e => setDate(e.target.value)} type="date" style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ color: '#A0A0A0', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>
+                Entry Time <span style={{ color: '#555' }}>(optional)</span>
+              </label>
+              <input value={entryTime} onChange={e => setEntryTime(e.target.value)} type="time" style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ color: '#A0A0A0', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>
+                Exit Time <span style={{ color: '#555' }}>(optional)</span>
+              </label>
+              <input value={exitTime} onChange={e => setExitTime(e.target.value)} type="time" style={inputStyle} />
             </div>
             <div>
               <label style={{ color: '#A0A0A0', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>Symbol</label>
