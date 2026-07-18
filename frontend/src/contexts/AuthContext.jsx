@@ -162,6 +162,9 @@ export function AuthProvider({ children }) {
           credentials: 'include',
         })
         const data = await res.json()
+        // Surface a real reason (e.g. ADMIN_PASSWORD unset on the deployment)
+        // instead of flattening every failure into "invalid credentials"
+        if (!data.admin && data.error) return { ok: false, error: data.error }
         if (data.admin) {
           // Store the session key in memory (Zustand) — never in localStorage/bundle
           if (data.sessionKey) useAdminStore.getState().setSessionKey(data.sessionKey)
