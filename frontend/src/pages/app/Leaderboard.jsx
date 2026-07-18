@@ -249,7 +249,10 @@ export default function Leaderboard() {
     if (!localEntry) return rows
     // If Supabase already has the user's row, replace it with fresh local stats
     // so the board always reflects their actual current trades
-    const without = rows.filter(r => r.email !== myEmail)
+    // Emails are compared case-insensitively — a stored row saved with
+    // different casing was leaving a stale duplicate that never updated
+    const mine = String(myEmail || '').toLowerCase()
+    const without = rows.filter(r => String(r.email || '').toLowerCase() !== mine)
     return [...without, localEntry]
   }, [rows, localEntry, myEmail])
 
