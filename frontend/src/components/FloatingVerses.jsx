@@ -137,7 +137,7 @@ export default function FloatingVerses({ count = COUNT, opacity = 0.34 }) {
           }}>
             "{v.text}"
           </p>
-          <span style={{ color: '#D4B85A', fontSize: '0.74rem', fontWeight: 700 }}>— {v.ref}</span>
+          <span style={{ color: '#5B9BD5', fontSize: '0.74rem', fontWeight: 700 }}>— {v.ref}</span>
         </div>
       ))}
     </div>
