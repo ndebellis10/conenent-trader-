@@ -1,3 +1,4 @@
+import { requireAdmin } from './_lib/adminAuth.js'
 /**
  * /api/leaderboard-data
  * Also handles ?action=historical for backtesting market data (merged to stay within Vercel's 12-function limit)
@@ -160,8 +161,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'DELETE') {
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'alanluvsisreal'
-    if (req.headers['x-admin-key'] !== ADMIN_PASSWORD) return res.status(401).json({ error: 'Unauthorized' })
+    if (requireAdmin(req, res)) return
 
     const email = new URL(req.url, 'http://x').searchParams.get('email')
     if (!email) return res.status(400).json({ error: 'email required' })

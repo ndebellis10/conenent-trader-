@@ -46,6 +46,9 @@ export default function DailyInsight({ trades }) {
   const [fetched, setFetched] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState(null)
+  // AI not configured on this deployment — hide the card rather than show a
+  // permanent error box on everyone's dashboard
+  const [unavailable, setUnavailable] = useState(false)
 
   // Today's cached read, resolved during render — stale once new trades are logged
   const cached = useMemo(() => {
@@ -63,7 +66,9 @@ export default function DailyInsight({ trades }) {
       setFetched(r)
       writeCache(email, r, recent.length)
     } catch (e) {
-      setError(e.message || 'Could not reach Alan right now.')
+      const msg = e.message || ''
+      if (/not configured/i.test(msg)) setUnavailable(true)
+      else setError(msg || 'Could not reach Alan right now.')
     } finally {
       setLoading(false)
     }
@@ -75,7 +80,7 @@ export default function DailyInsight({ trades }) {
     run()
   }, [recent.length, cached, fetched, run])
 
-  if (!recent.length) return null
+  if (!recent.length || unavailable) return null
 
   const card = { background: '#1E1E1E', border: '1px solid #2A2A2A', borderRadius: 14 }
 

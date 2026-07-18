@@ -6,11 +6,12 @@
  * Protected by the hardcoded admin password (sent as X-Admin-Key header).
  */
 import { supabaseAdmin, supabaseConfigured } from './_lib/supabase-admin.js'
+import { ADMIN_EMAIL, adminConfigured, verifyCredentials, issueSessionToken, requireAdmin } from './_lib/adminAuth.js'
 import { applySecurity, handleOptions }      from './_lib/security.js'
 
-// Credentials live SERVER-SIDE ONLY — never shipped to the browser
-const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || 'nickisthebesttrader@faithtrader.app'
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'alanluvsisreal'
+// Credentials live SERVER-SIDE ONLY. No hardcoded fallback: with ADMIN_PASSWORD
+// unset every admin route fails closed rather than accepting a known default.
+// The browser receives a short-lived HMAC token, never the password itself.
 
 function route(req) {
   const m = req.url.match(/\/api\/admin\/?([\w-]*)/)
@@ -23,23 +24,19 @@ export default async function handler(req, res) {
 
   /* ── POST /api/admin/auth — verify admin credentials, return session key ── */
   if (route(req) === 'auth' && req.method === 'POST') {
+    if (!adminConfigured()) {
+      return res.status(503).json({ admin: false, error: 'Admin access is not configured on this deployment.' })
+    }
     const { email, password } = req.body || {}
-    if (
-      email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() &&
-      password === ADMIN_PASSWORD
-    ) {
-      // Return the API key so the client can use it for subsequent admin calls.
-      // This only reaches the admin — not baked into the JS bundle everyone downloads.
-      return res.status(200).json({ admin: true, sessionKey: ADMIN_PASSWORD })
+    if (verifyCredentials(email, password)) {
+      // A signed, expiring token — the password never reaches the browser
+      return res.status(200).json({ admin: true, sessionKey: issueSessionToken() })
     }
     return res.status(401).json({ admin: false })
   }
 
-  // All other admin routes require the x-admin-key header
-  const adminKey = req.headers['x-admin-key']
-  if (adminKey !== ADMIN_PASSWORD) {
-    return res.status(401).json({ error: 'Unauthorized' })
-  }
+  // All other admin routes require a valid session token
+  if (requireAdmin(req, res)) return
 
   const sub = route(req)
 
