@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import AlanMascot from '../AlanMascot'
 import { faithAiApi } from '../../lib/api'
-import { Send } from 'lucide-react'
+import { Send, ImagePlus, X, Volume2, Square } from 'lucide-react'
+import { compressImage } from '../../lib/imageUtils'
 
 const SUGGESTED = [
   'What should I work on the most?',
@@ -31,6 +32,9 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
   const [error,     setError]     = useState(null)
   const bottomRef = useRef(null)
   const sentSeedRef = useRef(0)
+  const fileRef     = useRef(null)
+  const [attached, setAttached] = useState(null)   // data URL of a chart to send
+  const [speaking, setSpeaking] = useState(null)   // index of the message being read aloud
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
@@ -41,16 +45,39 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
     if (seed.text) send(seed.text)
   }, [seed])
 
+  async function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) return
+    try { setAttached(await compressImage(file)) }
+    catch { setError('Could not read that image. Try a smaller file.') }
+  }
+
+  function speak(text, i) {
+    const synth = window.speechSynthesis
+    if (!synth) return
+    if (speaking === i) { synth.cancel(); setSpeaking(null); return }
+    synth.cancel()
+    const u = new SpeechSynthesisUtterance(text)
+    u.rate = 1.02
+    u.onend = () => setSpeaking(null)
+    u.onerror = () => setSpeaking(null)
+    setSpeaking(i)
+    synth.speak(u)
+  }
+
+  // Stop any narration when the component goes away
+  useEffect(() => () => window.speechSynthesis?.cancel(), [])
+
   async function send(text) {
     const msg = (text || input).trim()
-    if (!msg || loading) return
-    setInput(''); setError(null)
-    const next = [...messages, { role: 'user', content: msg }]
+    const img = attached
+    if ((!msg && !img) || loading) return
+    setInput(''); setError(null); setAttached(null)
+    const next = [...messages, { role: 'user', content: msg || 'What do you make of this chart?', image: img }]
     setMessages(next)
     setLoading(true)
     try {
       const history = messages.slice(-10)
-      const reply = await faithAiApi.chat(msg, history, trades, stats, goals, completions, settings, playbook)
+      const reply = await faithAiApi.chat(msg || 'What do you make of this chart?', history, trades, stats, goals, completions, settings, playbook, img)
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (e) {
       setError(e.message || 'Could not connect to Ask Alan. Please try again.')
@@ -101,7 +128,7 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
         .alanchat-composer { padding: 14px 24px 18px; }
         .alanchat-inputwrap {
           max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 8px;
-          background: #141414; border: 1px solid #2F2F2F; border-radius: 14px; padding: 5px 5px 5px 18px;
+          background: #141414; border: 1px solid #2F2F2F; border-radius: 14px; padding: 5px 5px 5px 6px;
           transition: border-color .18s, box-shadow .18s;
         }
         .alanchat-inputwrap:focus-within { border-color: rgba(59,130,246,0.55); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
@@ -118,6 +145,26 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
         .alanchat-send.on:hover { filter: brightness(1.12); }
         .alanchat-send.off { background: #1E1E1E; color: #3A3A3A; cursor: not-allowed; }
 
+        .alanchat-thumb { position: relative; margin: 0 auto 8px; max-width: 760px; }
+        .alanchat-thumb img { height: 72px; border-radius: 10px; border: 1px solid #333; display: block; }
+        .alanchat-thumb button {
+          position: absolute; top: -7px; left: 64px; width: 22px; height: 22px; border-radius: 50%;
+          background: #2A2A2A; border: 1px solid #3D3D3D; color: #C8C8C8; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; padding: 0;
+        }
+        .alanchat-attach {
+          width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+          background: none; border: none; color: #6A6A6A; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; transition: all .15s;
+        }
+        .alanchat-attach:hover { color: #3B82F6; background: rgba(59,130,246,0.08); }
+        .alanchat-bubble img { max-width: 100%; border-radius: 9px; margin-bottom: 8px; display: block; }
+        .alanchat-speak {
+          background: none; border: none; padding: 3px; margin-top: 5px; cursor: pointer;
+          color: #5A5A5A; display: inline-flex; align-items: center; gap: 5px;
+          font-size: 0.7rem; font-weight: 700; letter-spacing: .04em; transition: color .15s;
+        }
+        .alanchat-speak:hover, .alanchat-speak.on { color: #3B82F6; }
         .alanchat-hint { max-width: 760px; margin: 8px auto 0; color: #4A4A4A; font-size: 0.72rem; text-align: center; }
         @keyframes aiPulse { 0%,60%,100%{transform:translateY(0);opacity:.5} 30%{transform:translateY(-5px);opacity:1} }
       `}</style>
@@ -141,7 +188,20 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
                 {m.role === 'assistant' && <AlanMascot size={34} style={{ marginTop: 18 }} />}
                 <div className="alanchat-msg">
                   {m.role === 'assistant' && <div className="alanchat-name">Alan</div>}
-                  <div className="alanchat-bubble">{m.content}</div>
+                  <div className="alanchat-bubble">
+                    {m.image && <img src={m.image} alt="Attached chart" />}
+                    {m.content}
+                  </div>
+                  {m.role === 'assistant' && (
+                    <button
+                      className={`alanchat-speak${speaking === i ? ' on' : ''}`}
+                      onClick={() => speak(m.content, i)}
+                      title={speaking === i ? 'Stop reading' : 'Read aloud'}
+                    >
+                      {speaking === i ? <Square size={11} /> : <Volume2 size={12} />}
+                      {speaking === i ? 'Stop' : 'Listen'}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -172,7 +232,18 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
 
       {/* Composer */}
       <div className="alanchat-composer">
+        {attached && (
+          <div className="alanchat-thumb">
+            <img src={attached} alt="Chart to send" />
+            <button onClick={() => setAttached(null)} aria-label="Remove image"><X size={12} /></button>
+          </div>
+        )}
         <div className="alanchat-inputwrap">
+          <button className="alanchat-attach" onClick={() => fileRef.current?.click()} title="Attach a chart" aria-label="Attach a chart">
+            <ImagePlus size={17} />
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+            onChange={e => { handleFile(e.target.files?.[0]); e.target.value = '' }} />
           <input
             value={input}
             onChange={e => setInput(e.target.value)}
@@ -180,8 +251,8 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
             placeholder="Ask Alan anything about your trading…"
             disabled={loading}
           />
-          <button type="button" onClick={() => send()} disabled={!input.trim() || loading}
-            className={`alanchat-send ${input.trim() && !loading ? 'on' : 'off'}`}>
+          <button type="button" onClick={() => send()} disabled={(!input.trim() && !attached) || loading}
+            className={`alanchat-send ${(input.trim() || attached) && !loading ? 'on' : 'off'}`}>
             <Send size={16} />
           </button>
         </div>

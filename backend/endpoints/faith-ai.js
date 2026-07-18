@@ -358,7 +358,7 @@ Moved stop loss: ${movedStop} times`)
 }
 
 async function handleChat(body, res) {
-  const { message, history = [], trades = [], goals, completions, settings, playbook } = body
+  const { message, history = [], trades = [], goals, completions, settings, playbook, image } = body
   if (!message) return res.status(400).json({ error: 'message is required' })
 
   const apiKey = getApiKey()
@@ -375,9 +375,22 @@ IMPORTANT RULES:
 4. Never give generic advice when real data exists. Every answer should feel like it came from someone who studied their journal.
 5. Address the trader by their first name (see "Trader name" above) — greet them by name and use it naturally once or twice in longer replies. Never invent a name: if no trader name is given, just say "trader".`
 
+  // An attached chart is sent as a vision block alongside the text
+  let userContent = message
+  if (typeof image === 'string' && image.startsWith('data:image/')) {
+    const [meta, b64] = image.split(',')
+    const mediaType = (meta.match(/data:(image\/[a-z+]+)/i) || [])[1] || 'image/png'
+    if (b64) {
+      userContent = [
+        { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } },
+        { type: 'text', text: message },
+      ]
+    }
+  }
+
   const msgs = [
     ...history.slice(-10).map(m => ({ role: m.role, content: m.content })),
-    { role: 'user', content: message },
+    { role: 'user', content: userContent },
   ]
 
   const client = new Anthropic({ apiKey })
