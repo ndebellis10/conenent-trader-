@@ -33,7 +33,7 @@ export default function AskAlanHome({ name, onAsk, onTab }) {
   ]
 
   const EXPLORE = [
-    { icon: MessageSquare, accent: BLUE,  title: 'Chat with Alan', desc: 'Talk through any trade, setup, or question.', go: () => onTab?.('chat') },
+    { icon: MessageSquare, accent: BLUE,  title: 'Chat with Alan', desc: 'Talk through any trade, setup, or question.', go: () => onAsk?.('') },
     { icon: Sparkles,      accent: SKY,  title: 'Trade Coach',    desc: 'Deep coaching on your recent trades.',       go: () => onTab?.('coach') },
     { icon: TrendingUp,    accent: GREEN, title: '30-Day Summary', desc: 'See your patterns over the last month.',     go: () => onTab?.('summary') },
   ]

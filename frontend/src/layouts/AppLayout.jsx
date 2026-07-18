@@ -9,13 +9,12 @@ import {
   LayoutDashboard, PlusCircle, BarChart2, BookOpen, Cross, Settings,
   LogOut, Menu, X, CalendarDays, TrendingUp, FileBarChart2, ListChecks,
   Trophy, Save, CheckCircle, ShieldAlert, Sparkles, Newspaper, FlaskConical,
-  Cloud, CloudOff, Loader2, Home, MessageSquare, ArrowLeft,
+  Cloud, CloudOff, Loader2, Home, ArrowLeft,
 } from 'lucide-react'
 
 /* Ask Alan's own sections — these replace the Trading Journal nav while on that page. */
 const ASK_ALAN_NAV = [
   { id: 'home',    label: 'Home',           icon: Home,          to: '/app/faith-ai' },
-  { id: 'chat',    label: 'Chat',           icon: MessageSquare, to: '/app/faith-ai?tab=chat' },
   { id: 'coach',   label: 'Trade Coach',    icon: Sparkles,      to: '/app/faith-ai?tab=coach' },
   { id: 'summary', label: '30-Day Summary', icon: TrendingUp,    to: '/app/faith-ai?tab=summary' },
 ]
