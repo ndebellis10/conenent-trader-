@@ -61,11 +61,11 @@ export default async function handler(req, res) {
                     'pre_trade','post_trade','faith_rating','trade_notes']
       const rows = (trades.data || []).map(t => cols.map(c => JSON.stringify(t[c] ?? '')).join(','))
       res.setHeader('Content-Type', 'text/csv; charset=utf-8')
-      res.setHeader('Content-Disposition', 'attachment; filename="faith-trader-trades.csv"')
+      res.setHeader('Content-Disposition', 'attachment; filename="covenant-trader-trades.csv"')
       return res.status(200).send([cols.join(','), ...rows].join('\n'))
     }
 
-    res.setHeader('Content-Disposition', 'attachment; filename="faith-trader-export.json"')
+    res.setHeader('Content-Disposition', 'attachment; filename="covenant-trader-export.json"')
     return res.status(200).json({
       exported_at: new Date().toISOString(),
       user: { id: user.id, email: user.email },

@@ -50,8 +50,8 @@ export default async function handler(req, res) {
       const token = process.env.GITHUB_TOKEN
       if (!token) return res.status(200).json({ users: [], source: 'no-token' })
       try {
-        const url = 'https://raw.githubusercontent.com/ndebellis10/faith-trader/master/backend/data/leaderboard.json'
-        const r = await fetch(url, { headers: { Authorization: `token ${token}`, 'User-Agent': 'faith-trader' } })
+        const url = 'https://raw.githubusercontent.com/ndebellis10/conenent-trader-/main/backend/data/leaderboard.json'
+        const r = await fetch(url, { headers: { Authorization: `token ${token}`, 'User-Agent': 'covenant-trader' } })
         if (!r.ok) return res.status(200).json({ users: [], source: 'leaderboard-missing' })
         const data = await r.json()
         const HIDDEN_LB   = [ADMIN_EMAIL.toLowerCase()]
@@ -144,8 +144,8 @@ export default async function handler(req, res) {
       const token = process.env.GITHUB_TOKEN
       if (token && email) {
         try {
-          const url = 'https://raw.githubusercontent.com/ndebellis10/faith-trader/master/backend/data/leaderboard.json'
-          const r = await fetch(url, { headers: { Authorization: `token ${token}`, 'User-Agent': 'faith-trader' } })
+          const url = 'https://raw.githubusercontent.com/ndebellis10/conenent-trader-/main/backend/data/leaderboard.json'
+          const r = await fetch(url, { headers: { Authorization: `token ${token}`, 'User-Agent': 'covenant-trader' } })
           if (r.ok) {
             const data = await r.json()
             const trader = (data.traders || []).find(t => t.email?.toLowerCase() === email.toLowerCase())

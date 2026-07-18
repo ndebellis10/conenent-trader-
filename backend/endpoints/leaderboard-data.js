@@ -73,8 +73,8 @@ export default async function handler(req, res) {
   // caching so deletes and syncs are always reflected immediately.
   async function readFile() {
     const metaR = await fetch(
-      'https://api.github.com/repos/ndebellis10/faith-trader/contents/backend/data/leaderboard.json',
-      { headers: { Authorization: `token ${token}`, 'User-Agent': 'faith-trader', Accept: 'application/vnd.github.v3+json', 'Cache-Control': 'no-cache' } }
+      'https://api.github.com/repos/ndebellis10/conenent-trader-/contents/backend/data/leaderboard.json',
+      { headers: { Authorization: `token ${token}`, 'User-Agent': 'covenant-trader', Accept: 'application/vnd.github.v3+json', 'Cache-Control': 'no-cache' } }
     )
     if (!metaR.ok) return { traders: [], banned: [], sha: null }
     const meta = await metaR.json()
@@ -92,8 +92,8 @@ export default async function handler(req, res) {
     const body    = { message, content }
     if (sha) body.sha = sha
     await fetch(
-      'https://api.github.com/repos/ndebellis10/faith-trader/contents/backend/data/leaderboard.json',
-      { method: 'PUT', headers: { Authorization: `token ${token}`, 'User-Agent': 'faith-trader', 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      'https://api.github.com/repos/ndebellis10/conenent-trader-/contents/backend/data/leaderboard.json',
+      { method: 'PUT', headers: { Authorization: `token ${token}`, 'User-Agent': 'covenant-trader', 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
     )
   }
 
