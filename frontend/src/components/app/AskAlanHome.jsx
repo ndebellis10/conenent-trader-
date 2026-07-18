@@ -7,7 +7,7 @@ import {
 import AlanMascot from '../AlanMascot'
 
 const BLUE  = '#3B82F6'
-const GOLD  = '#D4B85A'
+const SKY   = '#5B9BD5'
 const GREEN = '#4CAF7D'
 
 /* Ask Alan home hub. `onAsk(text)` sends a question straight into the Chat
@@ -34,7 +34,7 @@ export default function AskAlanHome({ name, onAsk, onTab }) {
 
   const EXPLORE = [
     { icon: MessageSquare, accent: BLUE,  title: 'Chat with Alan', desc: 'Talk through any trade, setup, or question.', go: () => onTab?.('chat') },
-    { icon: Sparkles,      accent: GOLD,  title: 'Trade Coach',    desc: 'Deep coaching on your recent trades.',       go: () => onTab?.('coach') },
+    { icon: Sparkles,      accent: SKY,  title: 'Trade Coach',    desc: 'Deep coaching on your recent trades.',       go: () => onTab?.('coach') },
     { icon: TrendingUp,    accent: GREEN, title: '30-Day Summary', desc: 'See your patterns over the last month.',     go: () => onTab?.('summary') },
   ]
 
@@ -240,11 +240,11 @@ export default function AskAlanHome({ name, onAsk, onTab }) {
           <div className="alanhome-list">
             {RESOURCES.map(r => (
               <button key={r.title} className="alanhome-row" onClick={r.go}>
-                <span className="alanhome-row-ico" style={{ background: 'rgba(212,184,90,0.1)', borderColor: 'rgba(212,184,90,0.25)' }}>
-                  <Cross size={14} color={GOLD} />
+                <span className="alanhome-row-ico" style={{ background: 'rgba(59,130,246,0.1)', borderColor: 'rgba(59,130,246,0.25)' }}>
+                  <Cross size={14} color={BLUE} />
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span className="alanhome-row-t" style={{ display: 'block', color: GOLD }}>{r.title}</span>
+                  <span className="alanhome-row-t" style={{ display: 'block', color: BLUE }}>{r.title}</span>
                   <span className="alanhome-row-d" style={{ display: 'block' }}>{r.desc}</span>
                 </span>
                 <ArrowRight size={14} color="#4A4A4A" style={{ flexShrink: 0 }} />

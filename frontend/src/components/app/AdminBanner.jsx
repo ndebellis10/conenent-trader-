@@ -140,7 +140,7 @@ export default function AdminBanner({ onAdminLogout }) {
     setViewing({ ...user, displayEmail: emailKey })
     setLoadingId(null)
     setOpen(false)
-    navigate('/app')
+    navigate('/app/dashboard')
   }
 
   /* ── Exit user view ── */

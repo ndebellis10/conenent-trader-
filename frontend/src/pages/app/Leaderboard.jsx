@@ -5,10 +5,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTradeStore }  from '../../store/tradeStore'
 import { useAuthStore }   from '../../store/authStore'
+import { liveTrades, backtestTrades, summarize } from '../../lib/tradeFilters'
 import { useAuth }        from '../../contexts/AuthContext'
 import { useAdminStore }  from '../../store/adminStore'
 import { getLeaderboard } from '../../lib/leaderboardApi'
-import { Trophy, RefreshCw, Loader2, TrendingUp, Target, Brain, RotateCcw } from 'lucide-react'
+import { Trophy, RefreshCw, Loader2, TrendingUp, Target, RotateCcw, FlaskConical
+} from 'lucide-react'
 
 function cleanName(raw) {
   if (!raw) return 'Trader'
@@ -16,16 +18,7 @@ function cleanName(raw) {
   return raw
 }
 
-function psychScore(row) {
-  return Math.round(
-    (row.avg_faith / 5) * 100 * 0.35 +
-    row.discipline   * 100 * 0.35 +
-    (row.avg_entry / 10) * 100 * 0.15 +
-    (row.avg_exit  / 10) * 100 * 0.15
-  )
-}
 
-const sc = s => s >= 75 ? '#4CAF7D' : s >= 50 ? '#3B82F6' : '#E05252'
 
 function Bar({ value, color }) {
   const pct = Math.min(100, Math.max(0, value))
@@ -56,14 +49,6 @@ function Mono({ children, color }) {
   return <span style={{ color, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>{children}</span>
 }
 
-function ScoreBadge({ value }) {
-  return (
-    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', background: `${sc(value)}18`, border: `1px solid ${sc(value)}40`, borderRadius: 8, padding: '4px 12px', minWidth: 52 }}>
-      <span style={{ color: sc(value), fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: '1.1rem', lineHeight: 1 }}>{value}</span>
-      <span style={{ color: '#444', fontSize: '0.6rem', marginTop: 2 }}>/100</span>
-    </div>
-  )
-}
 
 /* ── Seniority-aware sort helper ─────────────────────────────── */
 // Primary: whatever comparator fn says.
@@ -79,28 +64,27 @@ function withSeniority(cmp) {
   })
 }
 
-/* ── Tab definitions in requested order ─────────────────────── */
+/* ── Tab definitions ─────────────────────────────────────────
+   Live tabs rank real trades only; backtest tabs rank paper results
+   imported through the Backtest page (tagged 'Backtest'). */
+
+// Older leaderboard rows predate the backtest fields — treat them as zero
+const bt  = (row, k) => row[`backtest_${k}`] ?? 0
+const btMoney = v => `${v >= 0 ? '+' : '-'}$${Math.abs(v).toFixed(2)}`
+
+const BT_CELLS = row => [
+  <TD key="bt"><Mono color="#B98CE0">{bt(row, 'trades')}</Mono></TD>,
+  <TD key="btp" right>
+    <Mono color={bt(row, 'pnl') >= 0 ? '#4CAF7D' : '#E05252'}>{btMoney(bt(row, 'pnl'))}</Mono>
+  </TD>,
+  <TD key="btw" wide><Bar value={bt(row, 'win_rate')} color="#B98CE0" /></TD>,
+]
+const BT_HEADS = ['BT Trades', 'BT Net P&L', 'BT Win Rate']
+
 const TABS = [
   {
-    id: 'mosttrades', label: 'Most Trades', icon: RotateCcw, color: '#3B82F6',
-    desc: 'Ranked by total number of trades logged — seniority breaks ties',
-    sort: withSeniority((a, b) => b.total_trades - a.total_trades),
-    heads: ['Trades', 'Win Rate', 'Net P&L', 'R:R', 'FaithScore'],
-    cells: row => [
-      <TD key="t"><Mono color="#3B82F6">{row.total_trades}</Mono></TD>,
-      <TD key="wr" wide><Bar value={row.win_rate} color="#5B9BD5" /></TD>,
-      <TD key="pnl" right>
-        <Mono color={row.total_pnl >= 0 ? '#4CAF7D' : '#E05252'}>
-          {row.total_pnl >= 0 ? '+' : ''}${row.total_pnl.toFixed(2)}
-        </Mono>
-      </TD>,
-      <TD key="rr"><Mono color="#3B82F6">{row.avg_rr != null ? `1:${row.avg_rr.toFixed(2)}` : '—'}</Mono></TD>,
-      <TD key="fs" right><Mono color={sc(row.faith_score)}>{row.faith_score}</Mono></TD>,
-    ],
-  },
-  {
     id: 'winrate', label: 'Win Rate', icon: Target, color: '#5B9BD5',
-    desc: 'Ranked by highest win percentage — seniority breaks ties',
+    desc: 'Ranked by highest win percentage on live trades — seniority breaks ties',
     sort: withSeniority((a, b) => b.win_rate - a.win_rate),
     heads: ['Trades', 'Win Rate', 'Wins', 'Net P&L', 'R:R'],
     cells: row => [
@@ -120,9 +104,9 @@ const TABS = [
   },
   {
     id: 'profit', label: 'Most Profit', icon: TrendingUp, color: '#4CAF7D',
-    desc: 'Ranked by total net P&L earned',
+    desc: 'Ranked by total net P&L on live trades',
     sort: withSeniority((a, b) => b.total_pnl - a.total_pnl),
-    heads: ['Trades', 'Net P&L', 'Win Rate', 'R:R', 'FaithScore'],
+    heads: ['Trades', 'Net P&L', 'Win Rate', 'R:R'],
     cells: row => [
       <TD key="t"><Mono color="#F5F5F5">{row.total_trades}</Mono></TD>,
       <TD key="pnl" right>
@@ -132,43 +116,47 @@ const TABS = [
       </TD>,
       <TD key="wr" wide><Bar value={row.win_rate} color="#4CAF7D" /></TD>,
       <TD key="rr"><Mono color="#3B82F6">{row.avg_rr != null ? `1:${row.avg_rr.toFixed(2)}` : '—'}</Mono></TD>,
-      <TD key="fs" right><Mono color={sc(row.faith_score)}>{row.faith_score}</Mono></TD>,
     ],
   },
   {
-    id: 'psychology', label: 'Psychology', icon: Brain, color: '#3B82F6',
-    desc: 'Ranked by faith, discipline & execution quality',
-    sort: withSeniority((a, b) => psychScore(b) - psychScore(a)),
-    heads: ['Psych Score', 'Discipline', 'Faith', 'Entry Qual', 'Exit Qual'],
-    cells: row => {
-      const ps = psychScore(row)
-      return [
-        <TD key="ps"><ScoreBadge value={ps} /></TD>,
-        <TD key="d" wide><Bar value={row.discipline * 100} color="#3B82F6" /></TD>,
-        <TD key="f" wide><Bar value={(row.avg_faith / 5) * 100} color="#E07BA0" /></TD>,
-        <TD key="e" wide><Bar value={(row.avg_entry / 10) * 100} color="#3B82F6" /></TD>,
-        <TD key="x" wide><Bar value={(row.avg_exit  / 10) * 100} color="#5B9BD5" /></TD>,
-      ]
-    },
-  },
-  {
-    id: 'faithscore', label: 'FaithScore', icon: Trophy, color: '#3B82F6',
-    desc: 'Overall composite score — win rate, discipline, quality & faith',
-    sort: withSeniority((a, b) => b.faith_score - a.faith_score),
-    heads: ['Trades', 'Win Rate', 'Net P&L', 'R:R', 'FaithScore'],
+    id: 'mosttrades', label: 'Most Trades', icon: RotateCcw, color: '#3B82F6',
+    desc: 'Ranked by total live trades logged — seniority breaks ties',
+    sort: withSeniority((a, b) => b.total_trades - a.total_trades),
+    heads: ['Trades', 'Win Rate', 'Net P&L', 'R:R'],
     cells: row => [
-      <TD key="t">
-        <Mono color="#F5F5F5">{row.total_trades}</Mono>
-        <span style={{ color: '#555', fontSize: '0.72rem', marginLeft: 4 }}>({row.wins}W)</span>
-      </TD>,
-      <TD key="wr" wide><Bar value={row.win_rate} color="#4CAF7D" /></TD>,
+      <TD key="t"><Mono color="#3B82F6">{row.total_trades}</Mono></TD>,
+      <TD key="wr" wide><Bar value={row.win_rate} color="#5B9BD5" /></TD>,
       <TD key="pnl" right>
         <Mono color={row.total_pnl >= 0 ? '#4CAF7D' : '#E05252'}>
           {row.total_pnl >= 0 ? '+' : ''}${row.total_pnl.toFixed(2)}
         </Mono>
       </TD>,
       <TD key="rr"><Mono color="#3B82F6">{row.avg_rr != null ? `1:${row.avg_rr.toFixed(2)}` : '—'}</Mono></TD>,
-      <TD key="fs" right><ScoreBadge value={row.faith_score} /></TD>,
+    ],
+  },
+  {
+    id: 'btprofit', label: 'Backtest Profit', icon: FlaskConical, color: '#B98CE0',
+    desc: 'Ranked by total P&L across imported backtest trades',
+    sort: withSeniority((a, b) => bt(b, 'pnl') - bt(a, 'pnl')),
+    heads: BT_HEADS, cells: BT_CELLS,
+  },
+  {
+    id: 'bttrades', label: 'Most Backtested', icon: RotateCcw, color: '#B98CE0',
+    desc: 'Ranked by number of backtest trades logged — reps put in',
+    sort: withSeniority((a, b) => bt(b, 'trades') - bt(a, 'trades')),
+    heads: BT_HEADS, cells: BT_CELLS,
+  },
+  {
+    id: 'btwinrate', label: 'Backtest Win Rate', icon: Target, color: '#B98CE0',
+    desc: 'Ranked by win percentage across backtest trades',
+    sort: withSeniority((a, b) => bt(b, 'win_rate') - bt(a, 'win_rate')),
+    heads: ['BT Trades', 'BT Win Rate', 'BT Net P&L'],
+    cells: row => [
+      <TD key="bt"><Mono color="#B98CE0">{bt(row, 'trades')}</Mono></TD>,
+      <TD key="btw" wide><Bar value={bt(row, 'win_rate')} color="#B98CE0" /></TD>,
+      <TD key="btp" right>
+        <Mono color={bt(row, 'pnl') >= 0 ? '#4CAF7D' : '#E05252'}>{btMoney(bt(row, 'pnl'))}</Mono>
+      </TD>,
     ],
   },
 ]
@@ -208,19 +196,23 @@ export default function Leaderboard() {
     // Don't inject local stats if this account has been banned by admin
     if (localStorage.getItem(`ft-lb-banned-${myEmail.toLowerCase()}`)) return null
     const displayName = (currentName && currentName !== 'Trader') ? currentName : emailPrefix || myEmail.split('@')[0]
-    const wins       = trades.filter(t => t.result === 'Win').length
-    const winRate    = (wins / trades.length) * 100
-    const totalPnl   = trades.reduce((s, t) => s + (parseFloat(t.netPnl) || 0), 0)
-    const rrTrades   = trades.filter(t => t.riskReward)
+    // Backtest-tagged trades are paper results — ranked separately, never in live stats
+    const live       = liveTrades(trades)
+    const btStats    = summarize(backtestTrades(trades))
+    if (!live.length && !btStats.count) return null
+    const wins       = live.filter(t => t.result === 'Win').length
+    const winRate    = live.length ? (wins / live.length) * 100 : 0
+    const totalPnl   = live.reduce((s, t) => s + (parseFloat(t.netPnl) || 0), 0)
+    const rrTrades   = live.filter(t => t.riskReward)
     const avgRR      = rrTrades.length ? rrTrades.reduce((s, t) => s + parseFloat(t.riskReward), 0) / rrTrades.length : null
-    const avgEntry   = trades.reduce((s, t) => s + (t.entryQuality ?? 5), 0) / trades.length
-    const avgExit    = trades.reduce((s, t) => s + (t.exitQuality  ?? 5), 0) / trades.length
-    const avgFaith   = trades.reduce((s, t) => s + (t.faithRating  ?? 0), 0) / trades.length
-    const discipline = trades.reduce((s, t) => {
+    const avgEntry   = live.length ? live.reduce((s, t) => s + (t.entryQuality ?? 5), 0) / live.length : 0
+    const avgExit    = live.length ? live.reduce((s, t) => s + (t.exitQuality  ?? 5), 0) / live.length : 0
+    const avgFaith   = live.length ? live.reduce((s, t) => s + (t.faithRating  ?? 0), 0) / live.length : 0
+    const discipline = live.length ? live.reduce((s, t) => {
       if (t.followedPlan === 'Yes')       return s + 1
       if (t.followedPlan === 'Partially') return s + 0.5
       return s
-    }, 0) / trades.length
+    }, 0) / live.length : 0
     const faithScore = Math.round(
       winRate              * 0.35 +
       discipline * 100     * 0.20 +
@@ -229,13 +221,13 @@ export default function Leaderboard() {
       (avgFaith / 5 )*100  * 0.15
     )
     // Use the date of the earliest trade as this user's "seniority" timestamp
-    const earliestTrade = [...trades].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0))[0]
+    const earliestTrade = [...live, ...backtestTrades(trades)].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0))[0]
     const joinedAt = earliestTrade?.createdAt ? new Date(earliestTrade.createdAt).toISOString() : null
 
     return {
       email:        myEmail,
       display_name: displayName,
-      total_trades: trades.length,
+      total_trades: live.length,
       wins,
       win_rate:     Math.round(winRate * 10) / 10,
       total_pnl:    Math.round(totalPnl * 100) / 100,
@@ -245,6 +237,9 @@ export default function Leaderboard() {
       avg_faith:    Math.round(avgFaith * 10) / 10,
       discipline:   Math.round(discipline * 1000) / 1000,
       faith_score:  faithScore,
+      backtest_trades:   btStats.count,
+      backtest_pnl:      btStats.pnl,
+      backtest_win_rate: btStats.winRate,
       joined_at:    joinedAt,
     }
   }, [trades, myEmail, currentName, emailPrefix])

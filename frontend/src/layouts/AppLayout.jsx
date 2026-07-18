@@ -36,7 +36,7 @@ const VERSES = [
 ]
 
 const TRADING_ITEMS = [
-  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/app/log', label: 'Log Trade', icon: PlusCircle },
   { to: '/app/dayview', label: 'Day View', icon: CalendarDays },
   { to: '/app/tradeview', label: 'Trade View', icon: TrendingUp },
@@ -244,7 +244,7 @@ export default function AppLayout() {
     else if (location.pathname === '/app/admin-users')    setActiveRail('admin-users')
     else if (location.pathname === '/app/backtest')       setActiveRail('backtest')
     else if (location.pathname === '/app/faith-ai')       setActiveRail('faith-ai')
-    else if (!location.pathname.includes('/app'))         setActiveRail('trading')
+    else                                                  setActiveRail('trading')
   }, [location.pathname])
 
   // The <main> scroll container persists across route changes (only <Outlet/> swaps),
@@ -301,7 +301,7 @@ export default function AppLayout() {
             icon={BarChart2}
             label="Trading"
             isActive={activeRail === 'trading'}
-            onClick={() => { setActiveRail('trading'); navigate('/app') }}
+            onClick={() => { setActiveRail('trading'); navigate('/app/dashboard') }}
           />
 
           <RailBtn
@@ -369,7 +369,7 @@ export default function AppLayout() {
 
                 {/* Way back out of the focused AI view */}
                 <div style={{ marginTop: 'auto', paddingTop: 10, borderTop: '1px solid #2E2E2E' }}>
-                  <button onClick={() => navigate('/app')} style={{ ...navLinkStyle({ isActive: false }), width: '100%', border: 'none', cursor: 'pointer', font: 'inherit', textAlign: 'left' }}>
+                  <button onClick={() => navigate('/app/dashboard')} style={{ ...navLinkStyle({ isActive: false }), width: '100%', border: 'none', cursor: 'pointer', font: 'inherit', textAlign: 'left' }}>
                     <ArrowLeft size={15} />
                     <span>Back to app</span>
                   </button>

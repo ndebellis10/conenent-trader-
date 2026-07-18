@@ -107,7 +107,7 @@ export default function AdminUsers() {
   const [lastRefresh, setLastRefresh] = useState(null)
 
   if (!isAdmin) {
-    navigate('/app')
+    navigate('/app/dashboard')
     return null
   }
 
@@ -185,7 +185,7 @@ export default function AdminUsers() {
     })
 
     useAdminStore.getState().setViewingUser(user)
-    navigate('/app')
+    navigate('/app/dashboard')
   }
 
   function exitView() {

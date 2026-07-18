@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, RequireAuth } from './contexts/AuthContext'
 import CookieBanner from './components/CookieBanner'
@@ -52,7 +52,9 @@ export default function App() {
 
           {/* Protected app */}
           <Route path="/app" element={<RequireAuth><AppLayout /></RequireAuth>}>
-            <Route index          element={<Dashboard />} />
+            {/* Landing on the app goes to Ask Alan; the dashboard has its own path */}
+            <Route index          element={<Navigate to="/app/faith-ai" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
             <Route path="log"     element={<LogTrade />} />
             <Route path="history" element={<TradeHistory />} />
             <Route path="analytics"      element={<Analytics />} />

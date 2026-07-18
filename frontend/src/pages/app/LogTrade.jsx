@@ -864,7 +864,7 @@ export default function LogTrade() {
           {/* Actions */}
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
-              onClick={() => navigate('/app')}
+              onClick={() => navigate('/app/dashboard')}
               className="btn-gold"
               style={{ padding: '14px 36px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontSize: '1rem', fontWeight: 600 }}
             >

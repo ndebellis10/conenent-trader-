@@ -20,6 +20,7 @@ import GaugeKPIs from '../../components/app/GaugeKPIs'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, subDays, startOfWeek, addDays, startOfDay, endOfDay } from 'date-fns'
 import DateRangePicker from '../../components/app/DateRangePicker'
 import { VERSES } from '../../lib/verses'
+import { liveTrades } from '../../lib/tradeFilters'
 
 /* ── Pick 3 unique verses for today using a day-number hash ── */
 function getDayVerses() {
@@ -532,7 +533,9 @@ function SectionHead({ label }) {
 
 /* ─── Main Dashboard ──────────────────────────────────────── */
 export default function Dashboard() {
-  const { trades: allTrades } = useTradeStore()
+  const { trades: rawTrades } = useTradeStore()
+  // Backtest-tagged imports are paper results — keep them out of live performance
+  const allTrades = useMemo(() => liveTrades(rawTrades), [rawTrades])
   const { isAdmin } = useAuth()
   const viewingUser = useAdminStore(s => s.viewingUser)
   const navigate = useNavigate()
