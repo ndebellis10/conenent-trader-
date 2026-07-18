@@ -1,7 +1,7 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { CheckCircle, Loader2, Star, ImagePlus, X, Plus, Upload } from 'lucide-react'
 import { useTradeStore } from '../../store/tradeStore'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { compressImage } from '../../lib/imageUtils'
 import TradeChartAnnotator from '../../components/app/TradeChartAnnotator'
@@ -451,6 +451,8 @@ export default function LogTrade() {
   const playbook          = useTradeStore(s => s.playbook ?? EMPTY_ARR)
   const allTrades         = useTradeStore(s => s.trades   ?? EMPTY_ARR)
   const navigate = useNavigate()
+  const location = useLocation()
+  const isBacktest = !!location.state?.backtest
   const { isAdmin } = useAuth()
 
   // ALL hooks must come before any conditional return (React Rules of Hooks)
@@ -513,6 +515,9 @@ export default function LogTrade() {
   const [csvImporting,  setCsvImporting]  = useState(false)
   const [csvDragOver,   setCsvDragOver]   = useState(false)
   const csvFileRef = useRef(null)
+
+  // Backtest mode (arrived from the Backtesting page) — auto-open the CSV importer
+  useEffect(() => { if (isBacktest) setShowCsvImport(true) }, [isBacktest])
 
   // Form fields — plain state, no react-hook-form
   const [date,          setDate]          = useState(new Date().toISOString().split('T')[0])
@@ -715,10 +720,33 @@ export default function LogTrade() {
   function handleCsvImport() {
     if (!csvParsed.length) return
     setCsvImporting(true)
-    csvParsed.forEach(t => addTrade(t))
-    toast.success(`✅ ${csvParsed.length} trade${csvParsed.length !== 1 ? 's' : ''} imported!`)
+    csvParsed.forEach(t => addTrade(isBacktest ? { ...t, tags: [...(t.tags || []), 'Backtest'] } : t))
+    toast.success(`✅ ${csvParsed.length} ${isBacktest ? 'backtest ' : ''}trade${csvParsed.length !== 1 ? 's' : ''} imported!`)
     setCsvParsed([]); setShowCsvImport(false); setCsvImporting(false)
     navigate('/app/history')
+  }
+
+  // Load a single imported trade into the form so the user can finish journaling + save it
+  function loadTradeIntoForm(t) {
+    if (!t) return
+    setDate(t.date || new Date().toISOString().split('T')[0])
+    setSymbol(t.symbol || '')
+    setDirection(t.direction || 'Long')
+    setTimeframe(t.timeframe || 'Day Trade')
+    setEntryPrice(t.entryPrice || '')
+    setExitPrice(t.exitPrice || '')
+    setPositionSize(t.positionSize || '')
+    setCommission(t.commission || '')
+    setTradeNotes(t.tradeNotes && t.tradeNotes !== 'Imported from CSV' && t.tradeNotes !== 'Imported from Tradovate' ? t.tradeNotes : '')
+    // If the CSV already carries a P&L but no entry/exit prices, lock it in manually
+    if (t.netPnl != null && (!t.entryPrice || !t.exitPrice)) {
+      setManualNetPnl(String(t.netPnl))
+      setManualResult(t.result || (parseFloat(t.netPnl) > 0 ? 'Win' : parseFloat(t.netPnl) < 0 ? 'Loss' : 'Breakeven'))
+    }
+    setShowCsvImport(false)
+    resetCsvState()
+    toast.success('Trade loaded — add your journaling below, then hit Save.')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function validateBeforeSubmit(data) {
@@ -1009,10 +1037,18 @@ export default function LogTrade() {
                     </tbody>
                   </table>
                 </div>
-                <button type="button" onClick={handleCsvImport} disabled={csvImporting} className="btn-gold"
-                  style={{ width: '100%', padding: '12px', borderRadius: 10, border: 'none', cursor: csvImporting ? 'not-allowed' : 'pointer', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: csvImporting ? 0.7 : 1 }}>
-                  {csvImporting ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Importing…</> : <><Upload size={16} /> Import {csvParsed.length} Trade{csvParsed.length !== 1 ? 's' : ''}</>}
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {/* Load first trade into the form so the user can journal it, then save */}
+                  <button type="button" onClick={() => loadTradeIntoForm(csvParsed[0])} disabled={csvImporting} className="btn-gold"
+                    style={{ width: '100%', padding: '12px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                    <Plus size={16} /> Load into form to journal{csvParsed.length > 1 ? ' (1st trade)' : ''}
+                  </button>
+                  {/* Bulk import all rows straight to history (no journaling) */}
+                  <button type="button" onClick={handleCsvImport} disabled={csvImporting}
+                    style={{ width: '100%', padding: '11px', borderRadius: 10, border: '1px solid #3A3A3A', background: 'transparent', color: '#A0A0A0', cursor: csvImporting ? 'not-allowed' : 'pointer', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: csvImporting ? 0.7 : 1 }}>
+                    {csvImporting ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Importing…</> : <><Upload size={16} /> Save all {csvParsed.length} to history (skip journaling)</>}
+                  </button>
+                </div>
               </div>
             )}
 

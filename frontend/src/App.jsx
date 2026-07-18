@@ -18,6 +18,7 @@ import FaithJournal      from './pages/app/FaithJournal'
 import Settings          from './pages/app/Settings'
 import DayView           from './pages/app/DayView'
 import DailyGoals        from './pages/app/DailyGoals'
+import Backtest          from './pages/app/Backtest'
 import TradeView         from './pages/app/TradeView'
 import Reports           from './pages/app/Reports'
 
@@ -61,6 +62,7 @@ export default function App() {
             <Route path="goals"          element={<DailyGoals />} />
             <Route path="tradeview"      element={<TradeView />} />
             <Route path="news"           element={<News />} />
+            <Route path="backtest"       element={<Backtest />} />
             <Route path="reports"        element={<Reports />} />
             <Route path="settings"       element={<Settings />} />
             <Route path="leaderboard"   element={<Leaderboard />} />

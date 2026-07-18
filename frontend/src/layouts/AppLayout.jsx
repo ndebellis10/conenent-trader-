@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import {
   LayoutDashboard, PlusCircle, BarChart2, BookOpen, Cross, Settings,
   LogOut, Menu, X, CalendarDays, TrendingUp, FileBarChart2, ListChecks,
-  Trophy, Save, CheckCircle, ShieldAlert, Sparkles, Newspaper,
+  Trophy, Save, CheckCircle, ShieldAlert, Sparkles, Newspaper, FlaskConical,
   Cloud, CloudOff, Loader2,
 } from 'lucide-react'
 import { isSecureMode, serverCreateTrade } from '../lib/syncManager'
@@ -234,6 +234,7 @@ export default function AppLayout() {
   useEffect(() => {
     if      (location.pathname === '/app/leaderboard')    setActiveRail('leaderboard')
     else if (location.pathname === '/app/admin-users')    setActiveRail('admin-users')
+    else if (location.pathname === '/app/backtest')       setActiveRail('backtest')
     else if (location.pathname === '/app/faith-ai')       setActiveRail('faith-ai')
     else if (!location.pathname.includes('/app'))         setActiveRail('trading')
   }, [location.pathname])
@@ -292,6 +293,14 @@ export default function AppLayout() {
 
           {/* Divider */}
           <div style={{ width: 28, height: 1, background: '#2E2E2E', margin: '4px auto' }} />
+
+          {/* Backtesting — all users (currently a "coming soon" page + CSV upload) */}
+          <RailBtn
+            icon={FlaskConical}
+            label="Backtesting"
+            isActive={activeRail === 'backtest'}
+            onClick={() => { setActiveRail('backtest'); navigate('/app/backtest') }}
+          />
 
           {/* Admin-only: All Traders */}
           {isAdmin && (
