@@ -71,7 +71,24 @@ export default async function handler(req, res) {
   // ── Shared helper: read leaderboard file directly from GitHub Contents API ──
   // Decodes base64 content in-process — bypasses raw.githubusercontent.com CDN
   // caching so deletes and syncs are always reflected immediately.
+  //
+  // The repo is public, so reads work without a token. Without one we fall back
+  // to the raw CDN (writes still require GITHUB_TOKEN). If the repo is ever made
+  // private, this fallback stops working and GITHUB_TOKEN becomes required.
   async function readFile() {
+    if (!token) {
+      try {
+        const rawR = await fetch(
+          'https://raw.githubusercontent.com/ndebellis10/conenent-trader-/main/backend/data/leaderboard.json',
+          { headers: { 'User-Agent': 'covenant-trader', 'Cache-Control': 'no-cache' } }
+        )
+        if (!rawR.ok) return { traders: [], banned: [], sha: null }
+        const data = await rawR.json()
+        return { traders: data.traders || [], banned: data.banned || [], sha: null }
+      } catch {
+        return { traders: [], banned: [], sha: null }
+      }
+    }
     const metaR = await fetch(
       'https://api.github.com/repos/ndebellis10/conenent-trader-/contents/backend/data/leaderboard.json',
       { headers: { Authorization: `token ${token}`, 'User-Agent': 'covenant-trader', Accept: 'application/vnd.github.v3+json', 'Cache-Control': 'no-cache' } }
@@ -98,7 +115,6 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    if (!token) return res.status(200).json({ traders: [] })
     try {
       const { traders, banned } = await readFile()
       const HIDDEN = ['nickisthebesttrader@faithtrader.app']
