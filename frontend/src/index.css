@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #1A1A1A;
+  --color-bg-secondary: #242424;
+  --color-bg-tertiary: #2E2E2E;
+  --color-gold: #3B82F6;
+  --color-gold-hover: #60A5FA;
+  --color-gold-muted: #2563EB;
+  --color-text-primary: #F5F5F5;
+  --color-text-secondary: #A0A0A0;
+  --color-text-muted: #666666;
+  --color-border: #3A3A3A;
+  --color-success: #4CAF7D;
+  --color-danger: #E05252;
+  --color-neutral: #7A7A7A;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: #1A1A1A;
+  color: #F5F5F5;
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+#root { width: 100%; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #1A1A1A; }
+::-webkit-scrollbar-thumb { background: #3A3A3A; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3B82F6; }
+
+.gold-glow { box-shadow: 0 0 20px rgba(59,130,246,0.3); }
+.gold-glow-sm { box-shadow: 0 0 10px rgba(59,130,246,0.2); }
+.gold-text-glow { text-shadow: 0 0 20px rgba(59,130,246,0.5); }
+.card-hover:hover { transform: translateY(-4px); border-color: #3B82F6 !important; box-shadow: 0 0 20px rgba(59,130,246,0.2); transition: all 0.3s ease; }
+.card-hover { transition: all 0.3s ease; }
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #3B82F6 !important;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.15);
+}
+
+/* Override browser autofill white background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px #2E2E2E inset !important;
+  -webkit-text-fill-color: #F5F5F5 !important;
+  caret-color: #F5F5F5;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.btn-gold {
+  background: #3B82F6;
+  color: #FFFFFF;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.btn-gold:hover {
+  background: #60A5FA;
+  box-shadow: 0 0 20px rgba(59,130,246,0.4);
+}
+
+.btn-gold-outline {
+  border: 1px solid #3B82F6;
+  color: #3B82F6;
+  background: transparent;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.btn-gold-outline:hover {
+  background: rgba(59,130,246,0.1);
+  box-shadow: 0 0 15px rgba(59,130,246,0.3);
+}

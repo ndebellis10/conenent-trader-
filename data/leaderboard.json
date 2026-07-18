@@ -1,0 +1,22 @@
+{
+  "traders": [
+    {
+      "email": "nickdebellis07@gmail.com",
+      "display_name": "Nicholas",
+      "total_trades": 7,
+      "wins": 6,
+      "win_rate": 85.7,
+      "total_pnl": 920,
+      "avg_rr": null,
+      "avg_entry": 6.7,
+      "avg_exit": 6.7,
+      "avg_faith": 0.7,
+      "discipline": 0.571,
+      "faith_score": 64,
+      "name_confirmed": true,
+      "joined_at": "2026-07-09T14:36:50.423Z",
+      "updated_at": "2026-07-09T22:34:46.340Z"
+    }
+  ],
+  "banned": []
+}

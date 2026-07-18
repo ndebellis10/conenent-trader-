@@ -1,0 +1,7 @@
+# Python backend (Vercel Python runtime). Spike: auth endpoint on FastAPI.
+fastapi
+supabase
+httpx
+email-validator
+# dev-only (Vercel provides its own ASGI server; needed for local `uvicorn`):
+uvicorn[standard]

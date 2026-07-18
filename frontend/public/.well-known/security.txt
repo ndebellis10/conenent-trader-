@@ -1,0 +1,11 @@
+Contact: mailto:security@faithtrader.app
+Preferred-Languages: en
+Scope: https://faith-trader.vercel.app
+Expires: 2027-01-01T00:00:00.000Z
+Policy: https://faith-trader.vercel.app/privacy
+Acknowledgments: https://faith-trader.vercel.app/security-acknowledgments
+
+# Responsible disclosure:
+# If you discover a security vulnerability, please email security@faithtrader.app
+# with a description of the issue. We will respond within 48 hours.
+# Please do not publicly disclose the vulnerability until we have had a chance to address it.
