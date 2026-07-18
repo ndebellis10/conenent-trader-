@@ -354,30 +354,6 @@ function PatternSummaryTab({ trades, userId }) {
   )
 }
 
-/* ── Stats strip ─────────────────────────────────────────── */
-function StatsStrip({ stats }) {
-  if (!stats) return <span style={{ color: '#444', fontSize: '0.8rem' }}>No trades yet</span>
-  const streakColor = stats.streak > 0 ? '#4CAF7D' : stats.streak < 0 ? '#E05252' : '#888'
-  const streakLabel = stats.streak > 0 ? `${stats.streak}W streak` : stats.streak < 0 ? `${Math.abs(stats.streak)}L streak` : '—'
-  return (
-    <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-      {[
-        ['Win Rate',  `${stats.winRate}%`,        stats.winRate >= 50 ? '#4CAF7D' : '#E05252'],
-        ['Total P&L', `$${stats.totalPnl}`,       parseFloat(stats.totalPnl) >= 0 ? '#4CAF7D' : '#E05252'],
-        ['Avg Win',   `+$${stats.avgWin}`,        '#4CAF7D'],
-        ['Avg Loss',  `-$${stats.avgLoss}`,       '#E05252'],
-        ['This Week', `$${stats.weekPnl}`,        parseFloat(stats.weekPnl) >= 0 ? '#4CAF7D' : '#E05252'],
-        ['Streak',    streakLabel,                 streakColor],
-      ].map(([l, v, c]) => (
-        <div key={l}>
-          <div style={{ color: '#555', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{l}</div>
-          <div style={{ color: c, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '0.88rem', marginTop: 2 }}>{v}</div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 /* ── Main page ───────────────────────────────────────────── */
 export default function FaithAI() {
   const { trades, settings, playbook } = useTradeStore()
@@ -408,23 +384,12 @@ export default function FaithAI() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
 
-      {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg,rgba(59,130,246,0.08),rgba(30,30,30,0.5))', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 16, padding: '20px 24px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <AlanMascot size={30} color="#3B82F6" />
-            </div>
-            <div>
-              <h1 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: '1.3rem', color: '#F5F5F5', margin: 0 }}>Ask Alan Coach</h1>
-              <p style={{ color: '#555', fontSize: '0.78rem', margin: '2px 0 0' }}>
-                {viewingUser ? `Viewing: ${viewingUser.name || viewingUser.email}` : `${trades.length} trades analyzed`}
-              </p>
-            </div>
-          </div>
-          <StatsStrip stats={stats} />
+      {/* Admin context only — the page header is gone; Home carries the greeting */}
+      {viewingUser && (
+        <div style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, padding: '10px 16px', color: '#3B82F6', fontSize: '0.82rem', fontWeight: 600 }}>
+          Viewing: {viewingUser.name || viewingUser.email}
         </div>
-      </div>
+      )}
 
       {/* Content — section switching lives in the app sidebar while you're in Ask Alan */}
       <div style={{ minWidth: 0 }}>
