@@ -382,6 +382,7 @@ function GreetingBanner({ trades, onLogTrade, isAdmin }) {
   const todayTrades = trades.filter(t => format(_safeD(t.createdAt), 'yyyy-MM-dd') === todayStr)
   const todayPnl = todayTrades.reduce((s, t) => s + (parseFloat(t.netPnl) || 0), 0)
   const hasTodayTrades = todayTrades.length > 0
+  const netPnl = trades.reduce((s, t) => s + (parseFloat(t.netPnl) || 0), 0)
 
   return (
     <div style={{
@@ -409,6 +410,17 @@ function GreetingBanner({ trades, onLogTrade, isAdmin }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative' }}>
+        {/* Overall Net P&L — always shown, top-right */}
+        <div style={{
+          background: netPnl >= 0 ? 'rgba(76,175,125,0.08)' : 'rgba(224,82,82,0.08)',
+          border: `1px solid ${netPnl >= 0 ? 'rgba(76,175,125,0.3)' : 'rgba(224,82,82,0.3)'}`,
+          borderRadius: '10px', padding: '8px 16px', textAlign: 'center', minWidth: '100px',
+        }}>
+          <div style={{ color: '#666', fontSize: '0.63rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '3px', fontWeight: 600 }}>Net P&L</div>
+          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: '1.05rem', color: netPnl >= 0 ? '#4CAF7D' : '#E05252' }}>
+            {netPnl >= 0 ? '+' : '-'}${Math.abs(netPnl).toFixed(2)}
+          </div>
+        </div>
         {hasTodayTrades && (
           <div style={{
             background: todayPnl >= 0 ? 'rgba(76,175,125,0.08)' : 'rgba(224,82,82,0.08)',
