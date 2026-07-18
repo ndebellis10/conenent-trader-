@@ -9,8 +9,15 @@ import {
   LayoutDashboard, PlusCircle, BarChart2, BookOpen, Cross, Settings,
   LogOut, Menu, X, CalendarDays, TrendingUp, FileBarChart2, ListChecks,
   Trophy, Save, CheckCircle, ShieldAlert, Sparkles, Newspaper, FlaskConical,
-  Cloud, CloudOff, Loader2, Home, ArrowLeft,
+  Cloud, CloudOff, Loader2, Home, ArrowLeft, Upload,
 } from 'lucide-react'
+
+/* Backtesting's own sections — replace the Trading Journal nav on that page. */
+const BACKTEST_NAV = [
+  { id: 'dashboard', label: 'Dashboard',  icon: LayoutDashboard, to: '/app/backtest' },
+  { id: 'trades',    label: 'BT Trades',  icon: ListChecks,      to: '/app/backtest?tab=trades' },
+  { id: 'import',    label: 'Import CSV', icon: Upload,          to: '/app/backtest?tab=import' },
+]
 
 /* Ask Alan's own sections — these replace the Trading Journal nav while on that page. */
 const ASK_ALAN_NAV = [
@@ -257,8 +264,15 @@ export default function AppLayout() {
     : TRADING_ITEMS
 
   // Inside Ask Alan the sidebar shows the AI's sections instead of the journal nav
-  const inAskAlan = location.pathname === '/app/faith-ai'
-  const aiTab     = new URLSearchParams(location.search).get('tab') || 'home'
+  const inAskAlan   = location.pathname === '/app/faith-ai'
+  const inBacktest  = location.pathname === '/app/backtest'
+  const sectionTab  = new URLSearchParams(location.search).get('tab')
+  const aiTab       = sectionTab || 'home'
+  const btTab       = sectionTab || 'dashboard'
+  // Either focused area replaces the journal nav with its own sections
+  const focusNav    = inAskAlan ? ASK_ALAN_NAV : inBacktest ? BACKTEST_NAV : null
+  const focusActive = inAskAlan ? aiTab : btTab
+  const focusLabel  = inAskAlan ? 'Ask Alan' : 'Backtesting'
 
   const navLinkStyle = ({ isActive }) => ({
     display: 'flex', alignItems: 'center', gap: '9px',
@@ -349,15 +363,15 @@ export default function AppLayout() {
         }}>
           <div style={{ padding: '14px 12px 10px', borderBottom: '1px solid #2E2E2E' }}>
             <span style={{ color: '#3B82F6', fontSize: '0.66rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em' }}>
-              {inAskAlan ? 'Ask Alan' : 'Trading Journal'}
+              {focusNav ? focusLabel : 'Trading Journal'}
             </span>
           </div>
 
           <nav style={{ flex: 1, padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
-            {inAskAlan ? (
+            {focusNav ? (
               <>
-                {ASK_ALAN_NAV.map(item => {
-                  const active = aiTab === item.id
+                {focusNav.map(item => {
+                  const active = focusActive === item.id
                   return (
                     <button key={item.id} onClick={() => navigate(item.to)} style={{ ...navLinkStyle({ isActive: active }), width: '100%', border: 'none', cursor: 'pointer', font: 'inherit', textAlign: 'left' }}>
                       <item.icon size={15} />

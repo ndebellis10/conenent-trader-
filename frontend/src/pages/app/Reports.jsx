@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useTradeStore } from '../../store/tradeStore'
 import { avgTradeDuration, formatDuration } from '../../lib/tradeTime'
+import { liveTrades, backtestTrades } from '../../lib/tradeFilters'
+import BacktestReport from '../../components/app/BacktestReport'
 import { format } from 'date-fns'
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -1031,11 +1033,15 @@ function DayOfWeekBreakdown({ trades }) {
    MAIN PAGE
 ═══════════════════════════════════════════ */
 export default function Reports() {
-  const { trades } = useTradeStore()
+  const { trades: allTrades } = useTradeStore()
   const navigate   = useNavigate()
   const [tab, setTab] = useState('performance')
 
-  if (!trades.length) return (
+  // Live tabs report real trades only; the Backtesting tab reports the rest
+  const trades   = useMemo(() => liveTrades(allTrades), [allTrades])
+  const btTrades = useMemo(() => backtestTrades(allTrades), [allTrades])
+
+  if (!allTrades.length) return (
     <div style={{ textAlign: 'center', padding: '80px 20px' }}>
       <div style={{ fontSize: '3rem', marginBottom: '16px' }}>✝</div>
       <p style={{ color: '#A0A0A0', marginBottom: '20px' }}>No trades yet. Log your first trade to see your reports.</p>
@@ -1057,6 +1063,7 @@ export default function Reports() {
               ['performance', 'Performance'],
               ['psychology',  'Psychology'],
               ['execution',   'Execution'],
+              ['backtest',    'Backtesting'],
             ].map(([v, label]) => (
               <button key={v} onClick={() => setTab(v)}
                 style={{
@@ -1079,6 +1086,7 @@ export default function Reports() {
       {tab === 'performance' && <PerformanceView        trades={trades} />}
       {tab === 'psychology'  && <PsychologyReport      trades={trades} />}
       {tab === 'execution'   && <ExecutionQualityReport trades={trades} />}
+      {tab === 'backtest'    && <BacktestReport trades={btTrades} onImport={() => navigate('/app/backtest')} />}
     </div>
   )
 }

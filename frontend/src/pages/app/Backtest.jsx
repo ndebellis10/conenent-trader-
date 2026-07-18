@@ -1,42 +1,112 @@
-import { useNavigate } from 'react-router-dom'
+import { useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FlaskConical, Upload, Clock } from 'lucide-react'
+import { useTradeStore } from '../../store/tradeStore'
+import { backtestTrades } from '../../lib/tradeFilters'
+import BacktestReport from '../../components/app/BacktestReport'
 
-/* Backtesting — "coming soon" placeholder. The full replay/sessions/reports
-   suite is not built yet, but users can already import backtest trades from a
-   CSV (routed to the Log Trade importer, which tags them "Backtest"). */
+/* Backtesting. Sections are driven by ?tab= and rendered in the app sidebar
+   while you're on this page — see BACKTEST_NAV in layouts/AppLayout.jsx.
+   Keep the two lists in sync. */
+const BACKTEST_TABS = ['dashboard', 'import', 'trades']
+
+const card = { background: '#1E1E1E', border: '1px solid #2A2A2A', borderRadius: 14 }
+const money = v => `${v >= 0 ? '+' : '-'}$${Math.abs(v).toFixed(2)}`
+
 export default function Backtest() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const { trades: allTrades } = useTradeStore()
 
+  const tab = BACKTEST_TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'dashboard'
+  const bt  = useMemo(() => backtestTrades(allTrades), [allTrades])
+
+  const goImport = () => navigate('/app/log', { state: { backtest: true } })
+
+  if (tab === 'dashboard') {
+    return <BacktestReport trades={bt} onImport={goImport} />
+  }
+
+  if (tab === 'trades') {
+    const sorted = [...bt].sort(
+      (a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0)
+    )
+    return (
+      <div style={{ ...card, padding: '20px 22px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+          <span style={{ color: '#F5F5F5', fontSize: '0.92rem', fontWeight: 700 }}>
+            Backtest Trades <span style={{ color: '#666', fontWeight: 500 }}>({sorted.length})</span>
+          </span>
+          <button onClick={goImport} style={{ background: 'none', border: 'none', color: '#B98CE0', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
+            Import more →
+          </button>
+        </div>
+
+        {!sorted.length ? (
+          <p style={{ color: '#666', fontSize: '0.86rem', padding: '30px 0', textAlign: 'center' }}>
+            No backtest trades yet — import a CSV to get started.
+          </p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem' }}>
+              <thead>
+                <tr>
+                  {['Date', 'Symbol', 'Side', 'Result', 'Net P&L'].map(h => (
+                    <th key={h} style={{ textAlign: h === 'Net P&L' ? 'right' : 'left', color: '#6A6A6A', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.07em', padding: '0 10px 10px 0', fontWeight: 700 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((t, i) => {
+                  const pnl = parseFloat(t.netPnl) || 0
+                  const rc = t.result === 'Win' ? '#4CAF7D' : t.result === 'Loss' ? '#E05252' : '#888'
+                  return (
+                    <tr key={t.id || i} style={{ borderTop: '1px solid #262626' }}>
+                      <td style={{ padding: '10px 10px 10px 0', color: '#A8A8A8' }}>{String(t.date || '').slice(0, 10) || '—'}</td>
+                      <td style={{ padding: '10px 10px 10px 0', color: '#E4E4E4', fontWeight: 600 }}>{t.symbol || '—'}</td>
+                      <td style={{ padding: '10px 10px 10px 0', color: '#8A8A8A' }}>{t.direction || '—'}</td>
+                      <td style={{ padding: '10px 10px 10px 0', color: rc, fontWeight: 600 }}>{t.result || '—'}</td>
+                      <td style={{ padding: '10px 0', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: pnl >= 0 ? '#4CAF7D' : '#E05252' }}>{money(pnl)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  /* import */
   return (
     <div style={{ maxWidth: 720, margin: '0 auto' }}>
-      {/* Coming soon hero */}
-      <div style={{ textAlign: 'center', padding: '40px 24px', background: 'linear-gradient(160deg,#242424,#1E1E1E)', border: '1px solid #3A3A3A', borderRadius: 16, marginBottom: 20 }}>
-        <div style={{ fontSize: '2.4rem', marginBottom: 10, filter: 'drop-shadow(0 0 14px rgba(59,130,246,0.4))' }}>⚗️</div>
-        <h1 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: '1.5rem', color: '#F5F5F5', margin: '0 0 8px' }}>Backtesting — Coming Soon</h1>
-        <p style={{ color: '#888', fontSize: '0.9rem', maxWidth: 470, margin: '0 auto', lineHeight: 1.6 }}>
-          Replay sessions, paper trading, and backtest reports are being built. In the meantime, you can already import your backtest trades from a CSV below.
+      <div style={{ textAlign: 'center', padding: '36px 24px', background: 'linear-gradient(160deg,#242424,#1E1E1E)', border: '1px solid #3A3A3A', borderRadius: 16, marginBottom: 18 }}>
+        <div style={{ fontSize: '2.2rem', marginBottom: 10, filter: 'drop-shadow(0 0 14px rgba(185,140,224,0.4))' }}>⚗️</div>
+        <h1 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: '1.4rem', color: '#F5F5F5', margin: '0 0 8px' }}>Backtesting</h1>
+        <p style={{ color: '#888', fontSize: '0.88rem', maxWidth: 470, margin: '0 auto', lineHeight: 1.6 }}>
+          Replay sessions and paper trading are still being built. You can already import
+          backtest trades from a CSV — they get their own dashboard, separate from live results.
         </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
-          {['Replay Sessions', 'Paper Trading', 'Backtest Reports'].map(f => (
-            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#666', fontSize: '0.78rem', background: '#1A1A1A', border: '1px solid #2E2E2E', borderRadius: 20, padding: '6px 14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
+          {['Replay Sessions', 'Paper Trading'].map(f => (
+            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#666', fontSize: '0.76rem', background: '#1A1A1A', border: '1px solid #2E2E2E', borderRadius: 20, padding: '6px 14px' }}>
               <Clock size={13} /> {f}
             </div>
           ))}
         </div>
       </div>
 
-      {/* CSV upload CTA */}
-      <div style={{ background: '#242424', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 14, padding: '26px 24px', textAlign: 'center' }}>
-        <FlaskConical size={26} color="#3B82F6" />
+      <div style={{ background: '#242424', border: '1px solid rgba(185,140,224,0.28)', borderRadius: 14, padding: '26px 24px', textAlign: 'center' }}>
+        <FlaskConical size={26} color="#B98CE0" style={{ display: 'block', margin: '0 auto' }} />
         <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '1.05rem', color: '#F5F5F5', margin: '10px 0 6px' }}>Upload Backtest CSV</h2>
         <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: 18, maxWidth: 440, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
-          Import trades from your backtesting. They'll be tagged{' '}
-          <strong style={{ color: '#3B82F6' }}>Backtest</strong> so you can tell them apart from live trades.
+          Imported trades are tagged <strong style={{ color: '#B98CE0' }}>Backtest</strong>, so they stay out of
+          your live P&amp;L, Covenant Score and leaderboard rank.
         </p>
         <button
-          onClick={() => navigate('/app/log', { state: { backtest: true } })}
-          className="btn-gold"
-          style={{ padding: '12px 26px', borderRadius: 12, border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+          onClick={goImport}
+          style={{ padding: '12px 26px', borderRadius: 12, border: '1px solid rgba(185,140,224,0.4)', background: 'rgba(185,140,224,0.14)', color: '#B98CE0', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 8 }}
         >
           <Upload size={16} /> Import Backtest CSV
         </button>
