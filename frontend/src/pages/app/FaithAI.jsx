@@ -45,33 +45,84 @@ function computeStats(trades) {
   }
 }
 
-const SUGGESTED = [
-  'What should I work on the most?',
-  "What am I best at?",
-  'How am I doing this week?',
-  'Am I revenge trading?',
-  'Which session makes me the most money?',
-  'Give me a pre-market prayer',
+/* Starter cards shown on the Ask Alan home screen (Zella-AI style). */
+const HOME_CARDS = [
+  { icon: '📊', title: 'Review my week',        prompt: 'How am I doing this week?' },
+  { icon: '🎯', title: 'What should I work on', prompt: 'What should I work on the most?' },
+  { icon: '💪', title: "What I'm best at",       prompt: 'What am I best at?' },
+  { icon: '🔁', title: 'Am I revenge trading?',  prompt: 'Am I revenge trading?' },
+  { icon: '⏰', title: 'My most profitable session', prompt: 'Which session makes me the most money?' },
+  { icon: '🙏', title: 'Pre-market prayer',      prompt: 'Give me a pre-market prayer' },
 ]
 
-function makeInitMessage(trades, stats) {
+const greetingFor = () => {
+  const h = new Date().getHours()
+  return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
+}
+
+function homeSubtitle(trades, stats) {
   if (!trades || trades.length === 0) {
-    return "Peace be with you, trader. I'm Alan — your personal trading coach and spiritual guide. Start logging trades and I'll analyze your patterns, call out your weaknesses, and help you grow. What's on your mind?"
+    return "I'm Alan, your AI trading coach. Start logging trades and I'll spot your patterns, call out weaknesses, and help you grow — or just ask me anything below."
   }
   const streak = stats?.streak || 0
-  const streakNote = streak > 1 ? ` You're on a ${streak}-win streak right now.`
+  const streakNote = streak > 1 ? ` You're on a ${streak}-win streak.`
     : streak < -1 ? ` Heads up — you're in a ${Math.abs(streak)}-loss streak.` : ''
   const pnlSign = parseFloat(stats?.totalPnl || 0) >= 0 ? '+' : ''
-  return `Peace be with you. I've reviewed your full trading journal — ${trades.length} trades, ${stats?.winRate ?? 0}% win rate, ${pnlSign}$${stats?.totalPnl ?? '0.00'} total P&L.${streakNote} I know what you're doing well and where you're bleeding. Ask me anything — or ask "what should I work on?" and I'll give it to you straight.`
+  return `I've reviewed all ${trades.length} of your trades — ${stats?.winRate ?? 0}% win rate, ${pnlSign}$${stats?.totalPnl ?? '0.00'} P&L.${streakNote} Ask me anything, or tap a starter below.`
+}
+
+/* ── Ask Alan home screen (shown before a conversation starts) ── */
+function AlanHome({ trades, stats, userName, onPick }) {
+  const cardBase = {
+    display: 'flex', alignItems: 'center', gap: 11, textAlign: 'left',
+    padding: '13px 15px', borderRadius: 12,
+    border: '1px solid rgba(59,130,246,0.16)', background: 'rgba(255,255,255,0.02)',
+    color: '#C8C8C8', fontSize: '0.83rem', fontWeight: 600, cursor: 'pointer',
+    transition: 'all 0.15s', fontFamily: 'Inter, sans-serif',
+  }
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, padding: '36px 24px', textAlign: 'center' }}>
+      {/* Avatar with golden glow */}
+      <div style={{ position: 'relative', width: 100, height: 100, display: 'grid', placeItems: 'center' }}>
+        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(201,168,76,0.38), rgba(59,130,246,0.16) 58%, transparent 72%)', filter: 'blur(7px)', animation: 'alanGlow 3.4s ease-in-out infinite' }} />
+        <AlanMascot size={86} style={{ position: 'relative', border: '2px solid rgba(201,168,76,0.55)', boxShadow: '0 0 24px rgba(59,130,246,0.22)' }} />
+      </div>
+
+      {/* Greeting */}
+      <div style={{ maxWidth: 540 }}>
+        <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: '1.55rem', color: '#F5F5F5', margin: '0 0 8px' }}>
+          {greetingFor()}{userName ? `, ${userName}` : ''} 👋
+        </h2>
+        <p style={{ color: '#8A8A8A', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
+          {homeSubtitle(trades, stats)}
+        </p>
+      </div>
+
+      {/* Starter cards */}
+      <div style={{ width: '100%', maxWidth: 560, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 4 }}>
+        {HOME_CARDS.map(c => (
+          <button key={c.title} type="button" onClick={() => onPick(c.prompt)} style={cardBase}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(59,130,246,0.45)'; e.currentTarget.style.background = 'rgba(59,130,246,0.08)'; e.currentTarget.style.color = '#EAEAEA' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(59,130,246,0.16)'; e.currentTarget.style.background = 'rgba(255,255,255,0.02)'; e.currentTarget.style.color = '#C8C8C8' }}
+          >
+            <span style={{ fontSize: '1.1rem', lineHeight: 1, flexShrink: 0 }}>{c.icon}</span>
+            <span>{c.title}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 /* ── Chat tab ─────────────────────────────────────────────── */
-function ChatTab({ trades, stats, goals, completions, settings, playbook }) {
-  const [messages,  setMessages]  = useState(() => [{ role: 'assistant', content: makeInitMessage(trades, stats) }])
+function ChatTab({ trades, stats, goals, completions, settings, playbook, userName }) {
+  const [messages,  setMessages]  = useState([])
   const [input,     setInput]     = useState('')
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState(null)
   const bottomRef = useRef(null)
+
+  const showHome = messages.length === 0
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
@@ -95,7 +146,10 @@ function ChatTab({ trades, stats, goals, completions, settings, playbook }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 540 }}>
+      {showHome && <AlanHome trades={trades} stats={stats} userName={userName} onPick={send} />}
+
       {/* Messages */}
+      {!showHome && (
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {messages.map((m, i) => (
           <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start', alignItems: 'flex-start', gap: 10 }}>
@@ -132,20 +186,6 @@ function ChatTab({ trades, stats, goals, completions, settings, playbook }) {
         )}
         <div ref={bottomRef} />
       </div>
-
-      {/* Suggested questions */}
-      {messages.length <= 1 && (
-        <div style={{ padding: '0 24px 10px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {SUGGESTED.map(q => (
-            <button key={q} type="button" onClick={() => send(q)}
-              style={{ padding: '6px 12px', borderRadius: '999px', border: '1px solid rgba(59,130,246,0.25)', background: 'rgba(59,130,246,0.05)', color: '#8B7FBD', fontSize: '0.77rem', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(59,130,246,0.5)'; e.currentTarget.style.background = 'rgba(59,130,246,0.12)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(59,130,246,0.25)'; e.currentTarget.style.background = 'rgba(59,130,246,0.05)' }}
-            >
-              {q}
-            </button>
-          ))}
-        </div>
       )}
 
       {/* Input */}
@@ -169,7 +209,10 @@ function ChatTab({ trades, stats, goals, completions, settings, playbook }) {
         </button>
       </div>
 
-      <style>{`@keyframes aiPulse { 0%,60%,100%{transform:translateY(0);opacity:.5} 30%{transform:translateY(-5px);opacity:1} }`}</style>
+      <style>{`
+        @keyframes aiPulse { 0%,60%,100%{transform:translateY(0);opacity:.5} 30%{transform:translateY(-5px);opacity:1} }
+        @keyframes alanGlow { 0%,100%{opacity:.75;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
+      `}</style>
     </div>
   )
 }
@@ -373,6 +416,7 @@ export default function FaithAI() {
 
   const userId = viewingUser?.id || null
   const stats  = useMemo(() => computeStats(trades), [trades])
+  const userName = (viewingUser?.name || settings?.name || '').trim().split(' ')[0] || ''
 
   const tabBtn = active => ({
     padding: '9px 18px', borderRadius: 8,
@@ -419,7 +463,7 @@ export default function FaithAI() {
 
       {/* Content */}
       <div style={{ background: '#222', border: '1px solid #2A2A2A', borderRadius: 14, overflow: 'hidden' }}>
-        {tab === 'chat' && <ChatTab trades={trades} stats={stats} goals={goals} completions={completions} settings={settings} playbook={playbook} />}
+        {tab === 'chat' && <ChatTab trades={trades} stats={stats} goals={goals} completions={completions} settings={settings} playbook={playbook} userName={userName} />}
         {tab === 'coach' && <TradeCoachTab trades={trades} userId={userId} />}
         {tab === 'summary' && <div style={{ padding: 24 }}><PatternSummaryTab trades={trades} userId={userId} /></div>}
       </div>
