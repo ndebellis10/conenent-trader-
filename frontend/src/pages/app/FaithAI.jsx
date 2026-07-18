@@ -100,9 +100,7 @@ function ChatTab({ trades, stats, goals, completions, settings, playbook }) {
         {messages.map((m, i) => (
           <div key={i} style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start', alignItems: 'flex-start', gap: 10 }}>
             {m.role === 'assistant' && (
-              <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
-                <Sparkles size={13} color="#3B82F6" />
-              </div>
+              <AlanMascot size={30} style={{ marginTop: 2, border: '1px solid rgba(59,130,246,0.3)' }} />
             )}
             <div style={{
               maxWidth: '78%',
@@ -118,9 +116,8 @@ function ChatTab({ trades, stats, goals, completions, settings, playbook }) {
         ))}
         {loading && (
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Sparkles size={13} color="#3B82F6" />
-            </div>
+            <AlanMascot size={30} style={{ border: '1px solid rgba(59,130,246,0.3)' }} />
+
             <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px 14px 14px 4px', padding: '14px 18px', display: 'flex', gap: 5 }}>
               {[0, 1, 2].map(n => (
                 <div key={n} style={{ width: 6, height: 6, borderRadius: '50%', background: '#3B82F6', opacity: 0.5, animation: `aiPulse 1.2s ${n * 0.2}s infinite` }} />
