@@ -1,4 +1,7 @@
 import { requireAdmin } from './_lib/adminAuth.js'
+import { supabaseAdmin, supabaseConfigured } from './_lib/supabase-admin.js'
+
+const HIDDEN = ['nickisthebesttrader@faithtrader.app']
 /**
  * /api/leaderboard-data
  * Also handles ?action=historical for backtesting market data (merged to stay within Vercel's 12-function limit)
@@ -67,121 +70,99 @@ export default async function handler(req, res) {
     }
   }
 
-  const token = process.env.GITHUB_TOKEN
-
-  // ── Shared helper: read leaderboard file directly from GitHub Contents API ──
-  // Decodes base64 content in-process — bypasses raw.githubusercontent.com CDN
-  // caching so deletes and syncs are always reflected immediately.
-  //
-  // The repo is public, so reads work without a token. Without one we fall back
-  // to the raw CDN (writes still require GITHUB_TOKEN). If the repo is ever made
-  // private, this fallback stops working and GITHUB_TOKEN becomes required.
-  async function readFile() {
-    if (!token) {
-      try {
-        const rawR = await fetch(
-          'https://raw.githubusercontent.com/ndebellis10/conenent-trader-/main/backend/data/leaderboard.json',
-          { headers: { 'User-Agent': 'covenant-trader', 'Cache-Control': 'no-cache' } }
-        )
-        if (!rawR.ok) return { traders: [], banned: [], sha: null }
-        const data = await rawR.json()
-        return { traders: data.traders || [], banned: data.banned || [], sha: null }
-      } catch {
-        return { traders: [], banned: [], sha: null }
-      }
-    }
-    const metaR = await fetch(
-      'https://api.github.com/repos/ndebellis10/conenent-trader-/contents/backend/data/leaderboard.json',
-      { headers: { Authorization: `token ${token}`, 'User-Agent': 'covenant-trader', Accept: 'application/vnd.github.v3+json', 'Cache-Control': 'no-cache' } }
-    )
-    if (!metaR.ok) return { traders: [], banned: [], sha: null }
-    const meta = await metaR.json()
-    try {
-      // Decode base64 content directly — no second HTTP request, no CDN cache
-      const data = JSON.parse(Buffer.from(meta.content, 'base64').toString('utf-8'))
-      return { traders: data.traders || [], banned: data.banned || [], sha: meta.sha }
-    } catch {
-      return { traders: [], banned: [], sha: meta.sha }
-    }
-  }
-
-  async function writeFile(sha, traders, banned, message = 'leaderboard update') {
-    const content = Buffer.from(JSON.stringify({ traders, banned }, null, 2)).toString('base64')
-    const body    = { message, content }
-    if (sha) body.sha = sha
-    await fetch(
-      'https://api.github.com/repos/ndebellis10/conenent-trader-/contents/backend/data/leaderboard.json',
-      { method: 'PUT', headers: { Authorization: `token ${token}`, 'User-Agent': 'covenant-trader', 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-    )
-  }
+  /* ── Storage: Supabase `leaderboard` table ──────────────────────────
+     Previously a GitHub-backed JSON file, which needed GITHUB_TOKEN to
+     write. Without it every sync silently no-opped while still returning
+     {ok:true}, so the board looked broken with no error anywhere. Supabase
+     is already configured for auth, so the standings live there now and
+     writes work with no extra configuration. */
 
   if (req.method === 'GET') {
+    if (!supabaseConfigured) {
+      return res.status(503).json({ traders: [], error: 'Leaderboard storage is not configured.' })
+    }
     try {
-      const { traders, banned } = await readFile()
-      const HIDDEN = ['nickisthebesttrader@faithtrader.app']
-      const bannedLower = (banned || []).map(e => e.toLowerCase())
-      const visible = traders.filter(t =>
-        t.email &&
-        !HIDDEN.includes(t.email.toLowerCase()) &&
-        !bannedLower.includes(t.email.toLowerCase())
+      const { data, error } = await supabaseAdmin
+        .from('leaderboard')
+        .select('*')
+        .eq('hidden', false)
+        .order('total_pnl', { ascending: false })
+      if (error) throw error
+
+      const visible = (data || []).filter(
+        t => t.email && !HIDDEN.includes(String(t.email).toLowerCase())
       )
-      // Never cache — deletions must be visible to all users immediately
       res.setHeader('Cache-Control', 'no-store')
       return res.status(200).json({ traders: visible })
     } catch (e) {
-      return res.status(200).json({ traders: [], error: String(e) })
+      return res.status(200).json({ traders: [], error: String(e.message || e) })
     }
   }
 
   if (req.method === 'POST') {
-    if (!token) return res.status(200).json({ ok: true })
     const entry = req.body
     if (!entry?.email) return res.status(400).json({ error: 'email required' })
-    const HIDDEN = ['nickisthebesttrader@faithtrader.app']
-    if (HIDDEN.includes(entry.email.toLowerCase())) return res.status(200).json({ ok: true })
-    try {
-      const { traders, banned, sha } = await readFile()
+    if (HIDDEN.includes(String(entry.email).toLowerCase())) return res.status(200).json({ ok: true })
+    if (!supabaseConfigured) {
+      // Report the failure instead of pretending it saved
+      return res.status(503).json({ ok: false, error: 'Leaderboard storage is not configured.' })
+    }
 
-      // Banned users: tell the client explicitly so it can stop syncing forever
-      if (banned.map(e => e.toLowerCase()).includes(entry.email.toLowerCase())) {
-        return res.status(200).json({ ok: true, banned: true })
+    try {
+      const email = String(entry.email).toLowerCase()
+
+      // A hidden/banned trader must never sync themselves back in
+      const { data: existing } = await supabaseAdmin
+        .from('leaderboard').select('hidden, joined_at').eq('email', email).maybeSingle()
+      if (existing?.hidden) return res.status(200).json({ ok: true, banned: true })
+
+      const row = {
+        email,
+        display_name:      entry.display_name || email.split('@')[0],
+        total_trades:      entry.total_trades ?? 0,
+        wins:              entry.wins ?? 0,
+        win_rate:          entry.win_rate ?? 0,
+        total_pnl:         entry.total_pnl ?? 0,
+        avg_rr:            entry.avg_rr ?? null,
+        avg_entry:         entry.avg_entry ?? 0,
+        avg_exit:          entry.avg_exit ?? 0,
+        avg_faith:         entry.avg_faith ?? 0,
+        discipline:        entry.discipline ?? 0,
+        faith_score:       entry.faith_score ?? 0,
+        backtest_trades:   entry.backtest_trades ?? 0,
+        backtest_pnl:      entry.backtest_pnl ?? 0,
+        backtest_win_rate: entry.backtest_win_rate ?? 0,
+        joined_at:         existing?.joined_at || entry.joined_at || new Date().toISOString(),
+        updated_at:        new Date().toISOString(),
       }
 
-      const idx      = traders.findIndex(t => t.email === entry.email)
-      const existing = idx >= 0 ? traders[idx] : null
-      const joined_at = existing?.joined_at || new Date().toISOString()
-      const updated   = { ...entry, joined_at, updated_at: new Date().toISOString() }
-      if (idx >= 0) traders[idx] = updated; else traders.push(updated)
-
-      await writeFile(sha, traders, banned, 'leaderboard sync')
+      const { error } = await supabaseAdmin.from('leaderboard').upsert(row, { onConflict: 'email' })
+      if (error) throw error
       return res.status(200).json({ ok: true })
     } catch (e) {
-      return res.status(200).json({ ok: true, warning: String(e) })
+      return res.status(500).json({ ok: false, error: String(e.message || e) })
     }
   }
 
+  /* Admin: hide a trader from the board (and stop them re-syncing) */
   if (req.method === 'DELETE') {
     if (requireAdmin(req, res)) return
 
-    const email = new URL(req.url, 'http://x').searchParams.get('email')
+    const url2  = new URL(req.url, 'http://x')
+    const email = (url2.searchParams.get('email') || '').toLowerCase()
+    const unhide = url2.searchParams.get('unhide') === '1'
     if (!email) return res.status(400).json({ error: 'email required' })
-    if (!token) return res.status(200).json({ ok: true })
+    if (!supabaseConfigured) return res.status(503).json({ ok: false, error: 'Leaderboard storage is not configured.' })
 
     try {
-      const { traders, banned, sha } = await readFile()
-
-      // Remove from active traders
-      const newTraders = traders.filter(t => t.email?.toLowerCase() !== email.toLowerCase())
-
-      // Add to banned list so they can never re-sync back in
-      const newBanned = banned.includes(email.toLowerCase())
-        ? banned
-        : [...banned, email.toLowerCase()]
-
-      await writeFile(sha, newTraders, newBanned, 'leaderboard delete')
-      return res.status(200).json({ ok: true })
+      const { error } = await supabaseAdmin
+        .from('leaderboard')
+        .update({ hidden: !unhide })
+        .eq('email', email)
+      if (error) throw error
+      return res.status(200).json({ ok: true, hidden: !unhide })
     } catch (e) {
-      return res.status(200).json({ ok: true, warning: String(e) })
+      return res.status(500).json({ ok: false, error: String(e.message || e) })
     }
   }
 
