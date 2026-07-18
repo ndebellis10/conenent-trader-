@@ -3,6 +3,7 @@
  * Tabs: Chat · Trade Coach · 30-Day Summary
  */
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import AlanMascot from '../../components/AlanMascot'
 import AskAlanHome from '../../components/app/AskAlanHome'
 import { useTradeStore }  from '../../store/tradeStore'
@@ -11,7 +12,12 @@ import { useAdminStore }  from '../../store/adminStore'
 import { useAuth }        from '../../contexts/AuthContext'
 import { faithAiApi }     from '../../lib/api'
 import { format, subDays } from 'date-fns'
-import { Sparkles, ChevronDown, ChevronUp, Loader2, RefreshCw, BookOpen, Send, MessageSquare, TrendingUp, Home } from 'lucide-react'
+import { Sparkles, ChevronDown, ChevronUp, Loader2, RefreshCw, BookOpen, Send } from 'lucide-react'
+
+/* Ask Alan's sections. The app sidebar renders the labelled versions of these
+   while you're on this page, driving the `?tab=` param — see ASK_ALAN_NAV in
+   layouts/AppLayout.jsx. Keep the two lists in sync. */
+const AI_TABS = ['home', 'chat', 'coach', 'summary']
 
 const safeDate = d => { const dt = new Date(d || Date.now()); return isNaN(dt.getTime()) ? new Date() : dt }
 const RESULT_COLOR = { Win: '#4CAF7D', Loss: '#E05252', Breakeven: '#888' }
@@ -378,8 +384,12 @@ export default function FaithAI() {
   const { goals, completions }         = useGoalStore()
   const viewingUser                    = useAdminStore(s => s.viewingUser)
   const { isAdmin, user }              = useAuth()
-  const [tab, setTab]                  = useState('home')
+  const [searchParams, setSearchParams] = useSearchParams()
   const [seed, setSeed]                = useState({ text: '', n: 0 })
+
+  // The active section lives in the URL so the app sidebar can drive it.
+  const tab    = AI_TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'home'
+  const setTab = id => setSearchParams(id === 'home' ? {} : { tab: id }, { replace: true })
 
   const userId = viewingUser?.id || null
   const stats  = useMemo(() => computeStats(trades), [trades])
@@ -392,21 +402,6 @@ export default function FaithAI() {
     if (text) setSeed(s => ({ text, n: s.n + 1 }))
   }
 
-  const NAV = [
-    { id: 'home',    label: 'Home',           icon: Home },
-    { id: 'chat',    label: 'Chat',           icon: MessageSquare },
-    { id: 'coach',   label: 'Trade Coach',    icon: Sparkles },
-    { id: 'summary', label: '30-Day Summary', icon: TrendingUp },
-  ]
-
-  const navBtn = active => ({
-    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-    padding: '10px 12px', borderRadius: 9, textAlign: 'left',
-    border:     active ? '1px solid rgba(59,130,246,0.4)' : '1px solid transparent',
-    background: active ? 'rgba(59,130,246,0.12)' : 'transparent',
-    color:      active ? '#3B82F6' : '#8A8A8A',
-    cursor: 'pointer', fontSize: '0.84rem', fontWeight: 700, transition: 'all 0.15s',
-  })
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -430,43 +425,28 @@ export default function FaithAI() {
         </div>
       </div>
 
-      {/* Side nav + content */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 200px) minmax(0, 1fr)', gap: 16, alignItems: 'start' }}>
+      {/* Content — section switching lives in the app sidebar while you're in Ask Alan */}
+      <div style={{ minWidth: 0 }}>
+        {tab === 'home' && (
+          <AskAlanHome name={displayName} onAsk={askAlan} onTab={setTab} />
+        )}
 
-        {/* Side tab rail */}
-        <nav style={{ background: '#1E1E1E', border: '1px solid #2A2A2A', borderRadius: 14, padding: 10, display: 'flex', flexDirection: 'column', gap: 4, position: 'sticky', top: 16 }}>
-          {NAV.map(n => (
-            <button key={n.id} style={navBtn(tab === n.id)} onClick={() => setTab(n.id)}
-              onMouseEnter={e => { if (tab !== n.id) e.currentTarget.style.background = 'rgba(59,130,246,0.05)' }}
-              onMouseLeave={e => { if (tab !== n.id) e.currentTarget.style.background = 'transparent' }}>
-              <n.icon size={15} style={{ flexShrink: 0 }} />{n.label}
-            </button>
-          ))}
-        </nav>
-
-        {/* Content */}
-        <div style={{ minWidth: 0 }}>
-          {tab === 'home' && (
-            <AskAlanHome name={displayName} onAsk={askAlan} onTab={setTab} />
-          )}
-
-          {/* Chat stays mounted so the conversation survives tab switches */}
-          <div style={{ display: tab === 'chat' ? 'block' : 'none', background: '#222', border: '1px solid #2A2A2A', borderRadius: 14, overflow: 'hidden' }}>
-            <ChatTab trades={trades} stats={stats} goals={goals} completions={completions} settings={settings} playbook={playbook} seed={seed} />
-          </div>
-
-          {tab === 'coach' && (
-            <div style={{ background: '#222', border: '1px solid #2A2A2A', borderRadius: 14, overflow: 'hidden' }}>
-              <TradeCoachTab trades={trades} userId={userId} />
-            </div>
-          )}
-
-          {tab === 'summary' && (
-            <div style={{ background: '#222', border: '1px solid #2A2A2A', borderRadius: 14, overflow: 'hidden' }}>
-              <div style={{ padding: 24 }}><PatternSummaryTab trades={trades} userId={userId} /></div>
-            </div>
-          )}
+        {/* Chat stays mounted so the conversation survives section switches */}
+        <div style={{ display: tab === 'chat' ? 'block' : 'none', background: '#222', border: '1px solid #2A2A2A', borderRadius: 14, overflow: 'hidden' }}>
+          <ChatTab trades={trades} stats={stats} goals={goals} completions={completions} settings={settings} playbook={playbook} seed={seed} />
         </div>
+
+        {tab === 'coach' && (
+          <div style={{ background: '#222', border: '1px solid #2A2A2A', borderRadius: 14, overflow: 'hidden' }}>
+            <TradeCoachTab trades={trades} userId={userId} />
+          </div>
+        )}
+
+        {tab === 'summary' && (
+          <div style={{ background: '#222', border: '1px solid #2A2A2A', borderRadius: 14, overflow: 'hidden' }}>
+            <div style={{ padding: 24 }}><PatternSummaryTab trades={trades} userId={userId} /></div>
+          </div>
+        )}
       </div>
     </div>
   )

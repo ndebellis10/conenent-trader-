@@ -9,8 +9,16 @@ import {
   LayoutDashboard, PlusCircle, BarChart2, BookOpen, Cross, Settings,
   LogOut, Menu, X, CalendarDays, TrendingUp, FileBarChart2, ListChecks,
   Trophy, Save, CheckCircle, ShieldAlert, Sparkles, Newspaper, FlaskConical,
-  Cloud, CloudOff, Loader2,
+  Cloud, CloudOff, Loader2, Home, MessageSquare, ArrowLeft,
 } from 'lucide-react'
+
+/* Ask Alan's own sections — these replace the Trading Journal nav while on that page. */
+const ASK_ALAN_NAV = [
+  { id: 'home',    label: 'Home',           icon: Home,          to: '/app/faith-ai' },
+  { id: 'chat',    label: 'Chat',           icon: MessageSquare, to: '/app/faith-ai?tab=chat' },
+  { id: 'coach',   label: 'Trade Coach',    icon: Sparkles,      to: '/app/faith-ai?tab=coach' },
+  { id: 'summary', label: '30-Day Summary', icon: TrendingUp,    to: '/app/faith-ai?tab=summary' },
+]
 import { isSecureMode, serverCreateTrade } from '../lib/syncManager'
 import { useTradeStore } from '../store/tradeStore'
 import Logo from '../components/Logo'
@@ -249,6 +257,10 @@ export default function AppLayout() {
     ? TRADING_ITEMS.filter(i => i.to !== '/app/log' && i.to !== '/app/faith')
     : TRADING_ITEMS
 
+  // Inside Ask Alan the sidebar shows the AI's sections instead of the journal nav
+  const inAskAlan = location.pathname === '/app/faith-ai'
+  const aiTab     = new URLSearchParams(location.search).get('tab') || 'home'
+
   const navLinkStyle = ({ isActive }) => ({
     display: 'flex', alignItems: 'center', gap: '9px',
     padding: '9px 10px',
@@ -331,24 +343,46 @@ export default function AppLayout() {
           />
         </div>
 
-        {/* Nav panel */}
+        {/* Nav panel — inside Ask Alan this becomes the AI's own sections */}
         <div style={{
           width: 172, background: '#252525', borderRight: '1px solid #333',
           display: 'flex', flexDirection: 'column',
         }}>
-          {/* ── Trading Journal nav ── */}
           <div style={{ padding: '14px 12px 10px', borderBottom: '1px solid #2E2E2E' }}>
             <span style={{ color: '#3B82F6', fontSize: '0.66rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em' }}>
-              Trading Journal
+              {inAskAlan ? 'Ask Alan' : 'Trading Journal'}
             </span>
           </div>
+
           <nav style={{ flex: 1, padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto' }}>
-            {items.map(item => (
-              <NavLink key={item.to} to={item.to} end={item.end} style={navLinkStyle}>
-                <item.icon size={15} />
-                <span>{item.label}</span>
-              </NavLink>
-            ))}
+            {inAskAlan ? (
+              <>
+                {ASK_ALAN_NAV.map(item => {
+                  const active = aiTab === item.id
+                  return (
+                    <button key={item.id} onClick={() => navigate(item.to)} style={{ ...navLinkStyle({ isActive: active }), width: '100%', border: 'none', cursor: 'pointer', font: 'inherit', textAlign: 'left' }}>
+                      <item.icon size={15} />
+                      <span>{item.label}</span>
+                    </button>
+                  )
+                })}
+
+                {/* Way back out of the focused AI view */}
+                <div style={{ marginTop: 'auto', paddingTop: 10, borderTop: '1px solid #2E2E2E' }}>
+                  <button onClick={() => navigate('/app')} style={{ ...navLinkStyle({ isActive: false }), width: '100%', border: 'none', cursor: 'pointer', font: 'inherit', textAlign: 'left' }}>
+                    <ArrowLeft size={15} />
+                    <span>Back to app</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              items.map(item => (
+                <NavLink key={item.to} to={item.to} end={item.end} style={navLinkStyle}>
+                  <item.icon size={15} />
+                  <span>{item.label}</span>
+                </NavLink>
+              ))
+            )}
           </nav>
         </div>
       </div>

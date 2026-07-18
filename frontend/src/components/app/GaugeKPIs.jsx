@@ -126,10 +126,13 @@ export default function GaugeKPIs({ trades }) {
     const beDays    = dayVals.filter(v => v === 0).length
     const dayWinPct = dayVals.length ? (winDays / dayVals.length) * 100 : 0
 
+    const netPnl = trades.reduce((s, t) => s + (parseFloat(t.netPnl) || 0), 0)
+
     return {
       winRate, wins: wins.length, losses: losses.length, bes: bes.length,
       pf, avgWin, avgLoss, rr,
       dayWinPct, winDays, lossDays, beDays,
+      netPnl, tradeCount: trades.length,
     }
   }, [trades])
 
@@ -141,7 +144,27 @@ export default function GaugeKPIs({ trades }) {
   const winBarPct = winTotal > 0 ? (stats.avgWin / winTotal) * 100 : 50
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '14px' }}>
+
+      {/* ── Net P&L — sits to the left of Trade Win % ── */}
+      <GCard
+        label="Net P&L"
+        value={`${stats.netPnl >= 0 ? '+' : '-'}$${Math.abs(stats.netPnl).toFixed(2)}`}
+        valueColor={stats.netPnl >= 0 ? '#4CAF7D' : '#E05252'}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+          <div style={{ height: 6, background: '#242424', borderRadius: 3, overflow: 'hidden', display: 'flex' }}>
+            <div style={{ width: `${winBarPct}%`, background: '#4CAF7D' }} />
+            <div style={{ flex: 1, background: '#E05252' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: '0.68rem' }}>
+            <span>{stats.tradeCount} trade{stats.tradeCount !== 1 ? 's' : ''}</span>
+            <span style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+              {stats.tradeCount ? `${stats.netPnl >= 0 ? '+' : '-'}$${Math.abs(stats.netPnl / stats.tradeCount).toFixed(2)}/trade` : ''}
+            </span>
+          </div>
+        </div>
+      </GCard>
 
       {/* ── Trade Win % ── */}
       <GCard

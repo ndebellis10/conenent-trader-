@@ -15,6 +15,7 @@ import { useAuthStore } from '../../store/authStore'
 import TradeCalendar from '../../components/app/TradeCalendar'
 import FaithScore from '../../components/app/FaithScore'
 import NewsPanel from '../../components/app/NewsPanel'
+import DailyInsight from '../../components/app/DailyInsight'
 import GaugeKPIs from '../../components/app/GaugeKPIs'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, subDays, startOfWeek, addDays, startOfDay, endOfDay } from 'date-fns'
 import DateRangePicker from '../../components/app/DateRangePicker'
@@ -692,6 +693,9 @@ export default function Dashboard() {
       {/* ── Verse ── */}
       <VerseWidget />
 
+      {/* ── Alan's read on your recent trades ── */}
+      <DailyInsight trades={allTrades} />
+
       {/* ── Date range filter ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -774,10 +778,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Today's USD News — between the breakdown and the Faith Score */}
+          {/* Today's USD News — between the breakdown and the Covenant Score */}
           <NewsPanel />
 
-          {/* Faith Score — fills remaining left-column space */}
+          {/* Covenant Score — fills remaining left-column space */}
           <FaithScore trades={trades} />
 
         </div>

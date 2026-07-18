@@ -108,7 +108,7 @@ export default function FaithScore({ trades }) {
       {/* Header */}
       <div style={{ padding: '10px 14px', borderBottom: '1px solid #3A3A3A', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#F5F5F5', fontSize: '0.85rem' }}>Faith Score</span>
+          <span style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#F5F5F5', fontSize: '0.85rem' }}>Covenant Score</span>
           <span style={{ background: 'rgba(59,130,246,0.12)', color: '#3B82F6', fontSize: '0.6rem', fontWeight: 700, padding: '1px 6px', borderRadius: '5px', letterSpacing: '0.04em' }}>BETA</span>
         </div>
         <span style={{ color: '#555', fontSize: '0.68rem' }}>{trades.length} trade{trades.length !== 1 ? 's' : ''}</span>
@@ -145,7 +145,7 @@ export default function FaithScore({ trades }) {
         <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           {/* Score number */}
           <div>
-            <div style={{ color: '#666', fontSize: '0.62rem', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Faith Score</div>
+            <div style={{ color: '#666', fontSize: '0.62rem', marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Covenant Score</div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', marginBottom: '2px' }}>
               <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '1.9rem', fontWeight: 800, color, lineHeight: 1 }}>
                 {score.toFixed(1)}
