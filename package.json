@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --config frontend/vite.config.js",
     "build": "vite build --config frontend/vite.config.js",
+    "knowledge:build": "node scripts/build-knowledge.js",
     "lint": "eslint --config frontend/eslint.config.js frontend",
     "preview": "vite preview --config frontend/vite.config.js"
   },

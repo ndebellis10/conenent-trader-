@@ -19,6 +19,7 @@
  */
 import Anthropic from '@anthropic-ai/sdk'
 import { applySecurity, handleOptions, requireMethod, limitBody, getClientIP } from './_lib/security.js'
+import KNOWLEDGE from './_lib/knowledge-data.js'
 
 // Read the API key and strip any leading BOM (﻿) or surrounding whitespace.
 // A pasted key with a hidden BOM makes the Anthropic SDK throw a ByteString error
@@ -43,16 +44,31 @@ function rateLimit(ip, type) {
   return entry.count <= limit
 }
 
-const CHAT_SYSTEM = `You are Alan — the "Ask Alan" AI, an elite trading coach and spiritual mentor inside Covenant Trader, a Christian trading journal. You are like a blend of an ICT futures master and a wise pastor. The user trades ES and NQ futures using ICT concepts (liquidity hunts, Market Structure Shifts, Fair Value Gaps, Order Blocks, killzones, London/NY sessions).
+const CHAT_SYSTEM = `You are Alan — the "Ask Alan" AI, an elite trading coach and spiritual mentor inside Covenant Trader, a Christian trading journal. You are like a blend of an ICT futures master and a wise pastor. The user trades ES and NQ futures using the Covenant Model (liquidity hunts, Market Structure Shifts, Fair Value Gaps, Order Blocks, PD arrays, AMD, PDI, killzones, London/NY sessions).
 
 Guidelines:
 - Be direct and specific — ALWAYS reference their actual numbers, percentages, and dollar amounts from the dashboard data
 - When asked what to work on or what they're best at, quote the REPORT ANALYSIS section from the context — name the specific metric and number
+- Teach the Covenant Model using the KNOWLEDGE BASE below. It is the community's own method — prefer it over generic internet trading advice, and use its terminology
 - Weave in scripture naturally when it genuinely fits (don't force it on every message)
 - Keep responses concise: 2-4 short paragraphs max
 - Speak like a trusted coach who has studied their trading journal inside and out
 - Be honest, even when it's hard to hear — call out bad patterns directly
-- Never say "I don't have access to your data" — you DO have full access to their dashboard`
+- Never say "I don't have access to your data" — you DO have full access to their dashboard
+- Respond with your final answer only. Do not narrate your reasoning process or think out loud.
+
+You are an educational coach, NOT a financial advisor. Explain concepts and how to think about them; do not give guaranteed outcomes or personalized "buy/sell this now" calls.`
+
+// Stable across every user and every request — this is the cached prefix.
+// Nothing user-specific or time-varying may appear before the cache breakpoint,
+// or the cache is invalidated on every call.
+const KNOWLEDGE_BLOCK = `\n\n===================== COVENANT MODEL KNOWLEDGE BASE =====================
+The material below is this community's own trading method, drawn from the training
+videos. When a question is covered here, base your answer on it and use its
+terminology rather than generic trading advice.
+
+${KNOWLEDGE}
+===================== END KNOWLEDGE BASE =====================`
 
 const COACH_SYSTEM = `You are an elite trading coach built into Covenant Trader, a Christian trading journal. The user trades ES and NQ futures using ICT concepts — they hunt liquidity, wait for manipulation, and target London and Asian session highs and lows. Analyze the trade provided and the recent trade history. Cover: 1) Execution quality (did they wait for manipulation, was entry confluent with MSS/FVG/OB/killzone), 2) Psychology (flag FOMO, revenge trading, hesitation, overconfidence), 3) Patterns across recent trades (what's working, what's recurring mistake), 4) One Bible verse directly applied to what this trader needs to hear right now. Be direct and concise. No fluff.`
 
@@ -350,7 +366,7 @@ async function handleChat(body, res) {
 
   const traderContext = buildTraderContext(trades, goals, completions, settings, playbook)
 
-  const systemWithContext = CHAT_SYSTEM + traderContext + `
+  const volatileContext = traderContext + `
 
 IMPORTANT RULES:
 1. Always reference the trader's ACTUAL numbers — win rate, P&L, streak, specific dollar amounts.
@@ -366,12 +382,29 @@ IMPORTANT RULES:
 
   const client = new Anthropic({ apiKey })
   const response = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001', max_tokens: 600,
-    system: systemWithContext,
+    model: 'claude-opus-4-8', max_tokens: 1024,
+    // Two blocks, and the order is load-bearing. Block 1 (persona + knowledge
+    // base) is byte-identical for every user on every request, so the
+    // cache_control breakpoint at its end is shared across the whole community
+    // — cache reads cost ~10% of full input price. Block 2 holds the trader's
+    // live P&L, dates, and trades, which change constantly; it sits AFTER the
+    // breakpoint so it can vary without invalidating the cached knowledge.
+    system: [
+      { type: 'text', text: CHAT_SYSTEM + KNOWLEDGE_BLOCK, cache_control: { type: 'ephemeral' } },
+      { type: 'text', text: volatileContext },
+    ],
     messages: msgs,
   })
 
-  return res.status(200).json({ reply: response.content[0]?.text || '' })
+  const usage = response.usage
+  console.log(
+    `[faith-ai chat] cache_read=${usage?.cache_read_input_tokens ?? 0} ` +
+    `cache_write=${usage?.cache_creation_input_tokens ?? 0} ` +
+    `uncached=${usage?.input_tokens ?? 0} out=${usage?.output_tokens ?? 0}`,
+  )
+
+  const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim()
+  return res.status(200).json({ reply: text })
 }
 
 async function handleCoach(body, res) {

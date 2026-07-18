@@ -1,0 +1,6 @@
+# Heatmap Liquidity Grab
+Topic: heatmaps
+Source: https://www.youtube.com/watch?v=kT4AL8gkTO0
+
+## Transcript
+All right, so that being said, we have huge liquidity build up right here in this area. All all the way up to around 29,675. All right, and then the final little little piece of liquidity is at around 29,693. Okay? We're going to go and look at &gt;&gt; [cough] [clears throat] &gt;&gt; what happened on the candlestick chart when we reach these levels. Okay? So, [snorts] we have liquidity at 675 is like the peak of it, right? So, I want to test you guys right now. What did the candlestick chart do when we hit that liquidity level? Did we continue pumping higher or did we begin to move downward? I'mma give you guys a couple seconds. So, 1 2 3 4 5. If you said that we failed to go higher and we started going lower, boom, you got the right answer. All right, so this is a liquidity sweep. As you can see, there is no session highs, there is no equal highs or lows. This was just invisible liquidity that is only accessible through the heat map. So, if you were just looking at a candlestick chart, you wouldn't really know what just got swept, right? But since we have the heat map, we can see, all right, when price swept this liquidity,

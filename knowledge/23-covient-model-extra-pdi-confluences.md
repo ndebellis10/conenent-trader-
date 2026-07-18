@@ -1,0 +1,6 @@
+# Extra PDI Confluences
+Topic: covient-model
+Source: https://www.youtube.com/watch?v=UaioTV9dDiQ
+
+## Transcript
+Another thing that made this really, really powerful that I want to touch on is the fact that we had a huge 1hour gap that this tapped into, reached the bottom of, and then reversed because this 1hour gap was acting as a resistance level. So even when we tried to go below it, we barely peaked under it and then absolutely went back up. So the fact that this was there acted as resistance just another added level of confidence that we had going into this trade. So you can imagine if we have this exact same setup and then let's say an unfilled 1 hour from previous days like right here and let's mark this as a 1 hour gap. This is just an added level of support that is pushing price to the upside. So this is basically exactly what we had here. Obviously, the one hour was a little bit more like this, but same concept. We have a level of support here. Price tapped into it and then rejected back up. So, this was just a beautiful A+ trade today on NASDAQ using the pre-distribution inversion model, which is just, you know, another version uh or just capitalizing, I should say, off of AMD, which is accumulation, distribution. Wait, hold on, my bad. accumulation, manipulation, and then distribution to where the price
