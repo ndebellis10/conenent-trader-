@@ -70,7 +70,7 @@ export default function AskAlanHome({ name, onAsk, onTab }) {
 
         {/* Alan — big and front-and-center */}
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
-          <AlanMascot size={160} style={{ boxShadow: '0 0 30px rgba(59,130,246,0.35)' }} />
+          <AlanMascot size={160} style={{ filter: 'drop-shadow(0 0 26px rgba(59,130,246,0.35))' }} />
         </div>
 
         {/* Greeting */}
@@ -82,7 +82,7 @@ export default function AskAlanHome({ name, onAsk, onTab }) {
         <div style={{ maxWidth: 640, margin: '0 auto 14px' }}>
           <style>{`.alan-ask-input:focus { border-color: transparent !important; box-shadow: none !important; outline: none !important; }`}</style>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#1E1E1E', border: '1px solid rgba(59,130,246,0.35)', borderRadius: 16, padding: '10px 16px', boxShadow: '0 0 30px rgba(59,130,246,0.08)' }}>
-            <AlanMascot size={64} style={{ boxShadow: '0 0 10px rgba(59,130,246,0.3)' }} />
+            <AlanMascot size={64} style={{ filter: 'drop-shadow(0 0 8px rgba(59,130,246,0.3))' }} />
             <input
               value={q}
               onChange={e => setQ(e.target.value)}

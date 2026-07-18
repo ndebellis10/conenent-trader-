@@ -1,0 +1,23 @@
+/* Scripture used across the app — dashboard verse widgets and the signup backdrop. */
+export const VERSES = [
+  { text: "The plans of the diligent lead surely to abundance, but everyone who is hasty comes only to poverty.", ref: "Proverbs 21:5" },
+  { text: "I can do all things through Christ who strengthens me.", ref: "Philippians 4:13" },
+  { text: "Be strong and courageous. Do not be afraid; do not be discouraged.", ref: "Joshua 1:9" },
+  { text: "Commit to the LORD whatever you do, and he will establish your plans.", ref: "Proverbs 16:3" },
+  { text: "For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline.", ref: "2 Timothy 1:7" },
+  { text: "Trust in the Lord with all your heart and lean not on your own understanding.", ref: "Proverbs 3:5" },
+  { text: "All hard work brings a profit, but mere talk leads only to poverty.", ref: "Proverbs 14:23" },
+  { text: "The heart of the discerning acquires knowledge, for the ears of the wise seek it out.", ref: "Proverbs 18:15" },
+  { text: "Whoever is patient has great understanding, but one who is quick-tempered displays folly.", ref: "Proverbs 14:29" },
+  { text: "Be still before the Lord and wait patiently for him.", ref: "Psalm 37:7" },
+  { text: "The Lord will fight for you; you need only to be still.", ref: "Exodus 14:14" },
+  { text: "A faithful man will abound with blessings, but whoever hastens to be rich will not go unpunished.", ref: "Proverbs 28:20" },
+  { text: "Better a little with righteousness than much gain with injustice.", ref: "Proverbs 16:8" },
+  { text: "The righteous are as bold as a lion.", ref: "Proverbs 28:1" },
+  { text: "Dishonest money dwindles away, but whoever gathers money little by little makes it grow.", ref: "Proverbs 13:11" },
+  { text: "The blessing of the Lord brings wealth, without painful toil for it.", ref: "Proverbs 10:22" },
+  { text: "In their hearts humans plan their course, but the Lord establishes their steps.", ref: "Proverbs 16:9" },
+  { text: "Do not be anxious about anything, but in everything by prayer and supplication let your requests be made known to God.", ref: "Philippians 4:6" },
+  { text: "Better one handful with tranquility than two handfuls with toil and chasing after the wind.", ref: "Ecclesiastes 4:6" },
+  { text: "The Lord is my light and my salvation — whom shall I fear?", ref: "Psalm 27:1" },
+]

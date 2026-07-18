@@ -1,8 +1,11 @@
 import Logo from './Logo'
 
-export default function AuthCard({ children }) {
+export default function AuthCard({ children, backdrop = null }) {
   return (
     <div style={{ minHeight: '100vh', background: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', position: 'relative' }}>
+      {/* Optional decorative layer behind the grid (e.g. floating verses on signup) */}
+      {backdrop}
+
       {/* Background grid */}
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
         <svg width="100%" height="100%">

@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, Loader2, ShieldCheck, Check, ArrowRight } from 'lucide-react'
 import AuthCard from '../components/AuthCard'
+import FloatingVerses from '../components/FloatingVerses'
 import { useAuth } from '../contexts/AuthContext'
 import { useTradeStore } from '../store/tradeStore'
 import { userApi } from '../lib/api'
@@ -443,7 +444,7 @@ export default function SignupPage() {
   }
 
   return (
-    <AuthCard>
+    <AuthCard backdrop={<FloatingVerses />}>
       <p style={{ textAlign: 'center', color: '#A0A0A0', fontSize: '0.88rem', marginBottom: 24 }}>
         Create your free trading journal account.
       </p>
