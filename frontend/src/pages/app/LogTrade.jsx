@@ -585,8 +585,8 @@ export default function LogTrade() {
       const compressed = await compressImage(file)
       setChartImage(compressed)
       setChartMarkers([])
-      // Auto-analyze immediately on upload
-      analyzeChart(compressed)
+      // Auto-analyze is admin-only — it calls the vision API and bills per image
+      if (isAdmin) analyzeChart(compressed)
     } catch { toast.error('Failed to upload image. Try a smaller file.') }
   }
 
@@ -1240,9 +1240,9 @@ export default function LogTrade() {
           />
         </div>
 
-        {/* Section 3: Chart Screenshot — admin only AI price parser */}
-        {isAdmin && <div style={{ background: '#242424', borderRadius: '12px', border: '1px solid rgba(59,130,246,0.3)', padding: '24px', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 10, right: 12, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: 5, padding: '2px 8px', fontSize: '0.65rem', fontWeight: 700, color: '#3B82F6', letterSpacing: '0.05em' }}>ADMIN ONLY</div>
+        {/* Section 3: Chart Screenshot — open to all users. The AI price parser
+            that runs on upload stays admin-only (it bills per image). */}
+        <div style={{ background: '#242424', borderRadius: '12px', border: '1px solid rgba(59,130,246,0.3)', padding: '24px', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid #3A3A3A' }}>
             <ImagePlus size={16} color="#3B82F6" />
             <span style={{ color: '#3B82F6', fontSize: '0.85rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Chart Screenshot</span>
@@ -1296,7 +1296,7 @@ export default function LogTrade() {
               </div>
             </div>
           )}
-        </div>}
+        </div>
 
         {/* Section 4: Execution Quality */}
         <div style={{ background: '#242424', borderRadius: '12px', border: '1px solid #3A3A3A', padding: '24px' }}>

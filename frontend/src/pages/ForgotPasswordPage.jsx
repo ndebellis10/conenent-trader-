@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Mail } from 'lucide-react'
 import AuthCard from '../components/AuthCard'
+import FloatingVerses from '../components/FloatingVerses'
 
 const schema = z.object({ email: z.string().email('Please enter a valid email') })
 
@@ -25,7 +26,7 @@ export default function ForgotPasswordPage() {
   const inputStyle = { width: '100%', background: '#2E2E2E', border: '1px solid #3A3A3A', borderRadius: '10px', padding: '12px 16px', color: '#F5F5F5', fontSize: '0.95rem', fontFamily: 'Inter, sans-serif', outline: 'none' }
 
   return (
-    <AuthCard>
+    <AuthCard backdrop={<FloatingVerses />}>
       <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#F5F5F5', fontSize: '1.3rem', textAlign: 'center', marginBottom: '8px' }}>
         Reset Your Password
       </h2>

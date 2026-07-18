@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import AuthCard from '../components/AuthCard'
+import FloatingVerses from '../components/FloatingVerses'
 import { useAuth } from '../contexts/AuthContext'
 import { useTradeStore } from '../store/tradeStore'
 
@@ -169,109 +170,8 @@ const VERSES = [
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY
 
-const ALL_FLOATING_VERSES = [
-  { text: 'I can do all things through Christ who strengthens me.', ref: 'Phil 4:13' },
-  { text: 'The LORD is my shepherd; I shall not want.', ref: 'Psalm 23:1' },
-  { text: 'Trust in the LORD with all your heart.', ref: 'Prov 3:5' },
-  { text: 'Be strong and courageous. Do not be afraid.', ref: 'Josh 1:9' },
-  { text: 'For I know the plans I have for you, declares the LORD.', ref: 'Jer 29:11' },
-  { text: 'Commit to the LORD whatever you do, and he will establish your plans.', ref: 'Prov 16:3' },
-  { text: 'The heart of man plans his way, but the LORD establishes his steps.', ref: 'Prov 16:9' },
-  { text: 'Give thanks to the LORD, for he is good; his love endures forever.', ref: 'Psalm 107:1' },
-  { text: 'Do not be anxious about anything, but in everything by prayer present your requests to God.', ref: 'Phil 4:6' },
-  { text: 'And we know that in all things God works for the good of those who love him.', ref: 'Rom 8:28' },
-  { text: 'But seek first his kingdom and his righteousness.', ref: 'Matt 6:33' },
-  { text: 'The LORD your God is with you, the Mighty Warrior who saves.', ref: 'Zeph 3:17' },
-  { text: 'Cast all your anxiety on him because he cares for you.', ref: '1 Pet 5:7' },
-  { text: 'He gives strength to the weary and increases the power of the weak.', ref: 'Isa 40:29' },
-  { text: 'Let the peace of Christ rule in your hearts.', ref: 'Col 3:15' },
-  { text: 'Every good and perfect gift is from above.', ref: 'James 1:17' },
-  { text: 'With God all things are possible.', ref: 'Matt 19:26' },
-  { text: 'The LORD bless you and keep you.', ref: 'Num 6:24' },
-  { text: 'Delight yourself in the LORD, and he will give you the desires of your heart.', ref: 'Psalm 37:4' },
-  { text: 'I will never leave you nor forsake you.', ref: 'Heb 13:5' },
-  { text: 'Be still, and know that I am God.', ref: 'Psalm 46:10' },
-  { text: 'The name of the LORD is a fortified tower; the righteous run to it and are safe.', ref: 'Prov 18:10' },
-  { text: 'Blessed is the one who trusts in the LORD.', ref: 'Jer 17:7' },
-  { text: 'You are the light of the world.', ref: 'Matt 5:14' },
-  { text: 'Rejoice always, pray continually, give thanks in all circumstances.', ref: '1 Thess 5:16-18' },
-  { text: 'The LORD has done great things for us, and we are filled with joy.', ref: 'Psalm 126:3' },
-  { text: 'Wait for the LORD; be strong and take heart.', ref: 'Psalm 27:14' },
-  { text: 'God is our refuge and strength, an ever-present help in trouble.', ref: 'Psalm 46:1' },
-  { text: 'My grace is sufficient for you, for my power is made perfect in weakness.', ref: '2 Cor 12:9' },
-  { text: 'Ask and it will be given to you; seek and you will find.', ref: 'Matt 7:7' },
-]
 
-// Each lane slides continuously from one side to the other and loops
-const SLIDE_LANES = Array.from({ length: 22 }, (_, i) => {
-  const goRight  = i % 2 === 0
-  const topPct   = (i * 8 + (i % 4) * 9) % 92
-  const tilt     = ((i % 5) - 2) * 4               // –8° to +8°
-  const duration = 14 + (i % 9) * 2               // 14–30 s per pass
-  const delay    = -(i * (duration / 22))
-  const opacity  = 0.28 + (i % 5) * 0.04           // 0.28–0.44  (clearly visible)
-  const fontSize = 13 + (i % 4)                     // 13–16 px
-  return {
-    id:       i,
-    verse:    ALL_FLOATING_VERSES[i % ALL_FLOATING_VERSES.length],
-    top:      `${topPct}%`,
-    startX:   goRight ? -1900 : 1900,
-    endX:     goRight ?  1900 : -1900,
-    tilt,
-    duration,
-    delay,
-    opacity,
-    fontSize: `${fontSize}px`,
-  }
-})
 
-function FloatingVerses() {
-  return (
-    <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0, pointerEvents: 'none' }}>
-      {SLIDE_LANES.map(v => (
-        <motion.div
-          key={v.id}
-          initial={{ x: v.startX }}
-          animate={{ x: v.endX }}
-          transition={{
-            duration:   v.duration,
-            delay:      v.delay,
-            repeat:     Infinity,
-            ease:       'linear',
-            repeatType: 'loop',
-          }}
-          style={{
-            position:   'absolute',
-            top:        v.top,
-            whiteSpace: 'nowrap',
-            rotate:     v.tilt,
-            opacity:    v.opacity,
-          }}
-        >
-          <span style={{
-            fontStyle:  'italic',
-            fontSize:   v.fontSize,
-            color:      '#3B82F6',
-            fontFamily: 'Georgia, serif',
-            textShadow: '0 0 20px rgba(59,130,246,0.5)',
-          }}>
-            "{v.verse.text}"
-          </span>
-          <span style={{
-            marginLeft:  '12px',
-            fontSize:    `${parseInt(v.fontSize) - 1}px`,
-            color:       'rgba(245,245,245,0.85)',
-            fontFamily:  'Inter, sans-serif',
-            fontStyle:   'normal',
-            letterSpacing: '0.04em',
-          }}>
-            — {v.verse.ref}
-          </span>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
 
 export default function LoginPage() {
   const navigate      = useNavigate()
@@ -362,9 +262,7 @@ export default function LoginPage() {
       )}
     </AnimatePresence>
 
-    <FloatingVerses />
-
-    <AuthCard>
+    <AuthCard backdrop={<FloatingVerses />}>
       <p style={{ textAlign: 'center', color: '#A0A0A0', fontSize: '0.9rem', marginBottom: '28px' }}>
         Welcome back. Trade with purpose.
       </p>
