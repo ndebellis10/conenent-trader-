@@ -113,11 +113,8 @@ export default function CourseMaterial() {
     return () => clearTimeout(id)
   }, [done, email])
 
-  const toggle = (id) => setDone(prev => {
-    const next = new Set(prev)
-    next.has(id) ? next.delete(id) : next.add(id)
-    return next
-  })
+  const complete = (id) => setDone(prev => (prev.has(id) ? prev : new Set([...prev, id])))
+
 
   const toggleModule = (slug) => setOpenModules(prev => {
     const next = new Set(prev)
@@ -321,23 +318,34 @@ export default function CourseMaterial() {
           <h1 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, color: '#F5F5F5', fontSize: '1.25rem', margin: '0 0 16px' }}>
             {current?.title}
           </h1>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <button onClick={() => toggle(current.id)}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10, cursor: 'pointer', border: `1px solid ${isDone ? GREEN : '#333'}`, background: isDone ? 'rgba(76,175,125,0.14)' : 'transparent', color: isDone ? GREEN : '#A8A8A8', fontWeight: 700, fontSize: '0.85rem' }}>
-              <Check size={15} /> {isDone ? 'Completed' : 'Mark complete'}
-            </button>
-            <button onClick={goFullscreen}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10, cursor: 'pointer', border: '1px solid #333', background: 'transparent', color: '#A8A8A8', fontWeight: 700, fontSize: '0.85rem' }}>
-              <Maximize2 size={15} /> Fullscreen
-            </button>
-            {next && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            {/* Next also completes the lesson — one button, not two */}
+            {next ? (
               <button onClick={() => {
+                complete(current.id)
                 if (current && !NO_CHECKIN.has(current.module.slug)) setCheckIn(current)
                 else openLesson(next.id)
               }}
                 style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 10, border: 'none', background: BLUE, color: '#0B1220', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>
                 Next lesson <ChevronRight size={15} />
               </button>
+            ) : (
+              <button onClick={() => complete(current.id)} disabled={isDone}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10, cursor: isDone ? 'default' : 'pointer', border: `1px solid ${isDone ? GREEN : '#333'}`, background: isDone ? 'rgba(76,175,125,0.14)' : 'transparent', color: isDone ? GREEN : '#A8A8A8', fontWeight: 700, fontSize: '0.85rem' }}>
+                <Check size={15} /> {isDone ? 'Completed' : 'Mark complete'}
+              </button>
+            )}
+
+            <button onClick={goFullscreen}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10, cursor: 'pointer', border: '1px solid #333', background: 'transparent', color: '#A8A8A8', fontWeight: 700, fontSize: '0.85rem' }}>
+              <Maximize2 size={15} /> Fullscreen
+            </button>
+
+            {/* Status, not a control — completion happens by moving on */}
+            {next && isDone && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: GREEN, fontSize: '0.8rem', fontWeight: 700 }}>
+                <Check size={14} /> Watched
+              </span>
             )}
           </div>
         </div>
