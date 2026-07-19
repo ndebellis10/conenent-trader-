@@ -7,7 +7,6 @@ import AlanMascot from '../../components/AlanMascot'
 import { useTradeStore } from '../../store/tradeStore'
 import { useAuth } from '../../contexts/AuthContext'
 import { courseApi } from '../../lib/api'
-import { useGoalStore } from '../../store/goalStore'
 
 /* Onboarding-style modules skip the check-in — it only fires on teaching content */
 const NO_CHECKIN = new Set(['start-here', 'mindset-module'])
@@ -75,7 +74,7 @@ function Ring({ pct, size = 44, stroke = 4, color = BLUE, label }) {
 
 export default function CourseMaterial() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const { trades, settings, playbook } = useTradeStore()
+  const settings = useTradeStore(st => st.settings)
   const { user } = useAuth()
   const email = user?.email
   const displayName = settings?.name || user?.name || (email || '').split('@')[0] || 'trader'
@@ -84,7 +83,6 @@ export default function CourseMaterial() {
   const loadedRef = useRef(false)
   const [openModules, setOpenModules] = useState(() => new Set(COURSE_MODULES.map(m => m.slug)))
   const stageRef = useRef(null)
-  const { goals, completions }         = useGoalStore()
   const [checkIn, setCheckIn]  = useState(null)   // lesson just finished
   const [chatOpen, setChatOpen] = useState(false)
   const [seed, setSeed]        = useState({ text: '', n: 0 })
@@ -440,11 +438,17 @@ export default function CourseMaterial() {
         </div>
       )}
 
+      {/* Lesson mode: no journal preamble, no P&L — the question is the first
+          thing in the thread and the answer follows it. Trades are deliberately
+          not sent so Alan answers about the lesson, not the account. */}
       <ChatDrawer
+        lessonMode
         open={chatOpen}
         onClose={() => setChatOpen(false)}
-        trades={trades} stats={null} goals={goals}
-        completions={completions} settings={settings} playbook={playbook} seed={seed}
+        title="Alan"
+        subtitle={current ? current.title : ''}
+        trades={[]} stats={null} goals={null}
+        completions={null} settings={settings} playbook={[]} seed={seed}
       />
     </div>
   )

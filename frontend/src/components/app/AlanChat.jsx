@@ -25,8 +25,12 @@ function makeInitMessage(trades, stats) {
 }
 
 /* ── Chat tab ─────────────────────────────────────────────── */
-export default function AlanChat({ trades, stats, goals, completions, settings, playbook, seed }) {
-  const [messages,  setMessages]  = useState(() => [{ role: 'assistant', content: makeInitMessage(trades, stats) }])
+export default function AlanChat({ trades, stats, goals, completions, settings, playbook, seed, lessonMode = false }) {
+  // In lesson mode the thread starts empty — the question is the first thing
+  // shown, then the answer. No journal/P&L preamble.
+  const [messages,  setMessages]  = useState(
+    () => (lessonMode ? [] : [{ role: 'assistant', content: makeInitMessage(trades, stats) }])
+  )
   const [input,     setInput]     = useState('')
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState(null)
@@ -169,7 +173,7 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
         @keyframes aiPulse { 0%,60%,100%{transform:translateY(0);opacity:.5} 30%{transform:translateY(-5px);opacity:1} }
       `}</style>
 
-      {empty ? (
+      {empty && !lessonMode ? (
         <div className="alanchat-empty">
           <AlanMascot size={104} style={{ filter: 'drop-shadow(0 8px 22px rgba(0,0,0,0.5))' }} />
           <h2>Ask Alan</h2>

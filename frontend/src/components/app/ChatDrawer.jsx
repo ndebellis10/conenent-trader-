@@ -5,7 +5,7 @@ import AlanChat from './AlanChat'
 
 /* Right-side chat panel. Stays mounted while closed (translated off-screen)
    so the conversation survives opening and closing. */
-export default function ChatDrawer({ open, onClose, ...chatProps }) {
+export default function ChatDrawer({ open, onClose, title = 'Ask Alan', subtitle = 'Reads your journal', ...chatProps }) {
   // Escape closes the panel
   useEffect(() => {
     if (!open) return
@@ -67,8 +67,8 @@ export default function ChatDrawer({ open, onClose, ...chatProps }) {
         <div className="alandrawer-head">
           <AlanMascot size={34} />
           <div>
-            <div className="alandrawer-title">Ask Alan</div>
-            <div className="alandrawer-sub">Reads your journal</div>
+            <div className="alandrawer-title">{title}</div>
+            {subtitle && <div className="alandrawer-sub">{subtitle}</div>}
           </div>
           <button className="alandrawer-close" onClick={onClose} aria-label="Close chat">
             <X size={18} />
