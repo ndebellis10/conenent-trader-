@@ -159,25 +159,83 @@ export default function CourseMaterial() {
   return (
     <div className="course">
       <style>{`
-        .course { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+        .course { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 18px; align-items: start; }
         .course-stage { background: #000; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; }
         .course-stage video, .course-stage iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: none; background: #000; }
         /* In fullscreen the wrapper becomes the viewport — fill it */
         .course-stage:fullscreen { border-radius: 0; border: none; display: flex; align-items: center; justify-content: center; }
         .course-stage:fullscreen video, .course-stage:fullscreen iframe { height: 100%; width: 100%; aspect-ratio: auto; object-fit: contain; }
+        .course-stage-col { max-width: 860px; }
         .course-rail { background: #1C1C1C; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; position: sticky; top: 16px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
         .course-rail-scroll { overflow-y: auto; padding: 8px; }
         .course-lesson { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: none; border: none; cursor: pointer; text-align: left; border-radius: 9px; transition: background .15s; }
         .course-lesson:hover { background: rgba(255,255,255,0.035); }
         .course-lesson.on { background: rgba(59,130,246,0.12); }
-        @media (max-width: 900px) {
+        @media (max-width: 1100px) {
           .course { grid-template-columns: 1fr; }
+          .course-stage-col { max-width: none; }
           .course-rail { position: static; max-height: none; }
         }
       `}</style>
 
+      {/* Rail */}
+      <aside className="course-rail">
+        <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid #262626', display: 'flex', alignItems: 'center', gap: 13 }}>
+          <Ring pct={stats.pct} size={44} stroke={4} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ color: '#F2F2F2', fontSize: '0.86rem', fontWeight: 700 }}>Course Material</div>
+            <div style={{ color: '#6E6E6E', fontSize: '0.75rem', marginTop: 1 }}>
+              {stats.completed} of {TOTAL_LESSONS} lessons done
+            </div>
+          </div>
+        </div>
+
+        <div className="course-rail-scroll">
+          {stats.perModule.map((m, mi, arr) => {
+            const open = openModules.has(m.slug)
+            // Category heading whenever the group changes (e.g. "Foundations")
+            const heading = m.group && m.group !== arr[mi - 1]?.group ? m.group : null
+            return (
+              <div key={m.slug} style={{ marginBottom: 4 }}>
+                {heading && (
+                  <div style={{ color: '#5A5A5A', fontSize: '0.64rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', padding: '14px 10px 5px' }}>
+                    {heading}
+                  </div>
+                )}
+                <button onClick={() => toggleModule(m.slug)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 9 }}>
+                  <ChevronRight size={14} color="#5A5A5A" style={{ flexShrink: 0, transition: 'transform .18s', transform: open ? 'rotate(90deg)' : 'none' }} />
+                  <span style={{ flex: 1, minWidth: 0, color: '#E4E4E4', fontSize: '0.84rem', fontWeight: 700 }}>{m.title}</span>
+                  <span style={{ color: '#5E5E5E', fontSize: '0.72rem', flexShrink: 0 }}>{m.completed}/{m.lessons.length}</span>
+                </button>
+
+                {open && m.lessons.map((l, i) => {
+                  const on = l.id === lessonId
+                  const ld = done.has(l.id)
+                  return (
+                    <div key={l.id} className={`course-lesson${on ? ' on' : ''}`}
+                      onClick={() => openLesson(l.id)} role="button" tabIndex={0}
+                      onKeyDown={e => { if (e.key === 'Enter') openLesson(l.id) }}>
+                      <button onClick={e => { e.stopPropagation(); toggle(l.id) }}
+                        title={ld ? 'Mark not done' : 'Mark complete'}
+                        style={{ width: 19, height: 19, borderRadius: '50%', flexShrink: 0, cursor: 'pointer', padding: 0, border: `1px solid ${ld ? GREEN : '#3A3A3A'}`, background: ld ? 'rgba(76,175,125,0.18)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {ld ? <Check size={11} color={GREEN} /> : <span style={{ color: '#555', fontSize: '0.62rem', fontFamily: 'JetBrains Mono, monospace' }}>{i + 1}</span>}
+                      </button>
+                      <span style={{ flex: 1, minWidth: 0, color: on ? BLUE : ld ? '#7E7E7E' : '#BFBFBF', fontSize: '0.82rem', fontWeight: on ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {l.title}
+                      </span>
+                      {on && <Play size={11} color={BLUE} fill={BLUE} style={{ flexShrink: 0 }} />}
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })}
+        </div>
+      </aside>
+
       {/* Stage */}
-      <div style={{ minWidth: 0 }}>
+      <div className="course-stage-col" style={{ minWidth: 0 }}>
         <div className="course-stage" ref={stageRef}>
           {!src ? (
             <div style={{ aspectRatio: '16 / 9', background: 'linear-gradient(160deg,#242424,#141414)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
@@ -257,62 +315,6 @@ export default function CourseMaterial() {
           )
         })()}
       </div>
-
-      {/* Rail */}
-      <aside className="course-rail">
-        <div style={{ padding: '16px 16px 14px', borderBottom: '1px solid #262626', display: 'flex', alignItems: 'center', gap: 13 }}>
-          <Ring pct={stats.pct} size={44} stroke={4} />
-          <div style={{ minWidth: 0 }}>
-            <div style={{ color: '#F2F2F2', fontSize: '0.86rem', fontWeight: 700 }}>Course Material</div>
-            <div style={{ color: '#6E6E6E', fontSize: '0.75rem', marginTop: 1 }}>
-              {stats.completed} of {TOTAL_LESSONS} lessons done
-            </div>
-          </div>
-        </div>
-
-        <div className="course-rail-scroll">
-          {stats.perModule.map((m, mi, arr) => {
-            const open = openModules.has(m.slug)
-            // Category heading whenever the group changes (e.g. "Foundations")
-            const heading = m.group && m.group !== arr[mi - 1]?.group ? m.group : null
-            return (
-              <div key={m.slug} style={{ marginBottom: 4 }}>
-                {heading && (
-                  <div style={{ color: '#5A5A5A', fontSize: '0.64rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', padding: '14px 10px 5px' }}>
-                    {heading}
-                  </div>
-                )}
-                <button onClick={() => toggleModule(m.slug)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 9 }}>
-                  <ChevronRight size={14} color="#5A5A5A" style={{ flexShrink: 0, transition: 'transform .18s', transform: open ? 'rotate(90deg)' : 'none' }} />
-                  <span style={{ flex: 1, minWidth: 0, color: '#E4E4E4', fontSize: '0.84rem', fontWeight: 700 }}>{m.title}</span>
-                  <span style={{ color: '#5E5E5E', fontSize: '0.72rem', flexShrink: 0 }}>{m.completed}/{m.lessons.length}</span>
-                </button>
-
-                {open && m.lessons.map((l, i) => {
-                  const on = l.id === lessonId
-                  const ld = done.has(l.id)
-                  return (
-                    <div key={l.id} className={`course-lesson${on ? ' on' : ''}`}
-                      onClick={() => openLesson(l.id)} role="button" tabIndex={0}
-                      onKeyDown={e => { if (e.key === 'Enter') openLesson(l.id) }}>
-                      <button onClick={e => { e.stopPropagation(); toggle(l.id) }}
-                        title={ld ? 'Mark not done' : 'Mark complete'}
-                        style={{ width: 19, height: 19, borderRadius: '50%', flexShrink: 0, cursor: 'pointer', padding: 0, border: `1px solid ${ld ? GREEN : '#3A3A3A'}`, background: ld ? 'rgba(76,175,125,0.18)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {ld ? <Check size={11} color={GREEN} /> : <span style={{ color: '#555', fontSize: '0.62rem', fontFamily: 'JetBrains Mono, monospace' }}>{i + 1}</span>}
-                      </button>
-                      <span style={{ flex: 1, minWidth: 0, color: on ? BLUE : ld ? '#7E7E7E' : '#BFBFBF', fontSize: '0.82rem', fontWeight: on ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {l.title}
-                      </span>
-                      {on && <Play size={11} color={BLUE} fill={BLUE} style={{ flexShrink: 0 }} />}
-                    </div>
-                  )
-                })}
-              </div>
-            )
-          })}
-        </div>
-      </aside>
     </div>
   )
 }
