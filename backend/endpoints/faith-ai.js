@@ -476,7 +476,7 @@ async function handleCoach(body, res) {
   const apiKey = getApiKey()
   if (!apiKey) return res.status(503).json({ error: 'ANTHROPIC_API_KEY not configured.' })
 
-  const prompt = `TRADE BEING ANALYZED:\n${JSON.stringify(formatTrade(trade), null, 2)}\n\nLAST ${Math.min(recentTrades.length, 20)} TRADES:\n${JSON.stringify(recentTrades.slice(0, 20).map(formatTrade), null, 2)}\n\nRespond ONLY with valid JSON:\n{"execution":"...","psychology":"...","patterns":"...","scripture":"...","scriptureRef":"..."}`
+  const prompt = `TRADE BEING ANALYZED:\n${JSON.stringify(formatTrade(trade), null, 2)}\n\nLAST ${Math.min(recentTrades.length, 20)} TRADES:\n${JSON.stringify(recentTrades.slice(0, 20).map(formatTrade), null, 2)}\n\nRespond ONLY with valid JSON. Every field is HARD CAPPED at 35 words — count them:\n{"execution":"<=35 words, one point only","psychology":"<=35 words, name the emotion","patterns":"<=35 words, or say too few trades yet","scripture":"the verse text","scriptureRef":"Book 0:0"}`
 
   const client = new Anthropic({ apiKey })
   const response = await client.messages.create({
@@ -501,7 +501,7 @@ async function handleSummary(body, res) {
   const apiKey = getApiKey()
   if (!apiKey) return res.status(503).json({ error: 'ANTHROPIC_API_KEY not configured.' })
 
-  const prompt = `Here are the last 30 days of trades (${recent.length} total):\n${JSON.stringify(recent.map(formatTrade), null, 2)}\n\nRespond ONLY with valid JSON:\n{"strength":"...","weakness":"...","ruleChange":"...","scripture":"...","scriptureRef":"..."}`
+  const prompt = `Here are the last 30 days of trades (${recent.length} total):\n${JSON.stringify(recent.map(formatTrade), null, 2)}\n\nRespond ONLY with valid JSON. Every field is HARD CAPPED at 35 words — count them:\n{"strength":"<=35 words, cite the number","weakness":"<=35 words, cite the number","ruleChange":"<=35 words, one concrete rule","scripture":"the verse text","scriptureRef":"Book 0:0"}`
 
   const client = new Anthropic({ apiKey })
   const response = await client.messages.create({
