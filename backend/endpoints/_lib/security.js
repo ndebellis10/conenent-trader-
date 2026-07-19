@@ -70,7 +70,7 @@ export function applySecurity(req, res) {
     "img-src 'self' data: https:",
     "media-src 'self' blob: data: https://cdn.discordapp.com https://*.discordapp.net https://*.supabase.co",
     "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-    "frame-src https://challenges.cloudflare.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://player.vimeo.com",
+    "frame-src https://challenges.cloudflare.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.loom.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

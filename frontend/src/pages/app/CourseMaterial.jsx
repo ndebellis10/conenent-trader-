@@ -25,6 +25,8 @@ function embedUrl(url) {
   if (yt) return `https://www.youtube.com/embed/${yt[1]}`
   const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/)
   if (vm) return `https://player.vimeo.com/video/${vm[1]}`
+  const lm = url.match(/loom\.com\/(?:share|embed)\/([\w-]{16,})/)
+  if (lm) return `https://www.loom.com/embed/${lm[1]}`
   return null
 }
 

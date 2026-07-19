@@ -155,6 +155,60 @@ export const COURSE_MODULES = [
       { id: 'cm-recap-8', title: 'Covenant Recap 2 — 6.9.26', video: 'https://youtu.be/bYBZgmtnjBI' },
     ],
   },
+  {
+    slug: 'prop-firm-setup',
+    title: 'How To Set Up Prop Firms',
+    blurb: 'Platform setup, order types, contract sizing and risk settings.',
+    lessons: [
+      { id: 'prop-1', title: 'Alpha Futures Set Up', video: 'https://youtu.be/XXP3DJQ4buU' },
+      { id: 'prop-2', title: 'ProjectX Panel Set Up', video: 'https://youtu.be/AO4UzDP0Gvw' },
+      { id: 'prop-3', title: 'Market Orders + Stop Buys & Sells', video: 'https://youtu.be/ZShKbLl7ONw' },
+      { id: 'prop-4', title: 'Market Orders & Stop Buys & Sells (Part 2)', video: 'https://youtu.be/OHEdqEI-nAc' },
+      { id: 'prop-5', title: 'What Is Contract Sizing', video: 'https://youtu.be/Q8eFg0F6-zk' },
+      { id: 'prop-6', title: 'How To Change Risk Settings', video: 'https://youtu.be/x4MLDK_yXbk' },
+      { id: 'prop-7', title: 'Final Set Up Recap', video: 'https://youtu.be/xjY8viKEVLA' },
+    ],
+  },
+  {
+    slug: 'mastery-heatmaps',
+    group: 'Mastery Suite',
+    title: 'Heatmaps',
+    blurb: 'Reading resting liquidity and using it for sharper entries and exits.',
+    lessons: [
+      { id: 'ms-heat-1', title: 'Aggressive Liquidity', video: 'https://youtu.be/11Drn5skje0' },
+      { id: 'ms-heat-2', title: 'Passive Liquidity', video: 'https://youtu.be/3HbQv8rs68w' },
+      { id: 'ms-heat-3', title: 'Reading Heatmaps', video: 'https://youtu.be/k0sndsZ6oN4' },
+      { id: 'ms-heat-4', title: 'Heatmap Liquidity Grab', video: 'https://youtu.be/kT4AL8gkTO0' },
+      { id: 'ms-heat-5', title: 'Smarter Take Profits', video: 'https://youtu.be/DGHrikdWsDE' },
+      { id: 'ms-heat-6', title: 'Incorporating Heatmaps', video: 'https://youtu.be/3jzuFD0om9w' },
+      { id: 'ms-heat-7', title: 'Real World Application', video: 'https://youtu.be/3lkqHYzOuI8' },
+    ],
+  },
+  {
+    slug: 'mastery-advanced-vaults',
+    group: 'Mastery Suite',
+    title: 'Advanced Vaults',
+    blurb: 'Protected stops, Fibonacci, rejection blocks and pre-market bias.',
+    lessons: [
+      { id: 'ms-vault-1', title: 'Protected Stop Losses In Depth', video: 'https://youtu.be/IUlao1iFpuA' },
+      { id: 'ms-vault-2', title: 'How to Use Fibonacci for Trading', video: 'https://www.loom.com/share/4e514c55c6db4241a42bc5af3b771cbc' },
+      { id: 'ms-vault-3', title: 'Rejection Blocks for Stronger Covenant Trades', video: 'https://www.loom.com/share/93a0dbec11824fa296e44738615a7be1' },
+      { id: 'ms-vault-4', title: 'Spotting Rejection Blocks and Stop Loss', video: 'https://www.loom.com/share/871f1c23e8634483b9451ed69b2e5448' },
+      { id: 'ms-vault-5', title: 'Using Pre-Market Conditions for Trading Bias', video: 'https://www.loom.com/share/95d0d6b0bcb949bb85622737ad4921df' },
+    ],
+  },
+  {
+    slug: 'mastery-ath',
+    group: 'Mastery Suite',
+    title: 'How To Trade ATH',
+    blurb: 'Trading all-time highs — entries, targets and staying profitable.',
+    lessons: [
+      { id: 'ms-ath-1', title: 'What Are All-Time Highs', video: 'https://youtu.be/Hs9qOZRu9qw' },
+      { id: 'ms-ath-2', title: 'Spotting An ATH Entry', video: 'https://youtu.be/-HbRiTFkZwY' },
+      { id: 'ms-ath-3', title: 'How To TP During ATH', video: 'https://youtu.be/D-8ju5xQOl4' },
+      { id: 'ms-ath-4', title: 'Staying Profitable During ATH', video: 'https://youtu.be/jbkd3qNwYWA' },
+    ],
+  },
 ]
 
 const GENERATED_OUTLINE = [
