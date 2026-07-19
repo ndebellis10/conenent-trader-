@@ -74,13 +74,33 @@ export default function DailyInsight({ trades }) {
     }
   }, [recent, email])
 
-  // Only hit the API when today's cache can't answer it
+  // Only hit the API when today's cache can't answer it. Deferred a tick so
+  // the fetch's setState doesn't fire synchronously inside the effect body.
   useEffect(() => {
     if (!recent.length || cached || fetched) return
-    run()
+    const id = setTimeout(run, 0)
+    return () => clearTimeout(id)
   }, [recent.length, cached, fetched, run])
 
-  if (!recent.length || unavailable) return null
+  if (!recent.length) return null
+
+  const cardBase = { background: '#1E1E1E', border: '1px solid #2A2A2A', borderRadius: 14 }
+
+  // AI not configured — show a quiet placeholder so the card is findable
+  if (unavailable) return (
+    <div style={{ ...cardBase, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+      <AlanMascot size={34} style={{ opacity: 0.5 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ color: '#B4B4B4', fontSize: '0.88rem', fontWeight: 700 }}>What to work on</div>
+        <div style={{ color: '#6A6A6A', fontSize: '0.77rem', marginTop: 1 }}>
+          Alan will review your last 30 days here once the AI key is set in Vercel.
+        </div>
+      </div>
+      <span style={{ color: '#5A5A5A', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', border: '1px solid #2E2E2E', borderRadius: 6, padding: '4px 9px' }}>
+        Needs setup
+      </span>
+    </div>
+  )
 
   const card = { background: '#1E1E1E', border: '1px solid #2A2A2A', borderRadius: 14 }
 
