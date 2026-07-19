@@ -1,10 +1,29 @@
-import { useState } from 'react'
-import { PlusCircle, Trash2, BookOpen } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { PlusCircle, Trash2, BookOpen, Sparkles } from 'lucide-react'
 import { useTradeStore } from '../../store/tradeStore'
+import { COVENANT_SEED_FLAG, COVENANT_STRATEGIES, missingCovenantStrategies } from '../../lib/covenantPlaybook'
 
 export default function Playbook() {
   const { playbook, addPlaybookStrategy, deletePlaybookStrategy, trades } = useTradeStore()
   const [showForm, setShowForm] = useState(false)
+  const seededRef = useRef(false)
+
+  /* Seed the Covenant model once so the playbook isn't empty and the rules
+     live where trades get logged. Runs a single time per user — deleting a
+     strategy afterwards is respected and it won't come back. */
+  useEffect(() => {
+    if (seededRef.current) return
+    seededRef.current = true
+    if (localStorage.getItem(COVENANT_SEED_FLAG)) return
+    localStorage.setItem(COVENANT_SEED_FLAG, '1')
+    // Oldest last so the core PDI strategy ends up on top
+    ;[...COVENANT_STRATEGIES].reverse().forEach(addPlaybookStrategy)
+  }, [addPlaybookStrategy])
+
+  const missing = missingCovenantStrategies(playbook)
+  const restoreCovenant = () => {
+    ;[...missing].reverse().forEach(addPlaybookStrategy)
+  }
   const [form, setForm] = useState({ name: '', description: '', entryRules: '', exitRules: '', riskRules: '' })
 
   const getStats = (strategyName) => {
@@ -60,6 +79,21 @@ export default function Playbook() {
         </div>
       )}
 
+      {missing.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 12, padding: '12px 16px', marginBottom: 18, flexWrap: 'wrap' }}>
+          <Sparkles size={15} color="#3B82F6" />
+          <span style={{ color: '#C8C8C8', fontSize: '0.83rem' }}>
+            {missing.length === COVENANT_STRATEGIES.length
+              ? 'Add the Covenant model to your playbook — PDI, AMD and the pre-market routine.'
+              : `${missing.length} Covenant strateg${missing.length === 1 ? 'y is' : 'ies are'} missing from your playbook.`}
+          </span>
+          <button onClick={restoreCovenant}
+            style={{ marginLeft: 'auto', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.35)', color: '#3B82F6', borderRadius: 8, padding: '7px 14px', fontSize: '0.79rem', fontWeight: 700, cursor: 'pointer' }}>
+            Add Covenant model
+          </button>
+        </div>
+      )}
+
       {!playbook.length ? (
         <div style={{ textAlign: 'center', padding: '80px 20px' }}>
           <BookOpen size={48} color="#3A3A3A" style={{ margin: '0 auto 16px' }} />
@@ -88,12 +122,21 @@ export default function Playbook() {
                     <div style={{ fontFamily: 'JetBrains Mono, monospace', color: '#4CAF7D', fontWeight: 700 }}>{stats.winRate}%</div>
                   </div>
                 </div>
-                {s.entryRules && (
-                  <div style={{ marginBottom: '10px' }}>
-                    <div style={{ color: '#3B82F6', fontSize: '0.72rem', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Entry Rules</div>
-                    <p style={{ color: '#A0A0A0', fontSize: '0.82rem', margin: 0 }}>{s.entryRules}</p>
-                  </div>
-                )}
+                {/* All three rule sets — exit and risk were collected by the form
+                    but never rendered, so anything written there was invisible.
+                    pre-line keeps multi-line rules readable. */}
+                {[
+                  ['entryRules', 'Entry Rules', '#3B82F6'],
+                  ['exitRules',  'Exit Rules',  '#4CAF7D'],
+                  ['riskRules',  'Risk Rules',  '#E0A752'],
+                ].map(([key, label, color]) => (
+                  s[key] ? (
+                    <div key={key} style={{ marginBottom: '10px' }}>
+                      <div style={{ color, fontSize: '0.72rem', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+                      <p style={{ color: '#A0A0A0', fontSize: '0.82rem', margin: 0, whiteSpace: 'pre-line', lineHeight: 1.6 }}>{s[key]}</p>
+                    </div>
+                  ) : null
+                ))}
               </div>
             )
           })}
