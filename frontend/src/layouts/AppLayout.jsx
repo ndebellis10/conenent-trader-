@@ -276,8 +276,10 @@ export default function AppLayout() {
   useEffect(() => { mainRef.current?.scrollTo(0, 0) }, [location.pathname])
 
   // Admin cannot log trades or see Faith Journal
+  // Admins get everything except logging trades and the two private sections —
+  // Faith Journal and Daily Goals stay the trader's own.
   const items = isAdmin
-    ? TRADING_ITEMS.filter(i => i.to !== '/app/log' && i.to !== '/app/faith')
+    ? TRADING_ITEMS.filter(i => !['/app/log', '/app/faith', '/app/goals'].includes(i.to))
     : TRADING_ITEMS
 
   // Inside Ask Alan the sidebar shows the AI's sections instead of the journal nav

@@ -40,6 +40,23 @@ export default async function handler(req, res) {
 
   const sub = route(req)
 
+  /* ── GET /api/admin/course-progress ──────────────────────────────
+     Every trader's completed lesson ids, so admins can see who has
+     watched what without impersonating each account. */
+  if (sub === 'course-progress' && req.method === 'GET') {
+    if (!supabaseConfigured) return res.status(200).json({ progress: [] })
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('course_progress')
+        .select('email, completed, updated_at')
+        .order('updated_at', { ascending: false })
+      if (error) throw error
+      return res.status(200).json({ progress: data || [] })
+    } catch (e) {
+      return res.status(200).json({ progress: [], error: String(e.message || e) })
+    }
+  }
+
   /* ── GET /api/admin/users ── */
   if (sub === 'users' && req.method === 'GET') {
     if (!supabaseConfigured) {

@@ -12,6 +12,15 @@ import { useGoalStore } from '../../store/goalStore'
 /* Onboarding-style modules skip the check-in — it only fires on teaching content */
 const NO_CHECKIN = new Set(['start-here', 'mindset-module'])
 
+/* One-tap questions — the things people most often get stuck on */
+const CHECKIN_QUESTIONS = [
+  'Can you explain that in simpler terms?',
+  'What is the most important part to remember?',
+  'How do I spot this on a live chart?',
+  'What do people usually get wrong here?',
+  'How does this fit into the Covenant model?',
+]
+
 /* Course Material — lesson rail on the left, player on the right.
    Sections render in the app sidebar (see COURSE_NAV in AppLayout). */
 
@@ -69,6 +78,8 @@ export default function CourseMaterial() {
   const { trades, settings, playbook } = useTradeStore()
   const { user } = useAuth()
   const email = user?.email
+  const displayName = settings?.name || user?.name || (email || '').split('@')[0] || 'trader'
+  const firstName = String(displayName).split(' ')[0]
   const [done, setDone] = useState(() => loadDone(email))
   const loadedRef = useRef(false)
   const [openModules, setOpenModules] = useState(() => new Set(COURSE_MODULES.map(m => m.slug)))
@@ -374,34 +385,54 @@ export default function CourseMaterial() {
       {checkIn && (
         <div
           onClick={() => { setCheckIn(null); if (next) openLesson(next.id) }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.62)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
         >
           <div onClick={e => e.stopPropagation()}
-            style={{ background: '#1C1C1C', border: '1px solid #2E2E2E', borderRadius: 18, padding: '26px 28px', maxWidth: 460, width: '100%', boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginBottom: 14 }}>
-              <AlanMascot size={52} />
-              <div>
-                <div style={{ color: '#F2F2F2', fontSize: '0.95rem', fontWeight: 800, fontFamily: 'Poppins, sans-serif' }}>Alan</div>
-                <div style={{ color: '#6A6A6A', fontSize: '0.76rem' }}>{checkIn.module.title}</div>
+            style={{
+              width: '100%', maxWidth: 560, borderRadius: 20, padding: '28px 30px',
+              border: '1px solid #2C2C2C',
+              background: 'radial-gradient(90% 120% at 16% 0%, rgba(59,130,246,0.16), transparent 62%), linear-gradient(180deg,#212121,#171717)',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
+            }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+              <AlanMascot size={78} style={{ filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.5))' }} />
+              <div style={{ minWidth: 0 }}>
+                <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, color: '#F5F5F5', fontSize: '1.35rem', margin: '0 0 4px' }}>
+                  Hello, <span style={{ color: BLUE }}>{firstName}</span>
+                </h2>
+                <p style={{ color: '#8A8A8A', fontSize: '0.87rem', margin: 0, lineHeight: 1.5 }}>
+                  Any questions on <strong style={{ color: '#E8E8E8' }}>{checkIn.title}</strong>?
+                </p>
               </div>
             </div>
-            <p style={{ color: '#C4C4C4', fontSize: '0.92rem', lineHeight: 1.65, margin: '0 0 20px' }}>
-              Do you have any questions, or are you confused on anything that was taught in
-              <strong style={{ color: '#F0F0F0' }}> {checkIn.title}</strong>?
-            </p>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+              {CHECKIN_QUESTIONS.map(q => (
+                <button key={q}
+                  onClick={() => {
+                    setSeed(p => ({ text: `About the lesson "${checkIn.title}" (${checkIn.module.title}) — ${q}`, n: p.n + 1 }))
+                    setChatOpen(true); setCheckIn(null)
+                  }}
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #333', color: '#9C9C9C', borderRadius: 999, padding: '8px 15px', fontSize: '0.79rem', fontWeight: 600, cursor: 'pointer' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(59,130,246,0.5)'; e.currentTarget.style.color = BLUE }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#9C9C9C' }}>
+                  {q}
+                </button>
+              ))}
+            </div>
+
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button
                 onClick={() => {
-                  setSeed(p => ({ text: `I just finished the lesson "${checkIn.title}" in ${checkIn.module.title}. Can you explain the key ideas simply and check my understanding?`, n: p.n + 1 }))
-                  setChatOpen(true)
-                  setCheckIn(null)
+                  setSeed(p => ({ text: `I just finished "${checkIn.title}" in ${checkIn.module.title}. Can you walk me through the key ideas and check my understanding?`, n: p.n + 1 }))
+                  setChatOpen(true); setCheckIn(null)
                 }}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px', borderRadius: 10, border: 'none', background: BLUE, color: '#0B1220', fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer' }}>
-                Yes, ask Alan
+                style={{ padding: '11px 20px', borderRadius: 10, border: 'none', background: BLUE, color: '#0B1220', fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer' }}>
+                Ask Alan something else
               </button>
               <button
                 onClick={() => { setCheckIn(null); if (next) openLesson(next.id) }}
-                style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid #333', background: 'transparent', color: '#A8A8A8', fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer' }}>
+                style={{ padding: '11px 20px', borderRadius: 10, border: '1px solid #333', background: 'transparent', color: '#A8A8A8', fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer' }}>
                 No, next lesson
               </button>
             </div>
