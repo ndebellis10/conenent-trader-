@@ -25,7 +25,7 @@ function makeInitMessage(trades, stats) {
 }
 
 /* ── Chat tab ─────────────────────────────────────────────── */
-export default function AlanChat({ trades, stats, goals, completions, settings, playbook, seed, lessonMode = false }) {
+export default function AlanChat({ trades, stats, goals, completions, settings, playbook, seed, lessonMode = false, lessonContext = null }) {
   // In lesson mode the thread starts empty — the question is the first thing
   // shown, then the answer. No journal/P&L preamble.
   const [messages,  setMessages]  = useState(
@@ -81,7 +81,7 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
     setLoading(true)
     try {
       const history = messages.slice(-10)
-      const reply = await faithAiApi.chat(msg || 'What do you make of this chart?', history, trades, stats, goals, completions, settings, playbook, img)
+      const reply = await faithAiApi.chat(msg || 'What do you make of this chart?', history, trades, stats, goals, completions, settings, playbook, img, lessonContext)
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (e) {
       setError(e.message || 'Could not connect to Ask Alan. Please try again.')

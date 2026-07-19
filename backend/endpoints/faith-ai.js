@@ -358,7 +358,7 @@ Moved stop loss: ${movedStop} times`)
 }
 
 async function handleChat(body, res) {
-  const { message, history = [], trades = [], goals, completions, settings, playbook, image } = body
+  const { message, history = [], trades = [], goals, completions, settings, playbook, image, lessonContext } = body
   if (!message) return res.status(400).json({ error: 'message is required' })
 
   const apiKey = getApiKey()
@@ -366,7 +366,25 @@ async function handleChat(body, res) {
 
   const traderContext = buildTraderContext(trades, goals, completions, settings, playbook)
 
-  const volatileContext = traderContext + `
+  // Course context — which lesson they are on and the notes they wrote on it,
+  // so answers build on what they already understood instead of starting over.
+  let lessonBlock = ''
+  if (lessonContext && typeof lessonContext === 'object') {
+    const lines = []
+    if (lessonContext.lesson) lines.push('Lesson: ' + String(lessonContext.lesson).slice(0, 200))
+    if (lessonContext.module) lines.push('Module: ' + String(lessonContext.module).slice(0, 200))
+    const notes = String(lessonContext.notes || '').trim()
+    if (notes) {
+      lines.push('')
+      lines.push('THEIR OWN NOTES ON THIS LESSON (written by the trader — refer to these directly, correct anything wrong, and build on what they already grasped):')
+      lines.push(notes.slice(0, 6000))
+    }
+    if (lines.length) {
+      lessonBlock = ['', '', '=== CURRENT COURSE LESSON ===', ...lines, '=== END LESSON ==='].join('\n')
+    }
+  }
+
+  const volatileContext = traderContext + lessonBlock + `
 
 IMPORTANT RULES:
 1. Always reference the trader's ACTUAL numbers — win rate, P&L, streak, specific dollar amounts.

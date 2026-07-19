@@ -551,6 +551,7 @@ export default function CourseMaterial() {
         onClose={() => setChatOpen(false)}
         title="Alan"
         subtitle={current ? current.title : ''}
+        lessonContext={current ? { lesson: current.title, module: current.module.title, notes: notes[current.id] || '' } : null}
         trades={[]} stats={null} goals={null}
         completions={null} settings={settings} playbook={[]} seed={seed}
       />
