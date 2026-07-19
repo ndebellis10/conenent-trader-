@@ -1327,7 +1327,7 @@ export default function LogTrade() {
               ) : (
                 <>
                   <div style={{ color: '#555', fontSize: '0.8rem', padding: '12px 14px', background: '#1A1A1A', borderRadius: '8px', border: '1px solid #2A2A2A', marginBottom: '10px' }}>
-                    No strategies in your playbook yet — add them in the <span style={{ color: '#3B82F6' }}>Playbook</span> tab.
+                    No strategies yet — add them in the <span style={{ color: '#3B82F6' }}>Strategy</span> tab.
                   </div>
                   <input value={strategyName} onChange={e => setStrategyName(e.target.value)} placeholder="e.g. Bull Flag Breakout" style={inputStyle} />
                 </>

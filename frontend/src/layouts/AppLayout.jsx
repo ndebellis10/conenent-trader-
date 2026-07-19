@@ -49,7 +49,7 @@ const TRADING_ITEMS = [
   { to: '/app/news', label: 'USD News', icon: Newspaper },
   { to: '/app/reports', label: 'Reports', icon: FileBarChart2 },
 
-  { to: '/app/playbook', label: 'Playbook', icon: BookOpen },
+  { to: '/app/playbook', label: 'Strategy', icon: BookOpen },
   { to: '/app/goals', label: 'Daily Goals', icon: ListChecks },
   { to: '/app/faith', label: 'Faith Journal', icon: Cross },
   { to: '/app/settings', label: 'Settings', icon: Settings },

@@ -32,7 +32,7 @@ const features = [
   },
   {
     icon: Library,
-    title: 'Trade Playbook',
+    title: 'Trade Strategy',
     desc: 'Build and save your best setups so you always trade your plan — never your emotions or the chat.',
     color: '#38BDF8',
     glow: 'rgba(56,189,248,0.15)',
