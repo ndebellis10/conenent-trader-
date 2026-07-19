@@ -33,6 +33,59 @@ export const COURSE_MODULES = [
       },
     ],
   },
+  {
+    slug: 'foundations-trading-basics',
+    group: 'Foundations',
+    title: 'Trading Basics',
+    blurb: 'The building blocks — candles, structure, gaps, levels, stops and targets.',
+    quiz: {
+      url: 'https://create.kahoot.it/details/a1c1b4aa-57b1-431e-b269-d0d06f6d3c5f',
+      label: 'Trading Basics quiz',
+      blurb: 'All lessons done — take the Kahoot to check what stuck.',
+    },
+    lessons: [
+      { id: 'foundations-basics-1', title: 'Candlestick Basics',           video: 'https://youtu.be/WHkA0yEcJBw' },
+      { id: 'foundations-basics-2', title: 'Market Structure Fundamentals', video: 'https://youtu.be/hLhU9hUC6Zc' },
+      { id: 'foundations-basics-3', title: 'Fair Value Gaps & Imbalances',  video: 'https://www.youtube.com/watch?v=zKf1g4Bigi0' },
+      { id: 'foundations-basics-4', title: 'Support & Resistance Levels',   video: 'https://www.youtube.com/watch?v=GuAoSn3NpMA' },
+      { id: 'foundations-basics-5', title: 'Stop Loss & Take Profit',       video: 'https://www.youtube.com/watch?v=r-mFg7JOubs' },
+    ],
+  },
+  {
+    slug: 'foundations-liquidity',
+    group: 'Foundations',
+    title: 'Liquidity',
+    blurb: 'What liquidity is, where it sits, and how it gets engineered.',
+    quiz: {
+      url: 'https://create.kahoot.it/share/enter-kahoot-title/4166e08d-cedf-43f2-838a-3b9c18dc66e8',
+      label: 'Liquidity quiz',
+      blurb: 'All lessons done — take the Kahoot to check what stuck.',
+    },
+    lessons: [
+      { id: 'foundations-liquidity-1', title: 'Intro to Liquidity',    video: 'https://youtu.be/GL9HxdI2omA' },
+      { id: 'foundations-liquidity-2', title: 'Session Liquidity',     video: 'https://youtu.be/MMeiHtXCALg' },
+      { id: 'foundations-liquidity-3', title: 'Swing Highs & Lows',    video: 'https://youtu.be/5_iAo1cyCpw' },
+      { id: 'foundations-liquidity-4', title: 'Engineered Liquidity',  video: 'https://youtu.be/tyoEh-zIhzM' },
+      { id: 'foundations-liquidity-5', title: 'LRLR In Depth',         video: 'https://youtu.be/cxu3_NWrTpQ' },
+    ],
+  },
+  {
+    slug: 'foundations-market-movement',
+    group: 'Foundations',
+    title: 'Market Movement',
+    blurb: 'How price actually moves — trends, breaks, displacement and rejection.',
+    quiz: {
+      url: 'https://create.kahoot.it/share/covenant-quiz-1/f285b3b1-1b38-4230-8499-59b066be398a',
+      label: 'Market Movement quiz',
+      blurb: 'All lessons done — take the Kahoot to check what stuck.',
+    },
+    lessons: [
+      { id: 'foundations-mm-1', title: 'Trend Line vs Range',       video: 'https://www.youtube.com/watch?v=vwiMQEnxerk' },
+      { id: 'foundations-mm-2', title: 'Break of Structure',        video: 'https://www.youtube.com/watch?v=53FDtrs_WP8' },
+      { id: 'foundations-mm-3', title: 'Strong Displacement Candles', video: 'https://youtu.be/RJ1ZimqtEpk' },
+      { id: 'foundations-mm-4', title: 'Rejection Wick Theory',     video: 'https://youtu.be/TphcGAU5wro' },
+    ],
+  },
 ]
 
 const GENERATED_OUTLINE = [

@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Play, Check, ChevronRight, Maximize2 } from 'lucide-react'
+import { Play, Check, ChevronRight, Maximize2, Trophy, Lock } from 'lucide-react'
 import { COURSE_MODULES, TOTAL_LESSONS } from '../../lib/courseOutline'
 
 /* Course Material — lesson rail on the left, player on the right.
@@ -220,6 +220,42 @@ export default function CourseMaterial() {
             )}
           </div>
         </div>
+
+        {/* Quiz — unlocks once every lesson in the module is complete */}
+        {(() => {
+          const mod = current?.module
+          if (!mod?.quiz) return null
+          const ms = stats.perModule.find(m => m.slug === mod.slug)
+          const unlocked = ms && ms.completed === mod.lessons.length
+          return (
+            <div style={{
+              ...card, marginTop: 14, padding: '18px 22px',
+              borderColor: unlocked ? 'rgba(76,175,125,0.4)' : '#2A2A2A',
+              background: unlocked
+                ? 'radial-gradient(90% 130% at 8% 0%, rgba(76,175,125,0.12), transparent 60%), #1C1C1C'
+                : '#1C1C1C',
+              display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+            }}>
+              <div style={{ width: 40, height: 40, borderRadius: 11, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: unlocked ? 'rgba(76,175,125,0.15)' : '#232323', border: `1px solid ${unlocked ? 'rgba(76,175,125,0.35)' : '#2E2E2E'}` }}>
+                {unlocked ? <Trophy size={18} color={GREEN} /> : <Lock size={16} color="#555" />}
+              </div>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ color: unlocked ? '#F2F2F2' : '#8A8A8A', fontSize: '0.9rem', fontWeight: 700 }}>{mod.quiz.label}</div>
+                <div style={{ color: '#6E6E6E', fontSize: '0.78rem', marginTop: 2 }}>
+                  {unlocked
+                    ? mod.quiz.blurb
+                    : `Unlocks when all ${mod.lessons.length} lessons are complete — ${ms?.completed ?? 0} done.`}
+                </div>
+              </div>
+              {unlocked && (
+                <a href={mod.quiz.url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 10, background: GREEN, color: '#0B1A12', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'none', flexShrink: 0 }}>
+                  <Trophy size={15} /> Take the quiz
+                </a>
+              )}
+            </div>
+          )
+        })()}
       </div>
 
       {/* Rail */}
@@ -235,10 +271,17 @@ export default function CourseMaterial() {
         </div>
 
         <div className="course-rail-scroll">
-          {stats.perModule.map(m => {
+          {stats.perModule.map((m, mi, arr) => {
             const open = openModules.has(m.slug)
+            // Category heading whenever the group changes (e.g. "Foundations")
+            const heading = m.group && m.group !== arr[mi - 1]?.group ? m.group : null
             return (
               <div key={m.slug} style={{ marginBottom: 4 }}>
+                {heading && (
+                  <div style={{ color: '#5A5A5A', fontSize: '0.64rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', padding: '14px 10px 5px' }}>
+                    {heading}
+                  </div>
+                )}
                 <button onClick={() => toggleModule(m.slug)}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', borderRadius: 9 }}>
                   <ChevronRight size={14} color="#5A5A5A" style={{ flexShrink: 0, transition: 'transform .18s', transform: open ? 'rotate(90deg)' : 'none' }} />
