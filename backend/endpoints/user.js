@@ -34,6 +34,44 @@ export default async function handler(req, res) {
 
   const route = getSubRoute(req)
 
+  /* ══ /api/user/course-progress ══════════════════════════════════
+     Completed lesson ids, stored per account so watched lessons follow
+     the user across devices instead of living only in localStorage. */
+  if (route === 'course-progress') {
+    const email = String(user.email || '').toLowerCase()
+    if (!email) return res.status(400).json({ error: 'no email on session' })
+
+    if (req.method === 'GET') {
+      try {
+        const { data, error } = await supabaseAdmin
+          .from('course_progress').select('completed').eq('email', email).maybeSingle()
+        if (error) throw error
+        return res.status(200).json({ completed: data?.completed || [] })
+      } catch (e) {
+        return res.status(200).json({ completed: [], error: String(e.message || e) })
+      }
+    }
+
+    if (req.method === 'POST') {
+      const list = Array.isArray(req.body?.completed) ? req.body.completed : null
+      if (!list) return res.status(400).json({ error: 'completed[] required' })
+      // Cap it — the course is finite, this is just a guard against junk
+      const clean = [...new Set(list.filter(x => typeof x === 'string' && x.length < 120))].slice(0, 500)
+      try {
+        const { error } = await supabaseAdmin
+          .from('course_progress')
+          .upsert({ email, completed: clean, updated_at: new Date().toISOString() }, { onConflict: 'email' })
+        if (error) throw error
+        return res.status(200).json({ ok: true })
+      } catch (e) {
+        return res.status(500).json({ ok: false, error: String(e.message || e) })
+      }
+    }
+
+    res.setHeader('Allow', 'GET, POST')
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+
   /* ══ GET /api/user/export ═══════════════════════════════════════ */
   if (route === 'export') {
     if (req.method !== 'GET') {

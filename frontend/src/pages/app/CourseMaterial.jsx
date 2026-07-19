@@ -5,6 +5,8 @@ import { COURSE_MODULES, TOTAL_LESSONS } from '../../lib/courseOutline'
 import ChatDrawer from '../../components/app/ChatDrawer'
 import AlanMascot from '../../components/AlanMascot'
 import { useTradeStore } from '../../store/tradeStore'
+import { useAuth } from '../../contexts/AuthContext'
+import { courseApi } from '../../lib/api'
 import { useGoalStore } from '../../store/goalStore'
 
 /* Onboarding-style modules skip the check-in — it only fires on teaching content */
@@ -15,14 +17,18 @@ const NO_CHECKIN = new Set(['start-here', 'mindset-module'])
 
 const BLUE  = '#3B82F6'
 const GREEN = '#4CAF7D'
-const PROGRESS_KEY = 'ct-course-progress'
+/* Progress lives on the account (Supabase) so watched lessons follow you
+   between devices. localStorage is a per-user cache so the ticks show
+   instantly on load and still work if the request fails. */
+const progressKey = email =>
+  `ct-course-progress__${String(email || 'guest').replace(/[^a-z0-9]/gi, '_').toLowerCase()}`
 
-function loadDone() {
-  try { return new Set(JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]')) }
+function loadDone(email) {
+  try { return new Set(JSON.parse(localStorage.getItem(progressKey(email)) || '[]')) }
   catch { return new Set() }
 }
-function saveDone(set) {
-  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify([...set])) } catch { /* private mode */ }
+function saveDone(email, set) {
+  try { localStorage.setItem(progressKey(email), JSON.stringify([...set])) } catch { /* private mode */ }
 }
 
 /* Accepts a direct file (mp4/webm) or a YouTube/Vimeo link, so the video host
@@ -60,10 +66,13 @@ function Ring({ pct, size = 44, stroke = 4, color = BLUE, label }) {
 
 export default function CourseMaterial() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [done, setDone] = useState(loadDone)
+  const { trades, settings, playbook } = useTradeStore()
+  const { user } = useAuth()
+  const email = user?.email
+  const [done, setDone] = useState(() => loadDone(email))
+  const loadedRef = useRef(false)
   const [openModules, setOpenModules] = useState(() => new Set(COURSE_MODULES.map(m => m.slug)))
   const stageRef = useRef(null)
-  const { trades, settings, playbook } = useTradeStore()
   const { goals, completions }         = useGoalStore()
   const [checkIn, setCheckIn]  = useState(null)   // lesson just finished
   const [chatOpen, setChatOpen] = useState(false)
@@ -73,7 +82,27 @@ export default function CourseMaterial() {
   const firstLesson = COURSE_MODULES[0]?.lessons[0]?.id
   const lessonId = searchParams.get('lesson') || firstLesson
 
-  useEffect(() => { saveDone(done) }, [done])
+  // Pull the account's progress once, merging anything ticked offline
+  useEffect(() => {
+    if (!email || loadedRef.current) return
+    loadedRef.current = true
+    let alive = true
+    courseApi.getProgress()
+      .then(list => {
+        if (!alive || !Array.isArray(list)) return
+        setDone(prev => new Set([...prev, ...list]))
+      })
+      .catch(() => { /* offline or unauthenticated — cache still applies */ })
+    return () => { alive = false }
+  }, [email])
+
+  // Cache locally straight away, then push to the account
+  useEffect(() => {
+    saveDone(email, done)
+    if (!email || !loadedRef.current) return
+    const id = setTimeout(() => { courseApi.saveProgress([...done]).catch(() => {}) }, 600)
+    return () => clearTimeout(id)
+  }, [done, email])
 
   const toggle = (id) => setDone(prev => {
     const next = new Set(prev)

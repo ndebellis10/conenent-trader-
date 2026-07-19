@@ -95,6 +95,12 @@ export const userApi = {
   deleteAccount: (confirmation)  => request('POST',  '/user/delete', { confirmation }),
 }
 
+/* ── Course progress ──────────────────────────────────────── */
+export const courseApi = {
+  getProgress:  ()          => request('GET',  '/user/course-progress').then(d => d?.completed || []),
+  saveProgress: (completed) => request('POST', '/user/course-progress', { completed }),
+}
+
 /* ── Chart AI analysis ────────────────────────────────────── */
 export const chartApi = {
   analyze: (image) => request('POST', '/analyze-chart', { image }),
