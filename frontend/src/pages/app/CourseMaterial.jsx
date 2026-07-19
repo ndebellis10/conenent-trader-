@@ -216,11 +216,11 @@ export default function CourseMaterial() {
                     <div key={l.id} className={`course-lesson${on ? ' on' : ''}`}
                       onClick={() => openLesson(l.id)} role="button" tabIndex={0}
                       onKeyDown={e => { if (e.key === 'Enter') openLesson(l.id) }}>
-                      <button onClick={e => { e.stopPropagation(); toggle(l.id) }}
-                        title={ld ? 'Mark not done' : 'Mark complete'}
-                        style={{ width: 19, height: 19, borderRadius: '50%', flexShrink: 0, cursor: 'pointer', padding: 0, border: `1px solid ${ld ? GREEN : '#3A3A3A'}`, background: ld ? 'rgba(76,175,125,0.18)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {/* Status only — completion is marked from the lesson itself */}
+                      <span aria-hidden
+                        style={{ width: 19, height: 19, borderRadius: '50%', flexShrink: 0, border: `1px solid ${ld ? GREEN : '#3A3A3A'}`, background: ld ? 'rgba(76,175,125,0.18)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {ld ? <Check size={11} color={GREEN} /> : <span style={{ color: '#555', fontSize: '0.62rem', fontFamily: 'JetBrains Mono, monospace' }}>{i + 1}</span>}
-                      </button>
+                      </span>
                       <span style={{ flex: 1, minWidth: 0, color: on ? BLUE : ld ? '#7E7E7E' : '#BFBFBF', fontSize: '0.82rem', fontWeight: on ? 700 : 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {l.title}
                       </span>
