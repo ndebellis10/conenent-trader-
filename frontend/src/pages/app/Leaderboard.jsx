@@ -1,8 +1,10 @@
 /**
- * Leaderboard — 4 tabs in order:
- * Win Rate · Most Profit · Psychology · FaithScore
+ * Leaderboard — sections render in the app sidebar while you're on this page:
+ * Win Rate · Most Profit · Most Trades · Backtest Profit · Most Backtested ·
+ * Backtest Win Rate. See LEADERBOARD_NAV in layouts/AppLayout.jsx.
  */
 import { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTradeStore }  from '../../store/tradeStore'
 import { useAuthStore }   from '../../store/authStore'
 import { liveTrades, backtestTrades, summarize } from '../../lib/tradeFilters'
@@ -174,7 +176,12 @@ export default function Leaderboard() {
   const [rows,         setRows]         = useState([])
   const [loading,      setLoading]      = useState(true)
   const [error,        setError]        = useState(false)
-  const [activeTab,    setActiveTab]    = useState('mosttrades')
+  // Section lives in the URL — the app sidebar renders these while you're on
+  // this page (see LEADERBOARD_NAV in layouts/AppLayout.jsx)
+  const [searchParams] = useSearchParams()
+  const activeTab = TABS.some(t => t.id === searchParams.get('tab'))
+    ? searchParams.get('tab')
+    : 'winrate'
   const [resetting,    setResetting]    = useState(null)
   const [confirmEmail, setConfirmEmail] = useState(null)
   const [nameInput,    setNameInput]    = useState('')
@@ -416,25 +423,6 @@ export default function Leaderboard() {
         </button>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        {TABS.map(t => {
-          const on = t.id === activeTab
-          return (
-            <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-              display: 'flex', alignItems: 'center', gap: 7,
-              padding: '9px 16px', borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
-              border: `1px solid ${on ? t.color : '#333'}`,
-              background: on ? `${t.color}15` : '#242424',
-              color: on ? t.color : '#666',
-              fontWeight: on ? 700 : 400, fontSize: '0.85rem',
-            }}>
-              <t.icon size={15} />
-              {t.label}
-            </button>
-          )
-        })}
-      </div>
       <p style={{ color: '#555', fontSize: '0.78rem', marginBottom: 16 }}>{tab.desc}</p>
 
       {/* Table */}

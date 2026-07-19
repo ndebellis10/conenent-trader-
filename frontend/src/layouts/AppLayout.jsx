@@ -9,8 +9,18 @@ import {
   LayoutDashboard, PlusCircle, BarChart2, BookOpen, Cross, Settings,
   LogOut, Menu, X, CalendarDays, TrendingUp, FileBarChart2, ListChecks,
   Trophy, Save, CheckCircle, ShieldAlert, Sparkles, Newspaper, FlaskConical,
-  Cloud, CloudOff, Loader2, Home, ArrowLeft, Upload,
+  Cloud, CloudOff, Loader2, Home, ArrowLeft, Upload, Target, RotateCcw,
 } from 'lucide-react'
+
+/* Leaderboard's own sections — replace the Trading Journal nav on that page. */
+const LEADERBOARD_NAV = [
+  { id: 'winrate',    label: 'Win Rate',          icon: Target,       to: '/app/leaderboard' },
+  { id: 'profit',     label: 'Most Profit',       icon: TrendingUp,   to: '/app/leaderboard?tab=profit' },
+  { id: 'mosttrades', label: 'Most Trades',       icon: RotateCcw,    to: '/app/leaderboard?tab=mosttrades' },
+  { id: 'btprofit',   label: 'Backtest Profit',   icon: FlaskConical, to: '/app/leaderboard?tab=btprofit' },
+  { id: 'bttrades',   label: 'Most Backtested',   icon: FlaskConical, to: '/app/leaderboard?tab=bttrades' },
+  { id: 'btwinrate',  label: 'Backtest Win Rate', icon: Target,       to: '/app/leaderboard?tab=btwinrate' },
+]
 
 /* Backtesting's own sections — replace the Trading Journal nav on that page. */
 const BACKTEST_NAV = [
@@ -264,15 +274,17 @@ export default function AppLayout() {
     : TRADING_ITEMS
 
   // Inside Ask Alan the sidebar shows the AI's sections instead of the journal nav
-  const inAskAlan   = location.pathname === '/app/faith-ai'
-  const inBacktest  = location.pathname === '/app/backtest'
+  const inAskAlan    = location.pathname === '/app/faith-ai'
+  const inBacktest   = location.pathname === '/app/backtest'
+  const inLeaderboard = location.pathname === '/app/leaderboard'
   const sectionTab  = new URLSearchParams(location.search).get('tab')
   const aiTab       = sectionTab || 'home'
   const btTab       = sectionTab || 'dashboard'
   // Either focused area replaces the journal nav with its own sections
-  const focusNav    = inAskAlan ? ASK_ALAN_NAV : inBacktest ? BACKTEST_NAV : null
-  const focusActive = inAskAlan ? aiTab : btTab
-  const focusLabel  = inAskAlan ? 'Ask Alan' : 'Backtesting'
+  const lbTab       = sectionTab || 'winrate'
+  const focusNav    = inAskAlan ? ASK_ALAN_NAV : inBacktest ? BACKTEST_NAV : inLeaderboard ? LEADERBOARD_NAV : null
+  const focusActive = inAskAlan ? aiTab : inBacktest ? btTab : lbTab
+  const focusLabel  = inAskAlan ? 'Ask Alan' : inBacktest ? 'Backtesting' : 'Leaderboard'
 
   const navLinkStyle = ({ isActive }) => ({
     display: 'flex', alignItems: 'center', gap: '9px',
