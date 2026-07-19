@@ -198,8 +198,15 @@ export default function CourseMaterial() {
             return (
               <div key={m.slug} style={{ marginBottom: 4 }}>
                 {heading && (
-                  <div style={{ color: '#5A5A5A', fontSize: '0.64rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em', padding: '14px 10px 5px' }}>
-                    {heading}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    margin: '16px 0 8px', padding: '10px 10px 0',
+                    borderTop: '1px solid #2C2C2C',
+                  }}>
+                    <span style={{ color: '#F0F0F0', fontSize: '0.9rem', fontWeight: 800, fontFamily: 'Poppins, sans-serif', letterSpacing: '0.02em' }}>
+                      {heading}
+                    </span>
+                    <span style={{ flex: 1, height: 1, background: 'linear-gradient(90deg, rgba(59,130,246,0.35), transparent)' }} />
                   </div>
                 )}
                 <button onClick={() => toggleModule(m.slug)}
