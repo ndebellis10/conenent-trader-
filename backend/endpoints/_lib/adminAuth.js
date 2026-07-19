@@ -13,7 +13,7 @@ import crypto from 'node:crypto'
 
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000 // 12 hours
 
-export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'nickisthebesttrader@faithtrader.app'
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'nickisthebesttrader@covenanttrader.app'
 
 /** The configured password, or '' when unset. Never return a default. */
 export function adminSecret() {

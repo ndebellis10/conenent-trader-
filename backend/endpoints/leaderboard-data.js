@@ -1,7 +1,7 @@
 import { requireAdmin } from './_lib/adminAuth.js'
 import { supabaseAdmin, supabaseConfigured } from './_lib/supabase-admin.js'
 
-const HIDDEN = ['nickisthebesttrader@faithtrader.app']
+const HIDDEN = ['nickisthebesttrader@covenanttrader.app']
 /**
  * /api/leaderboard-data
  * Also handles ?action=historical for backtesting market data (merged to stay within Vercel's 12-function limit)

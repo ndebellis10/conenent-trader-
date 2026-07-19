@@ -5,7 +5,7 @@
  * After successful admin auth, the session key is stored in useAdminStore (memory only).
  */
 
-export const ADMIN_EMAIL = 'nickisthebesttrader@faithtrader.app'
+export const ADMIN_EMAIL = 'nickisthebesttrader@covenanttrader.app'
 
 export function isAdminEmail(email) {
   return email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()

@@ -88,7 +88,7 @@ export default function Terms() {
         <h2 style={S.h2}>10. Contact</h2>
         <p style={S.p}>
           Questions about these terms? Email{' '}
-          <a href="mailto:legal@faithtrader.app" style={{ color: '#3B82F6' }}>legal@faithtrader.app</a>
+          <a href="mailto:legal@covenanttrader.app" style={{ color: '#3B82F6' }}>legal@covenanttrader.app</a>
         </p>
 
         <hr style={S.divider} />

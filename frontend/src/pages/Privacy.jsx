@@ -88,7 +88,7 @@ export default function Privacy() {
         <h2 style={S.h2}>8. Contact</h2>
         <p style={S.p}>
           For privacy questions or data requests, contact us at{' '}
-          <a href="mailto:privacy@faithtrader.app" style={{ color: '#3B82F6' }}>privacy@faithtrader.app</a>
+          <a href="mailto:privacy@covenanttrader.app" style={{ color: '#3B82F6' }}>privacy@covenanttrader.app</a>
         </p>
 
         <hr style={S.divider} />

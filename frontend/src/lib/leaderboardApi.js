@@ -7,7 +7,7 @@ import { liveTrades, backtestTrades, summarize } from './tradeFilters'
 
 export const supabaseConfigured = true
 
-const HIDDEN = ['nickisthebesttrader@faithtrader.app']
+const HIDDEN = ['nickisthebesttrader@covenanttrader.app']
 
 const banKey = (email) => `ft-lb-banned-${email.toLowerCase()}`
 

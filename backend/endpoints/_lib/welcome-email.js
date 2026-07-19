@@ -152,14 +152,14 @@ function buildEmail(firstName) {
               <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
                 <tr>
                   <td style="background-color:#C9A84C;border-radius:10px;padding:0;">
-                    <a href="https://faithtrader.app/login" style="display:inline-block;padding:16px 48px;color:#1A1A1A;font-size:15px;font-family:Arial,sans-serif;font-weight:700;text-decoration:none;letter-spacing:0.5px;">
+                    <a href="https://covenanttrader.app/login" style="display:inline-block;padding:16px 48px;color:#1A1A1A;font-size:15px;font-family:Arial,sans-serif;font-weight:700;text-decoration:none;letter-spacing:0.5px;">
                       Start Journaling Today →
                     </a>
                   </td>
                 </tr>
               </table>
               <p style="margin:16px 0 0 0;color:#AAAAAA;font-size:12px;font-family:Arial,sans-serif;">
-                Or visit <a href="https://faithtrader.app" style="color:#C9A84C;text-decoration:none;">faithtrader.app</a> anytime
+                Or visit <a href="https://covenanttrader.app" style="color:#C9A84C;text-decoration:none;">covenanttrader.app</a> anytime
               </p>
             </td>
           </tr>
