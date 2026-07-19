@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 import { FlaskConical, Upload } from 'lucide-react'
+import { avgTradeDuration, formatDuration } from '../../lib/tradeTime'
 
 /* Backtesting report — its own dashboard, fed only by trades tagged
    'Backtest' (imported through the Backtest page). Deliberately separate
@@ -34,7 +35,7 @@ export default function BacktestReport({ trades, onImport }) {
     let running = 0
     const curve = ordered.map((t, i) => {
       running += parseFloat(t.netPnl) || 0
-      return { name: String(i + 1), equity: parseFloat(running.toFixed(2)) }
+      return { name: `#${i + 1}`, equity: parseFloat(running.toFixed(2)) }
     })
 
     // Largest peak-to-trough drop
@@ -45,6 +46,48 @@ export default function BacktestReport({ trades, onImport }) {
       const dd = peak - pt.equity
       if (dd > maxDD) maxDD = dd
     })
+
+    // Streaks, on the same ordering as the equity curve
+    let curW = 0, curL = 0, maxW = 0, maxL = 0
+    ordered.forEach(t => {
+      if (t.result === 'Win')       { curW++; curL = 0; if (curW > maxW) maxW = curW }
+      else if (t.result === 'Loss') { curL++; curW = 0; if (curL > maxL) maxL = curL }
+      else                          { curW = 0; curL = 0 }
+    })
+
+    // Long vs short
+    const side = dir => {
+      const list = trades.filter(t => String(t.direction || '').toLowerCase() === dir)
+      const w = list.filter(t => t.result === 'Win').length
+      return {
+        n: list.length,
+        wr: list.length ? (w / list.length) * 100 : 0,
+        pnl: list.reduce((a, t) => a + (parseFloat(t.netPnl) || 0), 0),
+      }
+    }
+
+    // Day of week
+    const DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const dow = DOW.map(label => ({ label, n: 0, wins: 0, pnl: 0 }))
+    trades.forEach(t => {
+      const d = new Date(t.date || t.createdAt)
+      if (isNaN(d.getTime())) return
+      const b = dow[d.getDay()]
+      b.n += 1
+      b.pnl += parseFloat(t.netPnl) || 0
+      if (t.result === 'Win') b.wins += 1
+    })
+    const dowActive = dow.filter(d => d.n > 0)
+
+    // Per-day totals → consistency
+    const dayMap = {}
+    trades.forEach(t => {
+      const k = String(t.date || t.createdAt || '').slice(0, 10)
+      if (!k) return
+      dayMap[k] = (dayMap[k] || 0) + (parseFloat(t.netPnl) || 0)
+    })
+    const dayVals = Object.values(dayMap)
+    const greenDays = dayVals.filter(v => v > 0).length
 
     const bySymbol = {}
     trades.forEach(t => {
@@ -70,6 +113,16 @@ export default function BacktestReport({ trades, onImport }) {
       maxDD,
       curve,
       bySymbol: Object.values(bySymbol).sort((a, b) => b.pnl - a.pnl),
+      maxW, maxL,
+      long: side('long'), short: side('short'),
+      dow: dowActive,
+      bestDow:  dowActive.length ? dowActive.reduce((a, b) => (b.pnl > a.pnl ? b : a)) : null,
+      worstDow: dowActive.length ? dowActive.reduce((a, b) => (b.pnl < a.pnl ? b : a)) : null,
+      days: dayVals.length,
+      greenDays,
+      consistency: dayVals.length ? (greenDays / dayVals.length) * 100 : 0,
+      avgPerDay: dayVals.length ? total / dayVals.length : 0,
+      hold: avgTradeDuration(trades),
     }
   }, [trades])
 
@@ -109,6 +162,10 @@ export default function BacktestReport({ trades, onImport }) {
           { label: 'Profit Factor', value: isFinite(s.pf) ? s.pf.toFixed(2) : '∞', color: s.pf >= 2 ? '#4CAF7D' : s.pf >= 1 ? '#3B82F6' : '#E05252' },
           { label: 'Expectancy',    value: money(s.expectancy),                    color: s.expectancy >= 0 ? '#4CAF7D' : '#E05252', sub: 'per trade' },
           { label: 'Max Drawdown',  value: `$${s.maxDD.toFixed(2)}`,               color: '#E05252', sub: 'peak to trough' },
+          { label: 'Consistency',   value: `${s.consistency.toFixed(0)}%`,          color: s.consistency >= 50 ? '#4CAF7D' : '#E05252', sub: `${s.greenDays}/${s.days} green days` },
+          { label: 'Avg / Day',     value: money(s.avgPerDay),                      color: s.avgPerDay >= 0 ? '#4CAF7D' : '#E05252', sub: `${s.days} day${s.days !== 1 ? 's' : ''} traded` },
+          { label: 'Best Streak',   value: `${s.maxW}W`,                            color: '#4CAF7D', sub: `worst ${s.maxL}L` },
+          { label: 'Avg Hold',      value: s.hold.ms != null ? formatDuration(s.hold.ms) : '—', color: s.hold.ms != null ? '#3B82F6' : '#444', sub: s.hold.counted ? `${s.hold.counted} timed` : 'no entry/exit times' },
         ].map(({ label, value, color, sub }) => (
           <div key={label} style={{ ...card, padding: '15px 17px' }}>
             <div style={{ color: '#8A8A8A', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>{label}</div>
@@ -129,7 +186,7 @@ export default function BacktestReport({ trades, onImport }) {
                 <stop offset="95%" stopColor={PURPLE} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <XAxis dataKey="name" tick={{ fill: '#444', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <XAxis dataKey="name" type="category" tick={{ fill: '#444', fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
             <YAxis tick={{ fill: '#444', fontSize: 10 }} axisLine={false} tickLine={false} width={54} />
             <Tooltip contentStyle={{ background: '#1E1E1E', border: '1px solid #2E2E2E', borderRadius: '8px', color: '#F5F5F5', fontSize: '0.78rem' }} />
             <ReferenceLine y={0} stroke="#333" />
@@ -139,6 +196,45 @@ export default function BacktestReport({ trades, onImport }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '14px' }}>
+        {/* Long vs short */}
+        <div style={card}>
+          <Head label="Long vs Short" />
+          {[['Long', s.long, '#4CAF7D'], ['Short', s.short, '#E05252']].map(([label, d, c], i) => (
+            <div key={label} style={{ padding: '11px 0', borderBottom: i === 0 ? '1px solid #252525' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <span style={{ color: '#E0E0E0', fontSize: '0.84rem', fontWeight: 700, width: 52 }}>{label}</span>
+                <span style={{ color: '#777', fontSize: '0.76rem' }}>{d.n} trade{d.n !== 1 ? 's' : ''}</span>
+                <span style={{ color: '#999', fontSize: '0.76rem', fontFamily: 'JetBrains Mono, monospace' }}>{d.n ? `${d.wr.toFixed(0)}%` : '—'}</span>
+                <span style={{ marginLeft: 'auto', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.84rem', fontWeight: 700, color: d.pnl >= 0 ? '#4CAF7D' : '#E05252' }}>
+                  {d.n ? money(d.pnl) : '—'}
+                </span>
+              </div>
+              <div style={{ height: 5, background: '#242424', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ width: `${d.n ? d.wr : 0}%`, height: '100%', background: c, borderRadius: 3 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Day of week */}
+        <div style={card}>
+          <Head label="By Day of Week" />
+          {s.bestDow && (
+            <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+              <span style={{ color: '#4CAF7D', fontSize: '0.76rem', fontWeight: 700 }}>Best {s.bestDow.label} {money(s.bestDow.pnl)}</span>
+              <span style={{ color: '#E05252', fontSize: '0.76rem', fontWeight: 700 }}>Worst {s.worstDow.label} {money(s.worstDow.pnl)}</span>
+            </div>
+          )}
+          {s.dow.map((d, i, arr) => (
+            <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < arr.length - 1 ? '1px solid #252525' : 'none' }}>
+              <span style={{ color: '#C0C0C0', fontSize: '0.8rem', fontWeight: 600, width: 78 }}>{d.label}</span>
+              <span style={{ color: '#777', fontSize: '0.74rem', width: 56 }}>{d.n} trade{d.n !== 1 ? 's' : ''}</span>
+              <span style={{ color: '#999', fontSize: '0.74rem', fontFamily: 'JetBrains Mono, monospace', width: 38 }}>{Math.round((d.wins / d.n) * 100)}%</span>
+              <span style={{ marginLeft: 'auto', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8rem', fontWeight: 700, color: d.pnl >= 0 ? '#4CAF7D' : '#E05252' }}>{money(d.pnl)}</span>
+            </div>
+          ))}
+        </div>
+
         <div style={card}>
           <Head label="Trade Extremes" />
           {[
