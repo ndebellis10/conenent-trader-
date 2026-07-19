@@ -1,7 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
-import { FlaskConical, Upload } from 'lucide-react'
+import { FlaskConical, Upload, Trash2, AlertTriangle } from 'lucide-react'
 import { avgTradeDuration, formatDuration } from '../../lib/tradeTime'
+import { useTradeStore } from '../../store/tradeStore'
+import { tradeDurationMs } from '../../lib/tradeTime'
 
 /* Backtesting report — its own dashboard, fed only by trades tagged
    'Backtest' (imported through the Backtest page). Deliberately separate
@@ -18,6 +20,19 @@ function Head({ label }) {
 }
 
 export default function BacktestReport({ trades, onImport }) {
+  const deleteTrade = useTradeStore(st => st.deleteTrade)
+  const [confirmAll, setConfirmAll] = useState(false)
+
+  // Newest first for the table at the bottom
+  const listed = useMemo(() => [...trades].sort(
+    (a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0)
+  ), [trades])
+
+  const deleteAll = () => {
+    listed.forEach(t => deleteTrade(t.id))
+    setConfirmAll(false)
+  }
+
   const s = useMemo(() => {
     if (!trades.length) return null
 
@@ -264,6 +279,64 @@ export default function BacktestReport({ trades, onImport }) {
               </span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Every backtest trade, deletable */}
+      <div style={card}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
+          <span style={{ color: '#F5F5F5', fontSize: '0.88rem', fontWeight: 700 }}>
+            All Backtest Trades <span style={{ color: '#666', fontWeight: 500 }}>({listed.length})</span>
+          </span>
+          {confirmAll ? (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+              <AlertTriangle size={14} color="#E05252" />
+              <span style={{ color: '#E05252', fontSize: '0.79rem' }}>Delete all {listed.length}? This cannot be undone.</span>
+              <button onClick={deleteAll} style={{ background: 'rgba(224,82,82,0.15)', border: '1px solid rgba(224,82,82,0.4)', color: '#E05252', borderRadius: 7, padding: '5px 12px', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer' }}>Yes, delete</button>
+              <button onClick={() => setConfirmAll(false)} style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+            </span>
+          ) : (
+            <button onClick={() => setConfirmAll(true)} style={{ background: 'none', border: 'none', color: '#7A7A7A', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
+              Delete all
+            </button>
+          )}
+        </div>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+            <thead>
+              <tr>
+                {['Date', 'Symbol', 'Side', 'Result', 'Hold', 'Net P&L', ''].map((h, i) => (
+                  <th key={i} style={{ textAlign: h === 'Net P&L' ? 'right' : 'left', color: '#6A6A6A', fontSize: '0.67rem', textTransform: 'uppercase', letterSpacing: '0.07em', padding: '0 10px 9px 0', fontWeight: 700 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {listed.map((t, i) => {
+                const pnl = parseFloat(t.netPnl) || 0
+                const rc = t.result === 'Win' ? '#4CAF7D' : t.result === 'Loss' ? '#E05252' : '#888'
+                const held = tradeDurationMs(t)
+                return (
+                  <tr key={t.id || i} style={{ borderTop: '1px solid #262626' }}>
+                    <td style={{ padding: '9px 10px 9px 0', color: '#A8A8A8' }}>{String(t.date || '').slice(0, 10) || '—'}</td>
+                    <td style={{ padding: '9px 10px 9px 0', color: '#E4E4E4', fontWeight: 600 }}>{t.symbol || '—'}</td>
+                    <td style={{ padding: '9px 10px 9px 0', color: '#8A8A8A' }}>{t.direction || '—'}</td>
+                    <td style={{ padding: '9px 10px 9px 0', color: rc, fontWeight: 600 }}>{t.result || '—'}</td>
+                    <td style={{ padding: '9px 10px 9px 0', color: '#777', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.78rem' }}>{held != null ? formatDuration(held) : '—'}</td>
+                    <td style={{ padding: '9px 0', textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: pnl >= 0 ? '#4CAF7D' : '#E05252' }}>{money(pnl)}</td>
+                    <td style={{ padding: '9px 0 9px 12px', textAlign: 'right', width: 34 }}>
+                      <button onClick={() => deleteTrade(t.id)} title="Delete this trade"
+                        style={{ background: 'none', border: 'none', color: '#4A4A4A', cursor: 'pointer', padding: 2, display: 'inline-flex' }}
+                        onMouseEnter={e => { e.currentTarget.style.color = '#E05252' }}
+                        onMouseLeave={e => { e.currentTarget.style.color = '#4A4A4A' }}>
+                        <Trash2 size={13} />
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
