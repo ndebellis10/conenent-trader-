@@ -268,7 +268,8 @@ export default function CourseMaterial() {
           font-family: Inter, sans-serif; outline: none;
         }
         .course-fsnotes textarea:focus { border-color: rgba(59,130,246,0.5); }
-        .course-stage-col { max-width: 860px; }
+        /* No cap — the player fills whatever width the rail leaves */
+        .course-stage-col { max-width: none; }
         .course-rail { background: #1C1C1C; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; position: sticky; top: 16px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
         .course-rail-scroll { overflow-y: auto; padding: 8px; }
         .course-lesson { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: none; border: none; cursor: pointer; text-align: left; border-radius: 9px; transition: background .15s; }
