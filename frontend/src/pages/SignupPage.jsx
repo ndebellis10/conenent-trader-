@@ -422,7 +422,7 @@ export default function SignupPage() {
         <DisplayNameCapture
           initialName={captureName.name}
           email={captureName.email}
-          onDone={() => navigate('/app')}
+          onDone={() => navigate('/app/faith-ai')}
         />
       </AnimatePresence>
     )

@@ -1,0 +1,6 @@
+# Closing Routine
+Topic: mindset
+Source: https://youtu.be/atwRSEkHUf4
+
+## Transcript
+Most traders overtrade because the session doesn't feel finished. An unfinished session in your head invites bad decisions into the mix. So, you need a routine to close that loop. So, at the end of the session, I need you to screenshot your P&amp;L, send it in the daily wins chat, write one sentence about what you learned on the trade or what worked and then shut the platform down. Closure in this community is not optional. It is part of discipline that builds wealth over time. Cuz this isn't a get-richqu scheme. We are following rules that work and are proven. It just require discipline for them to actually work out long term. You have to remember when you're on the charts that confidence is not our edge. It is discipline that is the edge. Overconfidence when you're trading is simply believing that you are above your own rules that you have preset. And that is one of the most unwise things that I have seen out of beginner traders, intermediate, and advanced traders too. Because I'm not going to lie, it happens. It definitely does. You're gonna overtrade probably once in your trading career, but the most important thing is that you learn from situations like this and you learn from other people's mistakes as well, so you don't repeat them in the process.

@@ -2,6 +2,13 @@ import { useMemo, useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Play, Check, ChevronRight, Maximize2, Trophy, Lock } from 'lucide-react'
 import { COURSE_MODULES, TOTAL_LESSONS } from '../../lib/courseOutline'
+import ChatDrawer from '../../components/app/ChatDrawer'
+import AlanMascot from '../../components/AlanMascot'
+import { useTradeStore } from '../../store/tradeStore'
+import { useGoalStore } from '../../store/goalStore'
+
+/* Onboarding-style modules skip the check-in — it only fires on teaching content */
+const NO_CHECKIN = new Set(['start-here', 'mindset-module'])
 
 /* Course Material — lesson rail on the left, player on the right.
    Sections render in the app sidebar (see COURSE_NAV in AppLayout). */
@@ -56,6 +63,11 @@ export default function CourseMaterial() {
   const [done, setDone] = useState(loadDone)
   const [openModules, setOpenModules] = useState(() => new Set(COURSE_MODULES.map(m => m.slug)))
   const stageRef = useRef(null)
+  const { trades, settings, playbook } = useTradeStore()
+  const { goals, completions }         = useGoalStore()
+  const [checkIn, setCheckIn]  = useState(null)   // lesson just finished
+  const [chatOpen, setChatOpen] = useState(false)
+  const [seed, setSeed]        = useState({ text: '', n: 0 })
 
   const view = searchParams.get('tab') === 'progress' ? 'progress' : 'modules'
   const firstLesson = COURSE_MODULES[0]?.lessons[0]?.id
@@ -281,7 +293,10 @@ export default function CourseMaterial() {
               <Maximize2 size={15} /> Fullscreen
             </button>
             {next && (
-              <button onClick={() => openLesson(next.id)}
+              <button onClick={() => {
+                if (current && !NO_CHECKIN.has(current.module.slug)) setCheckIn(current)
+                else openLesson(next.id)
+              }}
                 style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 10, border: 'none', background: BLUE, color: '#0B1220', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>
                 Next lesson <ChevronRight size={15} />
               </button>
@@ -325,6 +340,52 @@ export default function CourseMaterial() {
           )
         })()}
       </div>
+
+      {/* Alan checks in before moving on */}
+      {checkIn && (
+        <div
+          onClick={() => { setCheckIn(null); if (next) openLesson(next.id) }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        >
+          <div onClick={e => e.stopPropagation()}
+            style={{ background: '#1C1C1C', border: '1px solid #2E2E2E', borderRadius: 18, padding: '26px 28px', maxWidth: 460, width: '100%', boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginBottom: 14 }}>
+              <AlanMascot size={52} />
+              <div>
+                <div style={{ color: '#F2F2F2', fontSize: '0.95rem', fontWeight: 800, fontFamily: 'Poppins, sans-serif' }}>Alan</div>
+                <div style={{ color: '#6A6A6A', fontSize: '0.76rem' }}>{checkIn.module.title}</div>
+              </div>
+            </div>
+            <p style={{ color: '#C4C4C4', fontSize: '0.92rem', lineHeight: 1.65, margin: '0 0 20px' }}>
+              Do you have any questions, or are you confused on anything that was taught in
+              <strong style={{ color: '#F0F0F0' }}> {checkIn.title}</strong>?
+            </p>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => {
+                  setSeed(p => ({ text: `I just finished the lesson "${checkIn.title}" in ${checkIn.module.title}. Can you explain the key ideas simply and check my understanding?`, n: p.n + 1 }))
+                  setChatOpen(true)
+                  setCheckIn(null)
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px', borderRadius: 10, border: 'none', background: BLUE, color: '#0B1220', fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer' }}>
+                Yes, ask Alan
+              </button>
+              <button
+                onClick={() => { setCheckIn(null); if (next) openLesson(next.id) }}
+                style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid #333', background: 'transparent', color: '#A8A8A8', fontWeight: 700, fontSize: '0.86rem', cursor: 'pointer' }}>
+                No, next lesson
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ChatDrawer
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        trades={trades} stats={null} goals={goals}
+        completions={completions} settings={settings} playbook={playbook} seed={seed}
+      />
     </div>
   )
 }

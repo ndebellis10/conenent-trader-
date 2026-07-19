@@ -192,7 +192,8 @@ export default function LoginPage() {
 
   const handleWelcomeDone = useCallback(() => {
     setShowWelcome(false)
-    navigate(pendingNav.current || '/app', { replace: true })
+    // Always land on the AI home, whatever page sent them to login
+    navigate('/app/faith-ai', { replace: true })
   }, [navigate])
 
   const { register, handleSubmit, formState: { errors } } = useForm({

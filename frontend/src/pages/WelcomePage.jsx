@@ -22,7 +22,7 @@ export default function WelcomePage() {
           "I can do all things through Christ who strengthens me."
           <br /><span style={{ fontSize: '0.9em', opacity: 0.8 }}>— Philippians 4:13</span>
         </blockquote>
-        <button onClick={() => navigate('/app')} className="btn-gold" style={{ padding: '14px 40px', borderRadius: '12px', fontSize: '1rem', border: 'none', cursor: 'pointer' }}>
+        <button onClick={() => navigate('/app/faith-ai')} className="btn-gold" style={{ padding: '14px 40px', borderRadius: '12px', fontSize: '1rem', border: 'none', cursor: 'pointer' }}>
           Go to Dashboard →
         </button>
       </motion.div>
