@@ -58,6 +58,7 @@ const TRADING_ITEMS = [
   { to: '/app/tradeview', label: 'Trade View', icon: TrendingUp },
   { to: '/app/news', label: 'USD News', icon: Newspaper },
   { to: '/app/reports', label: 'Reports', icon: FileBarChart2 },
+  { to: '/app/leaderboard', label: 'Leaderboard', icon: Trophy },
 
   { to: '/app/playbook', label: 'Strategy', icon: BookOpen },
   { to: '/app/goals', label: 'Daily Goals', icon: ListChecks },
