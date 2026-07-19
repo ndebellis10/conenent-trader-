@@ -86,6 +86,62 @@ export const COURSE_MODULES = [
       { id: 'foundations-mm-4', title: 'Rejection Wick Theory',     video: 'https://youtu.be/TphcGAU5wro' },
     ],
   },
+  {
+    slug: 'covenant-premarket',
+    group: 'The Covenant Model',
+    title: 'Premarket Analysis',
+    blurb: 'Mark the chart before the session so the plan is set before price moves.',
+    lessons: [
+      { id: 'cm-pre-1', title: 'Marking Out Session Levels', video: 'https://youtu.be/2t20dgGRD0s' },
+      { id: 'cm-pre-2', title: 'Marking Out PD Arrays', video: 'https://youtu.be/0XCIEvdZZho' },
+      { id: 'cm-pre-3', title: 'Marking Out Swing Lows & Highs', video: 'https://youtu.be/ijbTBY9RhQM' },
+      { id: 'cm-pre-4', title: 'Why This Is Crucial', video: 'https://youtu.be/xc9vwBV_LR8' },
+      { id: 'cm-pre-5', title: 'Real Chart Application', video: 'https://youtu.be/oew7bovR_04' },
+    ],
+  },
+  {
+    slug: 'covenant-risk',
+    group: 'The Covenant Model',
+    title: 'Risk Management',
+    blurb: 'Sizing, phases and protecting the account.',
+    lessons: [
+      { id: 'cm-risk-1', title: 'Intro to Risk Management', video: 'https://youtu.be/2oFf3qfdcjw' },
+      { id: 'cm-risk-2', title: 'Phase 1 Risk', video: 'https://youtu.be/r-hzll6vw-8' },
+      { id: 'cm-risk-3', title: 'Phase 2 Risk', video: 'https://youtu.be/mumYZBplAcY' },
+      { id: 'cm-risk-4', title: 'Phase 3 Risk', video: 'https://youtu.be/btcWU4V2cds' },
+    ],
+  },
+  {
+    slug: 'covenant-model',
+    group: 'The Covenant Model',
+    title: 'Covenant Model',
+    blurb: 'AMD, PDI, and how to take and partial the setup.',
+    lessons: [
+      { id: 'cm-model-1', title: 'What Is AMD', video: 'https://youtu.be/oneLhZvG4UE' },
+      { id: 'cm-model-2', title: 'What Is PDI', video: 'https://youtu.be/tbbfwyo3h-Y' },
+      { id: 'cm-model-3', title: 'How To Partial w/ PDI', video: 'https://youtu.be/RQ_MrhUndUU' },
+      { id: 'cm-model-4', title: 'Good PDI vs Bad PDI', video: 'https://youtu.be/cPbIEKuSotI' },
+      { id: 'cm-model-5', title: 'Extra PDI Confluences', video: 'https://youtu.be/UaioTV9dDiQ' },
+      { id: 'cm-model-6', title: 'PDI Open Q&A', video: 'https://youtu.be/UslRgF-1xas' },
+      { id: 'cm-model-7', title: 'How To Partial Effectively', video: 'https://youtu.be/n3L9niJm3m0' },
+    ],
+  },
+  {
+    slug: 'covenant-recaps',
+    group: 'The Covenant Model',
+    title: 'Covenant Recaps',
+    blurb: 'Real trades broken down against the checklist.',
+    lessons: [
+      { id: 'cm-recap-1', title: 'What A $908.58 Trade Actually Looks Like', video: 'https://youtu.be/oubiiLFGda0' },
+      { id: 'cm-recap-2', title: 'Trade Breakdown 3.12.26', video: 'https://youtu.be/Pmn6iXVL2wU' },
+      { id: 'cm-recap-3', title: 'Trade Breakdown 3.13.26 — Checklist Guide', video: 'https://youtu.be/5Goi5mEU0zs' },
+      { id: 'cm-recap-4', title: 'Covenant Trade Breakdown 5.14.26', video: 'https://youtu.be/Y3aK5tf1KwE' },
+      { id: 'cm-recap-5', title: 'Covenant Model Recap 5.21.26', video: 'https://youtu.be/5jfy018VtBY' },
+      { id: 'cm-recap-6', title: 'Covenant Model Recap 5.28.26', video: 'https://youtu.be/f7yYgwNZLQQ' },
+      { id: 'cm-recap-7', title: 'Covenant Trade Recap 6.9.26', video: 'https://youtu.be/ItTJblhV4Fk' },
+      { id: 'cm-recap-8', title: 'Covenant Recap 2 — 6.9.26', video: 'https://youtu.be/bYBZgmtnjBI' },
+    ],
+  },
 ]
 
 const GENERATED_OUTLINE = [
