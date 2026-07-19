@@ -44,23 +44,33 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       try {
         const { data, error } = await supabaseAdmin
-          .from('course_progress').select('completed').eq('email', email).maybeSingle()
+          .from('course_progress').select('completed, notes').eq('email', email).maybeSingle()
         if (error) throw error
-        return res.status(200).json({ completed: data?.completed || [] })
+        return res.status(200).json({ completed: data?.completed || [], notes: data?.notes || {} })
       } catch (e) {
-        return res.status(200).json({ completed: [], error: String(e.message || e) })
+        return res.status(200).json({ completed: [], notes: {}, error: String(e.message || e) })
       }
     }
 
     if (req.method === 'POST') {
-      const list = Array.isArray(req.body?.completed) ? req.body.completed : null
-      if (!list) return res.status(400).json({ error: 'completed[] required' })
+      const list  = Array.isArray(req.body?.completed) ? req.body.completed : null
+      const notes = req.body?.notes && typeof req.body.notes === 'object' ? req.body.notes : null
+      if (!list && !notes) return res.status(400).json({ error: 'completed[] or notes{} required' })
+
+      const row = { email, updated_at: new Date().toISOString() }
       // Cap it — the course is finite, this is just a guard against junk
-      const clean = [...new Set(list.filter(x => typeof x === 'string' && x.length < 120))].slice(0, 500)
+      if (list) row.completed = [...new Set(list.filter(x => typeof x === 'string' && x.length < 120))].slice(0, 500)
+      if (notes) {
+        const clean = {}
+        for (const [k, v] of Object.entries(notes)) {
+          if (typeof k === 'string' && k.length < 120 && typeof v === 'string') clean[k] = v.slice(0, 20000)
+        }
+        row.notes = clean
+      }
       try {
         const { error } = await supabaseAdmin
           .from('course_progress')
-          .upsert({ email, completed: clean, updated_at: new Date().toISOString() }, { onConflict: 'email' })
+          .upsert(row, { onConflict: 'email' })
         if (error) throw error
         return res.status(200).json({ ok: true })
       } catch (e) {

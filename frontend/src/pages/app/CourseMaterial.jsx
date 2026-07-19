@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Play, Check, ChevronRight, Maximize2, Trophy, Lock } from 'lucide-react'
+import { Play, Check, ChevronRight, Maximize2, Trophy, Lock, NotebookPen } from 'lucide-react'
 import { COURSE_MODULES, TOTAL_LESSONS } from '../../lib/courseOutline'
 import ChatDrawer from '../../components/app/ChatDrawer'
 import AlanMascot from '../../components/AlanMascot'
@@ -35,6 +35,16 @@ function loadDone(email) {
   try { return new Set(JSON.parse(localStorage.getItem(progressKey(email)) || '[]')) }
   catch { return new Set() }
 }
+const notesKey = email => `${progressKey(email)}__notes`
+
+function loadNotes(email) {
+  try { return JSON.parse(localStorage.getItem(notesKey(email)) || '{}') }
+  catch { return {} }
+}
+function cacheNotes(email, notes) {
+  try { localStorage.setItem(notesKey(email), JSON.stringify(notes)) } catch { /* private mode */ }
+}
+
 function saveDone(email, set) {
   try { localStorage.setItem(progressKey(email), JSON.stringify([...set])) } catch { /* private mode */ }
 }
@@ -79,7 +89,8 @@ export default function CourseMaterial() {
   const email = user?.email
   const displayName = settings?.name || user?.name || (email || '').split('@')[0] || 'trader'
   const firstName = String(displayName).split(' ')[0]
-  const [done, setDone] = useState(() => loadDone(email))
+  const [done, setDone]   = useState(() => loadDone(email))
+  const [notes, setNotes] = useState(() => loadNotes(email))
   const loadedRef = useRef(false)
   // Everything starts collapsed — only the section you are in opens
   const [openModules, setOpenModules] = useState(() => new Set())
@@ -96,14 +107,23 @@ export default function CourseMaterial() {
     if (!email || loadedRef.current) return
     loadedRef.current = true
     let alive = true
-    courseApi.getProgress()
-      .then(list => {
-        if (!alive || !Array.isArray(list)) return
-        setDone(prev => new Set([...prev, ...list]))
+    courseApi.load()
+      .then(({ completed, notes: saved }) => {
+        if (!alive) return
+        if (Array.isArray(completed)) setDone(prev => new Set([...prev, ...completed]))
+        // Server wins for lessons it knows about; unsynced local notes are kept
+        if (saved && typeof saved === 'object') setNotes(prev => ({ ...prev, ...saved }))
       })
       .catch(() => { /* offline or unauthenticated — cache still applies */ })
     return () => { alive = false }
   }, [email])
+
+  useEffect(() => {
+    cacheNotes(email, notes)
+    if (!email || !loadedRef.current) return
+    const id = setTimeout(() => { courseApi.saveNotes(notes).catch(() => {}) }, 900)
+    return () => clearTimeout(id)
+  }, [notes, email])
 
   // Cache locally straight away, then push to the account
   useEffect(() => {
@@ -367,6 +387,31 @@ export default function CourseMaterial() {
               </span>
             )}
           </div>
+        </div>
+
+
+        {/* Notebook — per lesson, saved to the account */}
+        <div style={{ ...card, padding: '18px 22px', marginTop: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
+            <NotebookPen size={15} color={BLUE} />
+            <span style={{ color: '#F0F0F0', fontSize: '0.86rem', fontWeight: 700 }}>Your notes</span>
+            <span style={{ color: '#5E5E5E', fontSize: '0.74rem' }}>on this lesson</span>
+            <span style={{ marginLeft: 'auto', color: '#4A4A4A', fontSize: '0.72rem' }}>
+              {(notes[current?.id] || '').trim() ? 'Saved automatically' : ''}
+            </span>
+          </div>
+          <textarea
+            value={notes[current?.id] || ''}
+            onChange={e => setNotes(prev => ({ ...prev, [current.id]: e.target.value }))}
+            placeholder="Write what stood out — the setup, the rule, the thing you want to remember next session…"
+            rows={6}
+            style={{
+              width: '100%', boxSizing: 'border-box', resize: 'vertical',
+              background: '#151515', border: '1px solid #2E2E2E', borderRadius: 12,
+              padding: '13px 15px', color: '#E0E0E0', fontSize: '0.87rem', lineHeight: 1.65,
+              fontFamily: 'Inter, sans-serif', outline: 'none',
+            }}
+          />
         </div>
 
         {/* Quiz — unlocks once every lesson in the module is complete */}

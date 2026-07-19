@@ -97,8 +97,10 @@ export const userApi = {
 
 /* ── Course progress ──────────────────────────────────────── */
 export const courseApi = {
-  getProgress:  ()          => request('GET',  '/user/course-progress').then(d => d?.completed || []),
+  load:         ()          => request('GET',  '/user/course-progress')
+                                 .then(d => ({ completed: d?.completed || [], notes: d?.notes || {} })),
   saveProgress: (completed) => request('POST', '/user/course-progress', { completed }),
+  saveNotes:    (notes)     => request('POST', '/user/course-progress', { notes }),
 }
 
 /* ── Chart AI analysis ────────────────────────────────────── */
