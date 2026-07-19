@@ -19,6 +19,7 @@ import Settings          from './pages/app/Settings'
 import DayView           from './pages/app/DayView'
 import DailyGoals        from './pages/app/DailyGoals'
 import Backtest          from './pages/app/Backtest'
+import CourseMaterial    from './pages/app/CourseMaterial'
 import TradeView         from './pages/app/TradeView'
 import Reports           from './pages/app/Reports'
 
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="tradeview"      element={<TradeView />} />
             <Route path="news"           element={<News />} />
             <Route path="backtest"       element={<Backtest />} />
+            <Route path="course"         element={<CourseMaterial />} />
             <Route path="reports"        element={<Reports />} />
             <Route path="settings"       element={<Settings />} />
             <Route path="leaderboard"   element={<Leaderboard />} />

@@ -9,8 +9,14 @@ import {
   LayoutDashboard, PlusCircle, BarChart2, BookOpen, Cross, Settings,
   LogOut, Menu, X, CalendarDays, TrendingUp, FileBarChart2, ListChecks,
   Trophy, Save, CheckCircle, ShieldAlert, Sparkles, Newspaper, FlaskConical,
-  Cloud, CloudOff, Loader2, Home, ArrowLeft, Upload, Target, RotateCcw,
+  Cloud, CloudOff, Loader2, Home, ArrowLeft, Upload, Target, RotateCcw, GraduationCap,
 } from 'lucide-react'
+
+/* Course Material sections. */
+const COURSE_NAV = [
+  { id: 'modules',  label: 'Modules',  icon: BookOpen,      to: '/app/course' },
+  { id: 'progress', label: 'Progress', icon: GraduationCap, to: '/app/course?tab=progress' },
+]
 
 /* Leaderboard's own sections — replace the Trading Journal nav on that page. */
 const LEADERBOARD_NAV = [
@@ -260,6 +266,7 @@ export default function AppLayout() {
     if      (location.pathname === '/app/leaderboard')    setActiveRail('leaderboard')
     else if (location.pathname === '/app/admin-users')    setActiveRail('admin-users')
     else if (location.pathname === '/app/backtest')       setActiveRail('backtest')
+    else if (location.pathname === '/app/course')         setActiveRail('course')
     else if (location.pathname === '/app/faith-ai')       setActiveRail('faith-ai')
     else                                                  setActiveRail('trading')
   }, [location.pathname])
@@ -278,14 +285,16 @@ export default function AppLayout() {
   const inAskAlan    = location.pathname === '/app/faith-ai'
   const inBacktest   = location.pathname === '/app/backtest'
   const inLeaderboard = location.pathname === '/app/leaderboard'
+  const inCourse      = location.pathname === '/app/course'
   const sectionTab  = new URLSearchParams(location.search).get('tab')
   const aiTab       = sectionTab || 'home'
   const btTab       = sectionTab || 'dashboard'
   // Either focused area replaces the journal nav with its own sections
   const lbTab       = sectionTab || 'winrate'
-  const focusNav    = inAskAlan ? ASK_ALAN_NAV : inBacktest ? BACKTEST_NAV : inLeaderboard ? LEADERBOARD_NAV : null
-  const focusActive = inAskAlan ? aiTab : inBacktest ? btTab : lbTab
-  const focusLabel  = inAskAlan ? 'Ask Alan' : inBacktest ? 'Backtesting' : 'Leaderboard'
+  const courseTab   = sectionTab || 'modules'
+  const focusNav    = inAskAlan ? ASK_ALAN_NAV : inBacktest ? BACKTEST_NAV : inLeaderboard ? LEADERBOARD_NAV : inCourse ? COURSE_NAV : null
+  const focusActive = inAskAlan ? aiTab : inBacktest ? btTab : inLeaderboard ? lbTab : courseTab
+  const focusLabel  = inAskAlan ? 'Ask Alan' : inBacktest ? 'Backtesting' : inLeaderboard ? 'Leaderboard' : 'Course'
 
   const navLinkStyle = ({ isActive }) => ({
     display: 'flex', alignItems: 'center', gap: '9px',
@@ -346,6 +355,13 @@ export default function AppLayout() {
             label="Backtesting"
             isActive={activeRail === 'backtest'}
             onClick={() => { setActiveRail('backtest'); navigate('/app/backtest') }}
+          />
+
+          <RailBtn
+            icon={GraduationCap}
+            label="Course Material"
+            isActive={activeRail === 'course'}
+            onClick={() => { setActiveRail('course'); navigate('/app/course') }}
           />
 
           {/* Admin-only: All Traders */}
