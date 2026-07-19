@@ -247,7 +247,8 @@ export default function CourseMaterial() {
           ) : embed ? (
             <iframe key={current.id} src={embed} title={current.title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-              allowFullScreen />
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin" />
           ) : (
             <video key={current.id} src={src} controls preload="metadata" playsInline />
           )}

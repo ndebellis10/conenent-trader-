@@ -59,7 +59,7 @@ export function applySecurity(req, res) {
   res.setHeader('X-Frame-Options',            'DENY')
   res.setHeader('X-Content-Type-Options',     'nosniff')
   res.setHeader('X-XSS-Protection',           '1; mode=block')
-  res.setHeader('Referrer-Policy',            'no-referrer')
+  res.setHeader('Referrer-Policy',            'strict-origin-when-cross-origin')
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
   res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()')
