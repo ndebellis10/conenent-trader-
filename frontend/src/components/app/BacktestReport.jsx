@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
-import { FlaskConical, Upload, Trash2, AlertTriangle } from 'lucide-react'
+import { FlaskConical, Upload, Trash2 } from 'lucide-react'
 import { avgTradeDuration, formatDuration } from '../../lib/tradeTime'
 import { useTradeStore } from '../../store/tradeStore'
 import { tradeDurationMs } from '../../lib/tradeTime'
@@ -21,17 +21,12 @@ function Head({ label }) {
 
 export default function BacktestReport({ trades, onImport }) {
   const deleteTrade = useTradeStore(st => st.deleteTrade)
-  const [confirmAll, setConfirmAll] = useState(false)
 
   // Newest first for the table at the bottom
   const listed = useMemo(() => [...trades].sort(
     (a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0)
   ), [trades])
 
-  const deleteAll = () => {
-    listed.forEach(t => deleteTrade(t.id))
-    setConfirmAll(false)
-  }
 
   const s = useMemo(() => {
     if (!trades.length) return null
@@ -288,18 +283,6 @@ export default function BacktestReport({ trades, onImport }) {
           <span style={{ color: '#F5F5F5', fontSize: '0.88rem', fontWeight: 700 }}>
             All Backtest Trades <span style={{ color: '#666', fontWeight: 500 }}>({listed.length})</span>
           </span>
-          {confirmAll ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
-              <AlertTriangle size={14} color="#E05252" />
-              <span style={{ color: '#E05252', fontSize: '0.79rem' }}>Delete all {listed.length}? This cannot be undone.</span>
-              <button onClick={deleteAll} style={{ background: 'rgba(224,82,82,0.15)', border: '1px solid rgba(224,82,82,0.4)', color: '#E05252', borderRadius: 7, padding: '5px 12px', fontSize: '0.76rem', fontWeight: 700, cursor: 'pointer' }}>Yes, delete</button>
-              <button onClick={() => setConfirmAll(false)} style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.76rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-            </span>
-          ) : (
-            <button onClick={() => setConfirmAll(true)} style={{ background: 'none', border: 'none', color: '#7A7A7A', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
-              Delete all
-            </button>
-          )}
         </div>
 
         <div style={{ overflowX: 'auto' }}>
