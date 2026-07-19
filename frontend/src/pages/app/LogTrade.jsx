@@ -518,6 +518,9 @@ export default function LogTrade() {
   // CSV import state
   const [showCsvImport, setShowCsvImport] = useState(false)
   const [csvStep,       setCsvStep]       = useState('upload') // 'upload' | 'map' | 'preview'
+  // Imported rows waiting to be journaled one at a time
+  const [csvQueue,      setCsvQueue]      = useState([])   // trades still to journal after the current one
+  const [csvQueueTotal, setCsvQueueTotal] = useState(0)
   const [csvRawData,    setCsvRawData]    = useState(null)     // { rawHeaders, normHeaders, rawRows }
   const [csvMapping,    setCsvMapping]    = useState({})
   const [csvParsed,     setCsvParsed]     = useState([])
@@ -681,6 +684,17 @@ export default function LogTrade() {
         chartMarkers:  chartMarkers || [],
         riskReward:    detectedRR   || null,
       })
+      // More imported trades waiting? Load the next one and stay on the form.
+      if (csvQueue.length) {
+        const [next, ...rest] = csvQueue
+        resetFormForNext()
+        loadTradeIntoForm(next, rest, csvQueueTotal)
+        const done = csvQueueTotal - rest.length
+        toast.success(`Saved. Now journaling ${done} of ${csvQueueTotal}.`)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+
       const emotionVerse = getEmotionVerse(preTrade)
       const v = emotionVerse || getVerse()
       setVerseOverlay({ verse: v, emotion: preTrade, result: finalResult, netPnl: finalNetPnl })
@@ -739,8 +753,30 @@ export default function LogTrade() {
   }
 
   // Load a single imported trade into the form so the user can finish journaling + save it
-  function loadTradeIntoForm(t) {
+  /* Clear everything subjective before loading the next queued CSV trade —
+     the trade's own fields get overwritten by loadTradeIntoForm, but notes,
+     ratings and review answers must not carry over from the previous one. */
+  function resetFormForNext() {
+    setManualNetPnl(''); setManualResult(null); setDetectedRR(null)
+    setChartImage(null); setChartMarkers([])
+    setStopLoss(''); setTakeProfit(''); setAccountsTraded('')
+    setFollowedPlan(''); setMovedStop(''); setOverRisked('')
+    setMindsetNotes(''); setStrategyName(''); setTradeNotes('')
+    setScripture(''); setPrayer(''); setGratitude('')
+    setPreTrade(''); setPostTrade('')
+    setEntryQuality(5); setExitQuality(5); setFaithRating(0)
+    setWaitedConfirmation(''); setEnteredAtLevel(''); setExitDecision('')
+    setRushedEntry(''); setProtectedStop('')
+    setSleepQuality(''); setFocusLevel(''); setRevengeTrade('')
+    setStressLevel(''); setEnergyLevel(''); setMovedStopFear('')
+    setTradingSession(''); setHtfBias(''); setMarketStructure('')
+    setSetupType(''); setNewsEvent(''); setConfluences([])
+    setWentWell(''); setToImprove(''); setTakeAgain('')
+  }
+
+  function loadTradeIntoForm(t, rest = null, total = null) {
     if (!t) return
+    if (rest !== null) { setCsvQueue(rest); setCsvQueueTotal(total ?? rest.length + 1) }
     setDate(t.date || new Date().toISOString().split('T')[0])
     // Times may be ISO (imported) or already "HH:MM" (manually logged) — the input needs HH:MM
     setEntryTime(toTimeInput(t.entryTime))
@@ -888,6 +924,31 @@ export default function LogTrade() {
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
       <h1 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#F5F5F5', fontSize: '1.5rem', marginBottom: '24px' }}>Log a Trade</h1>
+
+      {/* Journaling through an imported CSV */}
+      {csvQueue.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: 12, padding: '13px 18px', marginBottom: 14, flexWrap: 'wrap' }}>
+          <Upload size={16} color="#3B82F6" />
+          <span style={{ color: '#3B82F6', fontSize: '0.85rem', fontWeight: 700 }}>
+            Journaling imported trade {csvQueueTotal - csvQueue.length} of {csvQueueTotal}
+          </span>
+          <span style={{ color: '#777', fontSize: '0.8rem' }}>
+            {csvQueue.length} still to go — saving loads the next one.
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              const rest = csvQueue
+              setCsvQueue([]); setCsvQueueTotal(0)
+              rest.forEach(t => addTrade(isBacktest ? { ...t, tags: [...(t.tags || []), 'Backtest'] } : t))
+              toast.success(`Saved the remaining ${rest.length} trade${rest.length !== 1 ? 's' : ''} to history without journaling.`)
+            }}
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#3B82F6', fontSize: '0.79rem', fontWeight: 700, cursor: 'pointer' }}
+          >
+            Skip journaling the rest →
+          </button>
+        </div>
+      )}
 
       {/* CSV Import */}
       <div style={{ background: '#242424', borderRadius: '12px', border: '1px solid #3A3A3A', padding: '20px', marginBottom: '8px' }}>
@@ -1054,9 +1115,9 @@ export default function LogTrade() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {/* Load first trade into the form so the user can journal it, then save */}
-                  <button type="button" onClick={() => loadTradeIntoForm(csvParsed[0])} disabled={csvImporting} className="btn-gold"
+                  <button type="button" onClick={() => loadTradeIntoForm(csvParsed[0], csvParsed.slice(1), csvParsed.length)} disabled={csvImporting} className="btn-gold"
                     style={{ width: '100%', padding: '12px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                    <Plus size={16} /> Load into form to journal{csvParsed.length > 1 ? ' (1st trade)' : ''}
+                    <Plus size={16} /> Journal {csvParsed.length > 1 ? `all ${csvParsed.length} trades, one at a time` : 'this trade'}
                   </button>
                   {/* Bulk import all rows straight to history (no journaling) */}
                   <button type="button" onClick={handleCsvImport} disabled={csvImporting}
@@ -1652,7 +1713,11 @@ export default function LogTrade() {
         </div>
 
         <button type="submit" disabled={loading} className="btn-gold" style={{ width: '100%', padding: '16px', borderRadius: '12px', fontSize: '1.05rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-          {loading ? <><Loader2 size={20} className="animate-spin" /> Logging Trade...</> : <><CheckCircle size={20} /> Log Trade</>}
+          {loading
+            ? <><Loader2 size={20} className="animate-spin" /> Logging Trade...</>
+            : csvQueue.length
+              ? <><CheckCircle size={20} /> Save &amp; continue to next trade ({csvQueueTotal - csvQueue.length} of {csvQueueTotal})</>
+              : <><CheckCircle size={20} /> Log Trade</>}
         </button>
       </form>
     </div>
