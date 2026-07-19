@@ -1,29 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
 import { PlusCircle, Trash2, BookOpen, Sparkles } from 'lucide-react'
 import { useTradeStore } from '../../store/tradeStore'
-import { COVENANT_SEED_FLAG, COVENANT_STRATEGIES, missingCovenantStrategies } from '../../lib/covenantPlaybook'
+import { COVENANT_SEED_FLAG, COVENANT_STRATEGY, hasCovenantStrategy, legacyCovenantEntries } from '../../lib/covenantPlaybook'
 
 export default function Playbook() {
   const { playbook, addPlaybookStrategy, deletePlaybookStrategy, trades } = useTradeStore()
   const [showForm, setShowForm] = useState(false)
   const seededRef = useRef(false)
 
-  /* Seed the Covenant model once so the playbook isn't empty and the rules
-     live where trades get logged. Runs a single time per user — deleting a
-     strategy afterwards is respected and it won't come back. */
+  /* Seed the Covenant model once, and fold away the older three-card version.
+     Deleting it afterwards is respected — it won't come back on its own. */
   useEffect(() => {
     if (seededRef.current) return
     seededRef.current = true
+    legacyCovenantEntries(playbook).forEach(p => deletePlaybookStrategy(p.id))
     if (localStorage.getItem(COVENANT_SEED_FLAG)) return
     localStorage.setItem(COVENANT_SEED_FLAG, '1')
-    // Oldest last so the core PDI strategy ends up on top
-    ;[...COVENANT_STRATEGIES].reverse().forEach(addPlaybookStrategy)
-  }, [addPlaybookStrategy])
+    if (!hasCovenantStrategy(playbook)) addPlaybookStrategy(COVENANT_STRATEGY)
+  }, [addPlaybookStrategy, deletePlaybookStrategy, playbook])
 
-  const missing = missingCovenantStrategies(playbook)
-  const restoreCovenant = () => {
-    ;[...missing].reverse().forEach(addPlaybookStrategy)
-  }
+  const needsCovenant = !hasCovenantStrategy(playbook)
   const [form, setForm] = useState({ name: '', description: '', entryRules: '', exitRules: '', riskRules: '' })
 
   const getStats = (strategyName) => {
@@ -79,15 +75,13 @@ export default function Playbook() {
         </div>
       )}
 
-      {missing.length > 0 && (
+      {needsCovenant && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 12, padding: '12px 16px', marginBottom: 18, flexWrap: 'wrap' }}>
           <Sparkles size={15} color="#3B82F6" />
           <span style={{ color: '#C8C8C8', fontSize: '0.83rem' }}>
-            {missing.length === COVENANT_STRATEGIES.length
-              ? 'Add the Covenant model to your playbook — PDI, AMD and the pre-market routine.'
-              : `${missing.length} Covenant strateg${missing.length === 1 ? 'y is' : 'ies are'} missing from your playbook.`}
+            Add the Covenant model to your playbook.
           </span>
-          <button onClick={restoreCovenant}
+          <button onClick={() => addPlaybookStrategy(COVENANT_STRATEGY)}
             style={{ marginLeft: 'auto', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.35)', color: '#3B82F6', borderRadius: 8, padding: '7px 14px', fontSize: '0.79rem', fontWeight: 700, cursor: 'pointer' }}>
             Add Covenant model
           </button>
