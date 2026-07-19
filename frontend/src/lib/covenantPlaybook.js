@@ -50,9 +50,14 @@ export function hasCovenantStrategy(playbook = []) {
   )
 }
 
-/* Old three-card seeds, so they can be cleared out. */
+/* Old three-card seeds, so they can be cleared out. Matched loosely — an
+   exact-string check missed cards whose dash character differed. */
 export function legacyCovenantEntries(playbook = []) {
-  return (playbook || []).filter(
-    p => LEGACY_COVENANT_NAMES.includes(String(p.name || '').toLowerCase())
-  )
+  return (playbook || []).filter(p => {
+    const n = String(p.name || '').toLowerCase().trim()
+    return LEGACY_COVENANT_NAMES.includes(n)
+      || n.startsWith('pdi')
+      || n.startsWith('amd')
+      || n === 'pre-market routine'
+  })
 }
