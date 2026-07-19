@@ -4,6 +4,7 @@ import { useTradeStore } from '../../store/tradeStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { compressImage } from '../../lib/imageUtils'
+import { getCustomQuestions } from '../../lib/customQuestions'
 import { toTimeInput, extractCsvData, buildAutoMapping, tradesFromMapping, parseTradeCSV } from '../../lib/csvImport'
 import TradeChartAnnotator from '../../components/app/TradeChartAnnotator'
 import TradeProjectionView from '../../components/app/TradeProjectionView'
@@ -115,7 +116,7 @@ function getEmotionVerse(emotion) {
 const EMPTY_ARR = []
 
 export default function LogTrade() {
-  const { addTrade, getVerse, updateSettings } = useTradeStore()
+  const { addTrade, getVerse, updateSettings, settings } = useTradeStore()
   const customConfluences = useTradeStore(s => s.settings?.customConfluences ?? EMPTY_ARR)
   const customSetupTypes  = useTradeStore(s => s.settings?.customSetupTypes  ?? EMPTY_ARR)
   const playbook          = useTradeStore(s => s.playbook ?? EMPTY_ARR)
@@ -166,6 +167,12 @@ export default function LogTrade() {
   const [toImprove,     setToImprove]     = useState('')
   const [takeAgain,     setTakeAgain]     = useState('')
   const [verseOverlay, setVerseOverlay] = useState(null)
+  // Answers to the trader's own questions, keyed by question id
+  const [customAnswers, setCustomAnswers] = useState({})
+  const psychQuestions = getCustomQuestions(settings, 'psychology')
+  const execQuestions  = getCustomQuestions(settings, 'execution')
+  const setCustomAnswer = (id, v) => setCustomAnswers(prev => ({ ...prev, [id]: v }))
+
   const [chartImage, setChartImage] = useState(null)
   const [chartMarkers, setChartMarkers] = useState([])
   const [dragOver, setDragOver] = useState(false)
@@ -343,6 +350,7 @@ export default function LogTrade() {
         chartImage:    chartImage   || null,
         chartMarkers:  chartMarkers || [],
         riskReward:    detectedRR   || null,
+        customAnswers,
       })
       // More imported trades waiting? Load the next one and stay on the form.
       if (csvQueue.length) {
@@ -432,6 +440,7 @@ export default function LogTrade() {
     setTradingSession(''); setHtfBias(''); setMarketStructure('')
     setSetupType(''); setNewsEvent(''); setConfluences([])
     setWentWell(''); setToImprove(''); setTakeAgain('')
+    setCustomAnswers({})
   }
 
   function loadTradeIntoForm(t, rest = null, total = null) {
@@ -1023,6 +1032,24 @@ export default function LogTrade() {
         <div style={{ background: '#242424', borderRadius: '12px', border: '1px solid #3A3A3A', padding: '24px' }}>
           {sectionTitle('Execution Quality')}
 
+            {/* The trader's own questions, added from Reports */}
+            {execQuestions.map(q => (
+              <div key={q.id} style={{ marginBottom: '20px' }}>
+                <label style={{ color: '#A0A0A0', fontSize: '0.8rem', display: 'block', marginBottom: '8px' }}>{q.label}</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {q.options.map(opt => {
+                    const on = customAnswers[q.id] === opt
+                    return (
+                      <button key={opt} type="button" onClick={() => setCustomAnswer(q.id, on ? '' : opt)}
+                        style={{ padding: '6px 12px', borderRadius: '999px', border: `1px solid ${on ? '#4CAF7D' : '#3A3A3A'}`, background: on ? '#4CAF7D26' : 'transparent', color: on ? '#4CAF7D' : '#A0A0A0', fontSize: '0.8rem', cursor: 'pointer' }}>
+                        {opt}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+
           {/* Direction */}
           <div style={{ marginBottom: '20px' }}>
             <label style={{ color: '#A0A0A0', fontSize: '0.8rem', display: 'block', marginBottom: '8px' }}>Direction</label>
@@ -1137,6 +1164,24 @@ export default function LogTrade() {
         <div style={{ background: '#242424', borderRadius: '12px', border: '1px solid #3A3A3A', padding: '24px' }}>
           {sectionTitle('Psychology')}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+            {/* The trader's own questions, added from Reports */}
+            {psychQuestions.map(q => (
+              <div key={q.id} style={{ marginBottom: '20px' }}>
+                <label style={{ color: '#A0A0A0', fontSize: '0.8rem', display: 'block', marginBottom: '8px' }}>{q.label}</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {q.options.map(opt => {
+                    const on = customAnswers[q.id] === opt
+                    return (
+                      <button key={opt} type="button" onClick={() => setCustomAnswer(q.id, on ? '' : opt)}
+                        style={{ padding: '6px 12px', borderRadius: '999px', border: `1px solid ${on ? '#3B82F6' : '#3A3A3A'}`, background: on ? '#3B82F626' : 'transparent', color: on ? '#3B82F6' : '#A0A0A0', fontSize: '0.8rem', cursor: 'pointer' }}>
+                        {opt}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
 
             {/* Emotions */}
             {[['Pre-trade emotion', preTrade, setPreTrade, emotions], ['Post-trade emotion', postTrade, setPostTrade, postEmotions]].map(([label, val, setter, opts]) => (

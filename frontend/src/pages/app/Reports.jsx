@@ -3,6 +3,7 @@ import { useTradeStore } from '../../store/tradeStore'
 import { avgTradeDuration, formatDuration } from '../../lib/tradeTime'
 import { liveTrades, backtestTrades } from '../../lib/tradeFilters'
 import BacktestReport from '../../components/app/BacktestReport'
+import CustomQuestions from '../../components/app/CustomQuestions'
 import { format } from 'date-fns'
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -1084,8 +1085,18 @@ export default function Reports() {
       </div>
 
       {tab === 'performance' && <PerformanceView        trades={trades} />}
-      {tab === 'psychology'  && <PsychologyReport      trades={trades} />}
-      {tab === 'execution'   && <ExecutionQualityReport trades={trades} />}
+      {tab === 'psychology'  && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <PsychologyReport trades={trades} />
+          <CustomQuestions category="psychology" accent="#3B82F6" trades={trades} />
+        </div>
+      )}
+      {tab === 'execution'   && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <ExecutionQualityReport trades={trades} />
+          <CustomQuestions category="execution" accent="#4CAF7D" trades={trades} />
+        </div>
+      )}
       {tab === 'backtest'    && <BacktestReport trades={btTrades} onImport={() => navigate('/app/backtest')} />}
     </div>
   )
