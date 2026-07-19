@@ -45,6 +45,16 @@ function Ring({ pct, size = 58, stroke = 5, color = BLUE, label }) {
   )
 }
 
+/* Accepts a direct file (mp4/webm) or a YouTube/Vimeo link, so the video host
+   can change later without touching the player. */
+function embedUrl(url) {
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/)
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`
+  const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/)
+  if (vm) return `https://player.vimeo.com/video/${vm[1]}`
+  return null
+}
+
 export default function CourseMaterial() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [done, setDone] = useState(loadDone)
@@ -119,17 +129,43 @@ export default function CourseMaterial() {
         </button>
 
         <div style={{ ...card, overflow: 'hidden', marginBottom: 16 }}>
-          {/* Video slot — swapped for the real embed once videos are supplied */}
-          <div style={{
-            aspectRatio: '16 / 9', background: 'linear-gradient(160deg,#242424,#141414)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12,
-            borderBottom: '1px solid #2A2A2A',
-          }}>
-            <div style={{ width: 62, height: 62, borderRadius: '50%', background: 'rgba(59,130,246,0.14)', border: '1px solid rgba(59,130,246,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Play size={24} color={BLUE} fill={BLUE} />
-            </div>
-            <span style={{ color: '#5E5E5E', fontSize: '0.82rem' }}>Video goes here</span>
-          </div>
+          {/* Player — direct file, embed, or an empty slot when no video is set */}
+          {(() => {
+            const src = current.lesson.video
+            if (!src) return (
+              <div style={{
+                aspectRatio: '16 / 9', background: 'linear-gradient(160deg,#242424,#141414)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12,
+                borderBottom: '1px solid #2A2A2A',
+              }}>
+                <div style={{ width: 62, height: 62, borderRadius: '50%', background: 'rgba(59,130,246,0.14)', border: '1px solid rgba(59,130,246,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Play size={24} color={BLUE} fill={BLUE} />
+                </div>
+                <span style={{ color: '#5E5E5E', fontSize: '0.82rem' }}>Video goes here</span>
+              </div>
+            )
+            const embed = embedUrl(src)
+            if (embed) return (
+              <iframe
+                key={current.lesson.id}
+                src={embed}
+                title={current.lesson.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowFullScreen
+                style={{ display: 'block', width: '100%', aspectRatio: '16 / 9', border: 'none', background: '#000', borderBottom: '1px solid #2A2A2A' }}
+              />
+            )
+            return (
+              <video
+                key={current.lesson.id}
+                src={src}
+                controls
+                preload="metadata"
+                playsInline
+                style={{ display: 'block', width: '100%', aspectRatio: '16 / 9', background: '#000', borderBottom: '1px solid #2A2A2A' }}
+              />
+            )
+          })()}
 
           <div style={{ padding: '20px 24px' }}>
             <div style={{ color: '#6A6A6A', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 6 }}>
