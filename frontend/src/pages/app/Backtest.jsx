@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { FlaskConical, Upload, Clock } from 'lucide-react'
+
 import { useTradeStore } from '../../store/tradeStore'
 import { backtestTrades } from '../../lib/tradeFilters'
 import BacktestReport from '../../components/app/BacktestReport'
+import BacktestCsvImport from '../../components/app/BacktestCsvImport'
 
 /* Backtesting. Sections are driven by ?tab= and rendered in the app sidebar
    while you're on this page — see BACKTEST_NAV in layouts/AppLayout.jsx.
@@ -21,7 +22,7 @@ export default function Backtest() {
   const tab = BACKTEST_TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'dashboard'
   const bt  = useMemo(() => backtestTrades(allTrades), [allTrades])
 
-  const goImport = () => navigate('/app/log', { state: { backtest: true } })
+  const goImport = () => navigate('/app/backtest?tab=import')
 
   if (tab === 'dashboard') {
     return <BacktestReport trades={bt} onImport={goImport} />
@@ -78,39 +79,8 @@ export default function Backtest() {
     )
   }
 
-  /* import */
+  /* import — its own area, separate from the live Log Trade importer */
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' }}>
-      <div style={{ textAlign: 'center', padding: '36px 24px', background: 'linear-gradient(160deg,#242424,#1E1E1E)', border: '1px solid #3A3A3A', borderRadius: 16, marginBottom: 18 }}>
-        <div style={{ fontSize: '2.2rem', marginBottom: 10, filter: 'drop-shadow(0 0 14px rgba(185,140,224,0.4))' }}>⚗️</div>
-        <h1 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 800, fontSize: '1.4rem', color: '#F5F5F5', margin: '0 0 8px' }}>Backtesting</h1>
-        <p style={{ color: '#888', fontSize: '0.88rem', maxWidth: 470, margin: '0 auto', lineHeight: 1.6 }}>
-          Replay sessions and paper trading are still being built. You can already import
-          backtest trades from a CSV — they get their own dashboard, separate from live results.
-        </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
-          {['Replay Sessions', 'Paper Trading'].map(f => (
-            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#666', fontSize: '0.76rem', background: '#1A1A1A', border: '1px solid #2E2E2E', borderRadius: 20, padding: '6px 14px' }}>
-              <Clock size={13} /> {f}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ background: '#242424', border: '1px solid rgba(185,140,224,0.28)', borderRadius: 14, padding: '26px 24px', textAlign: 'center' }}>
-        <FlaskConical size={26} color="#B98CE0" style={{ display: 'block', margin: '0 auto' }} />
-        <h2 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '1.05rem', color: '#F5F5F5', margin: '10px 0 6px' }}>Upload Backtest CSV</h2>
-        <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: 18, maxWidth: 440, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
-          Imported trades are tagged <strong style={{ color: '#B98CE0' }}>Backtest</strong>, so they stay out of
-          your live P&amp;L, Covenant Score and leaderboard rank.
-        </p>
-        <button
-          onClick={goImport}
-          style={{ padding: '12px 26px', borderRadius: 12, border: '1px solid rgba(185,140,224,0.4)', background: 'rgba(185,140,224,0.14)', color: '#B98CE0', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 8 }}
-        >
-          <Upload size={16} /> Import Backtest CSV
-        </button>
-      </div>
-    </div>
+    <BacktestCsvImport onDone={() => navigate('/app/backtest')} />
   )
 }

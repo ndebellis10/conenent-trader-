@@ -16,6 +16,7 @@ import TradeCalendar from '../../components/app/TradeCalendar'
 import FaithScore from '../../components/app/FaithScore'
 import NewsPanel from '../../components/app/NewsPanel'
 import DailyInsight from '../../components/app/DailyInsight'
+import LeaderboardMini from '../../components/app/LeaderboardMini'
 import GaugeKPIs from '../../components/app/GaugeKPIs'
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval, subDays, startOfWeek, addDays, startOfDay, endOfDay } from 'date-fns'
 import DateRangePicker from '../../components/app/DateRangePicker'
@@ -813,6 +814,9 @@ export default function Dashboard() {
             <DailyGoalsCard />
             <GoalHeatmap />
           </div>
+
+          {/* Compact standings — the right column runs shorter than the left */}
+          <LeaderboardMini />
 
         </div>
       </div>
