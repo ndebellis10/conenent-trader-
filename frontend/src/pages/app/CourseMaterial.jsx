@@ -81,7 +81,8 @@ export default function CourseMaterial() {
   const firstName = String(displayName).split(' ')[0]
   const [done, setDone] = useState(() => loadDone(email))
   const loadedRef = useRef(false)
-  const [openModules, setOpenModules] = useState(() => new Set(COURSE_MODULES.map(m => m.slug)))
+  // Everything starts collapsed — only the section you are in opens
+  const [openModules, setOpenModules] = useState(() => new Set())
   const stageRef = useRef(null)
   const [checkIn, setCheckIn]  = useState(null)   // lesson just finished
   const [chatOpen, setChatOpen] = useState(false)
@@ -89,7 +90,6 @@ export default function CourseMaterial() {
 
   const view = searchParams.get('tab') === 'progress' ? 'progress' : 'modules'
   const firstLesson = COURSE_MODULES[0]?.lessons[0]?.id
-  const lessonId = searchParams.get('lesson') || firstLesson
 
   // Pull the account's progress once, merging anything ticked offline
   useEffect(() => {
@@ -136,9 +136,28 @@ export default function CourseMaterial() {
     () => COURSE_MODULES.flatMap(m => m.lessons.map(l => ({ ...l, module: m }))),
     []
   )
+  // Resume where they left off — the first lesson they have not completed
+  const resumeId = useMemo(() => {
+    const nextUp = flat.find(l => !done.has(l.id))
+    return (nextUp || flat[flat.length - 1])?.id || firstLesson
+  }, [flat, done, firstLesson])
+
+  const lessonId = searchParams.get('lesson') || resumeId
+
   const idx     = flat.findIndex(l => l.id === lessonId)
   const current = idx >= 0 ? flat[idx] : null
   const next    = idx >= 0 ? flat[idx + 1] || null : null
+
+  // Open the section the current lesson lives in
+  const currentSlug = flat[flat.findIndex(l => l.id === lessonId)]?.module.slug
+  useEffect(() => {
+    if (!currentSlug) return
+    const id = setTimeout(
+      () => setOpenModules(prev => (prev.has(currentSlug) ? prev : new Set([...prev, currentSlug]))),
+      0
+    )
+    return () => clearTimeout(id)
+  }, [currentSlug])
 
   const openLesson = (id) => {
     const p = new URLSearchParams(searchParams)

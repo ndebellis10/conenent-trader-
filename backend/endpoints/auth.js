@@ -10,7 +10,6 @@
  *
  * * HIBP = HaveIBeenPwned k-anonymity password breach check
  */
-import { createHash }                                         from 'node:crypto'
 import { supabaseAdmin, supabaseConfigured }                  from './_lib/supabase-admin.js'
 import { setAuthCookiesWithCsrf, clearAuthCookies }           from './_lib/cookies.js'
 import { requireAuth, unauthorized }                          from './_lib/auth-middleware.js'
@@ -44,20 +43,6 @@ async function verifyCaptcha(token) {
 }
 
 /* ── HaveIBeenPwned k-anonymity password check ────────────── */
-async function isPasswordBreached(password) {
-  try {
-    const hash   = createHash('sha1').update(password).digest('hex').toUpperCase()
-    const prefix = hash.slice(0, 5)
-    const suffix = hash.slice(5)
-    const r = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
-      headers: { 'Add-Padding': 'true', 'User-Agent': 'FaithTrader-SecurityCheck/1.0' },
-    })
-    if (!r.ok) return false   // fail-open: don't block login if API is down
-    const lines = (await r.text()).split('\n')
-    return lines.some(l => l.split(':')[0].trim() === suffix)
-  } catch { return false }
-}
-
 /* ── Login attempt tracking ───────────────────────────────── */
 async function recordAttempt(email, ip, ua, success) {
   await supabaseAdmin.from('login_attempts')
@@ -208,13 +193,9 @@ export default async function handler(req, res) {
     if (!(await verifyCaptcha(captchaToken)))
       return res.status(400).json({ error: 'CAPTCHA verification failed' })
 
-    // HaveIBeenPwned breach check — reject known compromised passwords
-    if (await isPasswordBreached(password)) {
-      return res.status(422).json({
-        error: 'This password was found in a data breach. Please choose a different password.',
-        code:  'PASSWORD_BREACHED',
-      })
-    }
+    // Breach check intentionally not enforced — a password appearing in a
+    // public breach corpus does not block signup. Requirements are 8+
+    // characters and at least one special character.
 
     const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
       email, password, email_confirm: true,

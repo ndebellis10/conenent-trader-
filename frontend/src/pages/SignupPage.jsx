@@ -332,7 +332,8 @@ const schema = z.object({
   lastName:        z.string().min(1, 'Last name required').max(50),
   email:           z.string().email('Invalid email address'),
   password:        z.string()
-    .min(8,  'At least 8 characters required'),
+    .min(8, 'At least 8 characters required')
+    .regex(/[^A-Za-z0-9]/, 'Include at least one special character'),
   confirmPassword: z.string(),
   terms:           z.boolean().refine(v => v, 'You must agree to the terms'),
 }).refine(d => d.password === d.confirmPassword, {
@@ -343,7 +344,8 @@ const schema = z.object({
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY
 
 const STRENGTH_RULES = [
-  { re: /.{8}/,          label: '8+ characters'     },
+  { re: /.{8}/,           label: '8+ characters'      },
+  { re: /[^A-Za-z0-9]/,   label: 'A special character' },
 ]
 
 export default function SignupPage() {
