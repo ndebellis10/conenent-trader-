@@ -34,6 +34,19 @@ export const COURSE_MODULES = [
     ],
   },
   {
+    slug: 'mindset-module',
+    title: 'Mindset Module',
+    blurb: 'The psychology side — why traders fail, and the routines that stop it.',
+    lessons: [
+      { id: 'mindset-1', title: 'Why Most Fail',                    video: 'https://youtu.be/mKwiaOPyXzY' },
+      { id: 'mindset-2', title: 'The Psychology Nobody Talks About', video: 'https://youtu.be/rN7nbBRQWoE' },
+      { id: 'mindset-3', title: 'Keep Your Covenant',               video: 'https://youtu.be/4srAihrx4MU' },
+      { id: 'mindset-4', title: 'Green Means Stop',                 video: 'https://youtu.be/E_rcE78CpRo' },
+      { id: 'mindset-5', title: 'Closing Routine',                  video: 'https://youtu.be/atwRSEkHUf4' },
+      { id: 'mindset-6', title: 'Mindset Walkthrough',              video: 'https://cdn.discordapp.com/attachments/1479568044354175118/1484432448505774160/c3a96a2f0ee24900b93263aed82be028.mov?ex=6a5dba73&is=6a5c68f3&hm=980a4d61e73637b5e7c07cacb741cf515e2035267352b514d21d22d7f0e3e788&' },
+    ],
+  },
+  {
     slug: 'foundations-trading-basics',
     group: 'Foundations',
     title: 'Trading Basics',
