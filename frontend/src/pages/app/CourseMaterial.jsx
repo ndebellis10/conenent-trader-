@@ -252,20 +252,22 @@ export default function CourseMaterial() {
         .course-stage video, .course-stage iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: none; background: #000; }
         /* In fullscreen the wrapper becomes the viewport — fill it */
         .course-stage:fullscreen { border-radius: 0; border: none; display: flex; align-items: stretch; background: #000; }
-        .course-stage:fullscreen .course-player { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; }
+        .course-stage:fullscreen .course-player { width: 90%; flex: 0 0 90%; min-width: 0; display: flex; align-items: center; justify-content: center; }
         .course-stage:fullscreen video, .course-stage:fullscreen iframe { height: 100%; width: 100%; aspect-ratio: auto; object-fit: contain; }
         /* Notepad rides along in fullscreen only */
         .course-fsnotes { display: none; }
         .course-stage:fullscreen .course-fsnotes {
-          display: flex; flex-direction: column; width: min(380px, 34vw);
-          background: #141414; border-left: 1px solid #2A2A2A; padding: 16px;
+          display: flex; flex-direction: column;
+          width: 10%; flex: 0 0 10%; min-width: 190px;
+          background: #141414; border-left: 1px solid #2A2A2A; padding: 12px;
         }
         .course-fsnotes textarea {
           flex: 1; width: 100%; box-sizing: border-box; resize: none;
-          background: #191919; border: 1px solid #2E2E2E; border-radius: 12;
-          padding: 13px 15px; color: #E0E0E0; font-size: 0.88rem; line-height: 1.65;
+          background: #191919; border: 1px solid #2E2E2E; border-radius: 10px;
+          padding: 10px 11px; color: #E0E0E0; font-size: 0.8rem; line-height: 1.6;
           font-family: Inter, sans-serif; outline: none;
         }
+        .course-fsnotes textarea:focus { border-color: rgba(59,130,246,0.5); }
         .course-stage-col { max-width: 860px; }
         .course-rail { background: #1C1C1C; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; position: sticky; top: 16px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
         .course-rail-scroll { overflow-y: auto; padding: 8px; }
@@ -365,10 +367,10 @@ export default function CourseMaterial() {
 
           {/* Only visible in fullscreen — same notes as the panel below */}
           <aside className="course-fsnotes">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <NotebookPen size={14} color={BLUE} />
-              <span style={{ color: '#E8E8E8', fontSize: '0.84rem', fontWeight: 700 }}>Your notes</span>
-              <span style={{ marginLeft: 'auto', color: '#5A5A5A', fontSize: '0.7rem' }}>Private to you</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8, flexWrap: 'wrap' }}>
+              <NotebookPen size={13} color={BLUE} />
+              <span style={{ color: '#E8E8E8', fontSize: '0.78rem', fontWeight: 700 }}>Notes</span>
+              <span style={{ color: '#5A5A5A', fontSize: '0.66rem' }}>private</span>
             </div>
             <textarea
               value={notes[current?.id] || ''}
