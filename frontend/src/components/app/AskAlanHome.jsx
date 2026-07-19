@@ -87,10 +87,8 @@ export default function AskAlanHome({ name, onAsk, onTab }) {
           background: #141414; border: 1px solid #333; border-radius: 14px;
           padding: 6px 6px 6px 18px; transition: border-color .18s, box-shadow .18s;
         }
-        .alanhome-ask:focus-within {
-          border-color: rgba(59,130,246,0.55);
-          box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
-        }
+        /* No focus ring — the border alone is enough of a cue */
+        .alanhome-ask:focus-within { border-color: #3F3F3F; box-shadow: none; }
         .alanhome-ask input {
           flex: 1; background: none; border: none; outline: none;
           color: #F0F0F0; font-size: 0.95rem; font-family: Inter, sans-serif;
