@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import AlanMascot from '../AlanMascot'
 import { faithAiApi } from '../../lib/api'
-import { Send, ImagePlus, X, Volume2, Square } from 'lucide-react'
+import { Send, ImagePlus, X, Volume2, Square, Mic } from 'lucide-react'
 import { compressImage } from '../../lib/imageUtils'
 
 const SUGGESTED = [
@@ -24,13 +24,33 @@ function makeInitMessage(trades, stats) {
   return `Peace be with you. I've reviewed your full trading journal — ${trades.length} trades, ${stats?.winRate ?? 0}% win rate, ${pnlSign}$${stats?.totalPnl ?? '0.00'} total P&L.${streakNote} I know what you're doing well and where you're bleeding. Ask me anything — or ask "what should I work on?" and I'll give it to you straight.`
 }
 
+/* Conversations persist per account so closing the panel doesn't lose the
+   thread. Threads are capped so the cache can't grow without bound. */
+const HISTORY_LIMIT = 60
+const historyKey = (email, lessonMode) =>
+  `ct-alan-chat__${String(email || 'guest').replace(/[^a-z0-9]/gi, '_').toLowerCase()}${lessonMode ? '__lesson' : ''}`
+
+function loadHistory(email, lessonMode) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(historyKey(email, lessonMode)) || 'null')
+    return Array.isArray(raw) ? raw.slice(-HISTORY_LIMIT) : null
+  } catch { return null }
+}
+function saveHistory(email, lessonMode, messages) {
+  try {
+    localStorage.setItem(historyKey(email, lessonMode), JSON.stringify(messages.slice(-HISTORY_LIMIT)))
+  } catch { /* quota or private mode — the thread just won't persist */ }
+}
+
 /* ── Chat tab ─────────────────────────────────────────────── */
-export default function AlanChat({ trades, stats, goals, completions, settings, playbook, seed, lessonMode = false, lessonContext = null }) {
+export default function AlanChat({ trades, stats, goals, completions, settings, playbook, seed, lessonMode = false, lessonContext = null, courseProgress = null, email = null }) {
   // In lesson mode the thread starts empty — the question is the first thing
   // shown, then the answer. No journal/P&L preamble.
-  const [messages,  setMessages]  = useState(
-    () => (lessonMode ? [] : [{ role: 'assistant', content: makeInitMessage(trades, stats) }])
-  )
+  const [messages,  setMessages]  = useState(() => {
+    const saved = loadHistory(email, lessonMode)
+    if (saved?.length) return saved
+    return lessonMode ? [] : [{ role: 'assistant', content: makeInitMessage(trades, stats) }]
+  })
   const [input,     setInput]     = useState('')
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState(null)
@@ -40,7 +60,45 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
   const [attached, setAttached] = useState(null)   // data URL of a chart to send
   const [speaking, setSpeaking] = useState(null)   // index of the message being read aloud
 
+  const [listening, setListening] = useState(false)
+  const recogRef = useRef(null)
+
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+
+  // Keep the thread so closing the panel doesn't lose the conversation
+  useEffect(() => { saveHistory(email, lessonMode, messages) }, [messages, email, lessonMode])
+
+  /* Dictation via the browser's own speech recognition — nothing is uploaded. */
+  const SpeechRec = typeof window !== 'undefined'
+    ? (window.SpeechRecognition || window.webkitSpeechRecognition)
+    : null
+
+  function toggleDictation() {
+    if (!SpeechRec) return
+    if (listening) { recogRef.current?.stop(); return }
+    const rec = new SpeechRec()
+    rec.lang = 'en-US'
+    rec.interimResults = true
+    rec.continuous = false
+    let final = ''
+    rec.onresult = e => {
+      let interim = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript
+        if (e.results[i].isFinal) final += t
+        else interim += t
+      }
+      setInput((final + interim).trim())
+    }
+    rec.onerror = () => setListening(false)
+    rec.onend   = () => setListening(false)
+    recogRef.current = rec
+    setListening(true)
+    rec.start()
+  }
+
+  // Stop the mic if the chat goes away mid-dictation
+  useEffect(() => () => { try { recogRef.current?.stop() } catch { /* already stopped */ } }, [])
 
   // A question asked from the home hub arrives as { text, n }; fire it once per bump.
   useEffect(() => {
@@ -81,7 +139,7 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
     setLoading(true)
     try {
       const history = messages.slice(-10)
-      const reply = await faithAiApi.chat(msg || 'What do you make of this chart?', history, trades, stats, goals, completions, settings, playbook, img, lessonContext)
+      const reply = await faithAiApi.chat(msg || 'What do you make of this chart?', history, trades, stats, goals, completions, settings, playbook, img, lessonContext, courseProgress)
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
     } catch (e) {
       setError(e.message || 'Could not connect to Ask Alan. Please try again.')
@@ -248,6 +306,13 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
           </button>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
             onChange={e => { handleFile(e.target.files?.[0]); e.target.value = '' }} />
+          {SpeechRec && (
+            <button className="alanchat-attach" onClick={toggleDictation}
+              title={listening ? 'Stop dictating' : 'Dictate'} aria-label="Dictate"
+              style={listening ? { color: '#E05252', background: 'rgba(224,82,82,0.1)' } : undefined}>
+              <Mic size={17} />
+            </button>
+          )}
           <input
             value={input}
             onChange={e => setInput(e.target.value)}

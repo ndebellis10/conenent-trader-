@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Play, Check, ChevronRight, Maximize2, Trophy, Lock, NotebookPen } from 'lucide-react'
 import { COURSE_MODULES, TOTAL_LESSONS } from '../../lib/courseOutline'
 import ChatDrawer from '../../components/app/ChatDrawer'
+import { summarizeCourseProgress } from '../../lib/courseProgress'
 import AlanMascot from '../../components/AlanMascot'
 import { useTradeStore } from '../../store/tradeStore'
 import { useAuth } from '../../contexts/AuthContext'
@@ -554,6 +555,7 @@ export default function CourseMaterial() {
         lessonContext={current ? { lesson: current.title, module: current.module.title, notes: notes[current.id] || '' } : null}
         trades={[]} stats={null} goals={null}
         completions={null} settings={settings} playbook={[]} seed={seed}
+        courseProgress={summarizeCourseProgress(email, done)} email={email}
       />
     </div>
   )

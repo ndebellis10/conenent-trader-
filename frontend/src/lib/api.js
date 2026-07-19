@@ -121,7 +121,7 @@ async function faithFetch(body) {
 }
 
 export const faithAiApi = {
-  chat: (message, history, trades, stats, goals, completions, settings, playbook, image, lessonContext) => {
+  chat: (message, history, trades, stats, goals, completions, settings, playbook, image, lessonContext, courseProgress) => {
     const today = new Date().toISOString().split('T')[0]
     const todayCompletions = completions ? { [today]: completions[today] || [] } : {}
     return faithFetch({
@@ -132,6 +132,7 @@ export const faithAiApi = {
       playbook: (playbook || []).slice(0, 10),
       image: image || undefined,
       lessonContext: lessonContext || undefined,
+      courseProgress: courseProgress || undefined,
     }).then(d => d.reply)
   },
   coachTrade:     (trade, recentTrades, userId)     => faithFetch({ type: 'coach',   trade, recentTrades, userId }),

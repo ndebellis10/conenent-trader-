@@ -358,7 +358,7 @@ Moved stop loss: ${movedStop} times`)
 }
 
 async function handleChat(body, res) {
-  const { message, history = [], trades = [], goals, completions, settings, playbook, image, lessonContext } = body
+  const { message, history = [], trades = [], goals, completions, settings, playbook, image, lessonContext, courseProgress } = body
   if (!message) return res.status(400).json({ error: 'message is required' })
 
   const apiKey = getApiKey()
@@ -384,7 +384,30 @@ async function handleChat(body, res) {
     }
   }
 
-  const volatileContext = traderContext + lessonBlock + `
+  // Where they are in the course, so coaching can connect what they have been
+  // taught to how they are actually trading.
+  let courseBlock = ''
+  if (courseProgress && typeof courseProgress === 'object') {
+    const { completed = 0, total = 0, modules = [], recent = [] } = courseProgress
+    const lines = []
+    if (total) lines.push(`Lessons completed: ${completed} of ${total}`)
+    if (Array.isArray(modules) && modules.length) {
+      lines.push('Progress by section:')
+      modules.slice(0, 20).forEach(m => {
+        lines.push(`  ${String(m.title).slice(0, 80)} — ${m.completed}/${m.total}`)
+      })
+    }
+    if (Array.isArray(recent) && recent.length) {
+      lines.push('Most recently completed: ' + recent.slice(0, 5).map(t => String(t).slice(0, 80)).join(', '))
+    }
+    if (lines.length) {
+      lines.push('')
+      lines.push('Use this: connect what they have been taught to how they are actually trading. If they have covered a topic their trades contradict, name the lesson. If they have not reached it yet, point them to it instead of assuming they know it.')
+      courseBlock = ['', '', '=== COURSE PROGRESS ===', ...lines, '=== END COURSE PROGRESS ==='].join('\n')
+    }
+  }
+
+  const volatileContext = traderContext + lessonBlock + courseBlock + `
 
 IMPORTANT RULES:
 1. Always reference the trader's ACTUAL numbers — win rate, P&L, streak, specific dollar amounts.

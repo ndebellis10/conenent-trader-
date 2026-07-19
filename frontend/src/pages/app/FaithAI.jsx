@@ -11,6 +11,7 @@ import { useGoalStore }   from '../../store/goalStore'
 import { useAdminStore }  from '../../store/adminStore'
 import { useAuth }        from '../../contexts/AuthContext'
 import { faithAiApi }     from '../../lib/api'
+import { summarizeCourseProgress } from '../../lib/courseProgress'
 import { format, subDays } from 'date-fns'
 import { Sparkles, ChevronDown, ChevronUp, Loader2, RefreshCw, BookOpen } from 'lucide-react'
 
@@ -224,6 +225,9 @@ export default function FaithAI() {
   const { goals, completions }         = useGoalStore()
   const viewingUser                    = useAdminStore(s => s.viewingUser)
   const { isAdmin, user }              = useAuth()
+  const email = user?.email || null
+  // What they've covered in the course, so Alan can tie lessons to their trades
+  const courseProgress = useMemo(() => summarizeCourseProgress(email), [email])
   const [searchParams, setSearchParams] = useSearchParams()
   const [seed, setSeed]                = useState({ text: '', n: 0 })
   const [chatOpen, setChatOpen]        = useState(false)
@@ -281,6 +285,7 @@ export default function FaithAI() {
         onClose={() => setChatOpen(false)}
         trades={trades} stats={stats} goals={goals}
         completions={completions} settings={settings} playbook={playbook} seed={seed}
+        courseProgress={courseProgress} email={email}
       />
     </div>
   )
