@@ -802,6 +802,8 @@ function ExecutionQualityReport({ trades }) {
         </div>
       </div>
 
+      <DayOfWeekBreakdown trades={trades} />
+
       {/* ── Core Discipline ── */}
       <SecHead label="Core Discipline" />
       {pillarRow([
@@ -940,7 +942,6 @@ function ExecutionQualityReport({ trades }) {
         </div>
       )}
 
-      <DayOfWeekBreakdown trades={trades} />
     </div>
   )
 }
