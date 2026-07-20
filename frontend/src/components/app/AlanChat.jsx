@@ -27,7 +27,7 @@ function makeInitMessage(trades, stats) {
 /* Conversations persist per account so closing the panel doesn't lose the
    thread. Threads are capped so the cache can't grow without bound. */
 const HISTORY_LIMIT = 60
-const historyKey = (email, lessonMode) =>
+export const historyKey = (email, lessonMode) =>
   `ct-alan-chat__${String(email || 'guest').replace(/[^a-z0-9]/gi, '_').toLowerCase()}${lessonMode ? '__lesson' : ''}`
 
 function loadHistory(email, lessonMode) {

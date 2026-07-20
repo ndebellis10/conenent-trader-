@@ -5,6 +5,7 @@
 import { useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import AskAlanHome from '../../components/app/AskAlanHome'
+import OnboardingChecklist from '../../components/app/OnboardingChecklist'
 import ChatDrawer from '../../components/app/ChatDrawer'
 import { useTradeStore }  from '../../store/tradeStore'
 import { useGoalStore }   from '../../store/goalStore'
@@ -263,7 +264,14 @@ export default function FaithAI() {
       {/* Content — section switching lives in the app sidebar while you're in Ask Alan */}
       <div style={{ minWidth: 0 }}>
         {tab === 'home' && (
-          <AskAlanHome name={displayName} onAsk={askAlan} onTab={setTab} />
+          <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+            <OnboardingChecklist
+              email={email} settings={settings} trades={trades}
+              goals={goals} playbook={playbook} courseProgress={courseProgress}
+              onAsk={askAlan}
+            />
+            <AskAlanHome name={displayName} onAsk={askAlan} onTab={setTab} />
+          </div>
         )}
 
         {tab === 'coach' && (
