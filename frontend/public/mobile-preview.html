@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Covenant Trader — phone preview</title>
+<!--
+  Dev tool. Each frame is a real browsing context, so CSS media queries inside
+  it respond to the frame's width — this is a genuine mobile render, not a
+  scaled-down screenshot. Log in inside a frame and navigate normally.
+-->
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; padding: 24px; background: #101010; min-height: 100vh;
+    font-family: Inter, system-ui, sans-serif; color: #E8E8E8;
+  }
+  h1 { font-size: 1rem; font-weight: 700; margin: 0 0 4px; }
+  p  { color: #8A8A8A; font-size: 0.8rem; margin: 0 0 20px; }
+  .row { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+  .device { display: flex; flex-direction: column; gap: 8px; }
+  .label { color: #9A9A9A; font-size: 0.75rem; font-weight: 600; }
+  .label span { color: #5E5E5E; font-weight: 400; }
+  .bezel {
+    border: 10px solid #2A2A2A; border-radius: 28px; background: #000;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.6); overflow: hidden;
+  }
+  iframe { display: block; border: 0; background: #1A1A1A; }
+  .bar { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  input {
+    background: #1E1E1E; border: 1px solid #333; border-radius: 8px;
+    padding: 8px 12px; color: #E8E8E8; font-size: 0.82rem; width: 320px;
+  }
+  button {
+    background: #3B82F6; border: 0; border-radius: 8px; color: #fff;
+    padding: 8px 16px; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  }
+  button.ghost { background: #262626; color: #B0B0B0; }
+</style>
+</head>
+<body>
+  <h1>Covenant Trader — phone preview</h1>
+  <p>Real viewports, so responsive CSS behaves exactly as it would on the device. Log in inside a frame; navigation works normally.</p>
+
+  <div class="bar">
+    <input id="path" value="/app/faith-ai" spellcheck="false" />
+    <button onclick="go()">Go</button>
+    <button class="ghost" onclick="set('/login')">Login</button>
+    <button class="ghost" onclick="set('/app/dashboard')">Dashboard</button>
+    <button class="ghost" onclick="set('/app/reports')">Reports</button>
+    <button class="ghost" onclick="set('/app/log')">Log Trade</button>
+    <button class="ghost" onclick="set('/app/course')">Course</button>
+  </div>
+
+  <div class="row">
+    <div class="device">
+      <div class="label">iPhone SE <span>· 375 × 667</span></div>
+      <div class="bezel"><iframe id="f1" width="375" height="667"></iframe></div>
+    </div>
+    <div class="device">
+      <div class="label">iPhone 14 Pro <span>· 393 × 852</span></div>
+      <div class="bezel"><iframe id="f2" width="393" height="852"></iframe></div>
+    </div>
+    <div class="device">
+      <div class="label">iPad mini <span>· 768 × 900 — the breakpoint</span></div>
+      <div class="bezel"><iframe id="f3" width="768" height="900"></iframe></div>
+    </div>
+  </div>
+
+<script>
+  const frames = ['f1', 'f2', 'f3']
+  function go() {
+    const p = document.getElementById('path').value || '/'
+    frames.forEach(id => { document.getElementById(id).src = p })
+  }
+  function set(p) { document.getElementById('path').value = p; go() }
+  go()
+</script>
+</body>
+</html>
