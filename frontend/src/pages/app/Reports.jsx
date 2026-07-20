@@ -1075,8 +1075,9 @@ export default function Reports() {
       {tab === 'performance' && <PerformanceView        trades={trades} />}
       {tab === 'psychology'  && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <PsychologyReport trades={trades} />
+          {/* Their own questions first — there's no score block to sit under here */}
           <CustomQuestions category="psychology" accent="#3B82F6" trades={trades} />
+          <PsychologyReport trades={trades} />
         </div>
       )}
       {tab === 'execution'   && (
