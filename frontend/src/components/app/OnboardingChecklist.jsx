@@ -7,7 +7,7 @@ const BLUE = '#3B82F6'
 
 /* First-run checklist shown above the Ask Alan hub. Disappears for good once
    every step is done, or when the trader dismisses it. */
-export default function OnboardingChecklist({ email, settings, trades, goals, playbook, courseProgress, onAsk }) {
+export default function OnboardingChecklist({ email, settings, trades, goals, playbook, courseProgress, onAsk, onProfile }) {
   const navigate = useNavigate()
   const [hidden, setHidden] = useState(() => isDismissed(email))
 
@@ -24,7 +24,8 @@ export default function OnboardingChecklist({ email, settings, trades, goals, pl
   const close = () => { dismiss(email); setHidden(true) }
 
   const go = (where) => {
-    if (where === 'chat') return onAsk?.('')
+    if (where === 'chat')    return onAsk?.('')
+    if (where === 'profile') return onProfile?.()
     navigate({
       settings: '/app/settings', course: '/app/course', log: '/app/log',
       goals: '/app/goals', playbook: '/app/playbook',

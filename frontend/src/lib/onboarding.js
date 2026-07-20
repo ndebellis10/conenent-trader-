@@ -6,6 +6,7 @@
  * something you haven't, and it fills itself in as you use the app normally.
  */
 import { historyKey } from '../components/app/AlanChat'
+import { isProfileComplete } from './traderProfile'
 
 const dismissKey = email =>
   `ct-onboarding-done__${String(email || 'guest').replace(/[^a-z0-9]/gi, '_').toLowerCase()}`
@@ -39,6 +40,13 @@ export function buildSteps({ email, settings, trades, goals, playbook, coursePro
       desc: 'So the leaderboard shows you, not your email.',
       go: 'settings',
       done: Boolean(settings?.name && String(settings.name).trim() && settings.name !== 'Trader'),
+    },
+    {
+      id: 'profile',
+      title: 'Tell Alan about your trading',
+      desc: 'Your experience and goals, so his coaching starts informed.',
+      go: 'profile',
+      done: isProfileComplete(settings?.traderProfile),
     },
     {
       id: 'lesson',

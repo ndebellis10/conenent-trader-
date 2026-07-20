@@ -6,6 +6,7 @@ import { useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import AskAlanHome from '../../components/app/AskAlanHome'
 import OnboardingChecklist from '../../components/app/OnboardingChecklist'
+import TraderProfileModal from '../../components/app/TraderProfileModal'
 import ChatDrawer from '../../components/app/ChatDrawer'
 import { useTradeStore }  from '../../store/tradeStore'
 import { useGoalStore }   from '../../store/goalStore'
@@ -232,6 +233,7 @@ export default function FaithAI() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [seed, setSeed]                = useState({ text: '', n: 0 })
   const [chatOpen, setChatOpen]        = useState(false)
+  const [profileOpen, setProfileOpen]  = useState(false)
 
   // The active section lives in the URL so the app sidebar can drive it.
   const tab    = AI_TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'home'
@@ -269,6 +271,7 @@ export default function FaithAI() {
               email={email} settings={settings} trades={trades}
               goals={goals} playbook={playbook} courseProgress={courseProgress}
               onAsk={askAlan}
+              onProfile={() => setProfileOpen(true)}
             />
             <AskAlanHome name={displayName} onAsk={askAlan} onTab={setTab} />
           </div>
@@ -288,6 +291,8 @@ export default function FaithAI() {
       </div>
 
       {/* Chat lives here — opened by typing on Home, not a sidebar section */}
+      <TraderProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
+
       <ChatDrawer
         open={chatOpen}
         onClose={() => setChatOpen(false)}

@@ -115,6 +115,24 @@ Risk per trade: ${risk}%
 Currency: ${settings.currency || 'USD'}`)
   }
 
+  // ── Who they are ──
+  // Background they told us at onboarding: experience, account type, the
+  // weakness they named themselves and what they're working toward. Trades
+  // show what happened; this says what they were trying to do.
+  const prof = settings?.traderProfile
+  if (prof && typeof prof === 'object') {
+    const lines = Object.entries(prof)
+      .filter(([, v]) => String(v || '').trim())
+      .map(([k, v]) => `${k}: ${String(v).slice(0, 300)}`)
+    if (lines.length) {
+      sections.push(`ABOUT THIS TRADER (they told you this themselves):
+${lines.join('\n')}
+
+Hold them to the weakness they named and the goal they set. If their trades
+contradict either, say so plainly — they asked to be held to it.`)
+    }
+  }
+
   // ── Goals ──
   if (goals && goals.length) {
     const today = new Date().toISOString().split('T')[0]
