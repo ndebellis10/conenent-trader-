@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { PlusCircle, Trash2, BookOpen, Sparkles, ChevronRight } from 'lucide-react'
+import { PlusCircle, Trash2, BookOpen, Sparkles, X } from 'lucide-react'
 import { useTradeStore } from '../../store/tradeStore'
 import { COVENANT_STRATEGY, hasCovenantStrategy, ensureCovenantSeeded } from '../../lib/covenantPlaybook'
 import { useAuth } from '../../contexts/AuthContext'
@@ -9,12 +9,7 @@ export default function Playbook() {
   const email = useAuth().user?.email || null
   const [showForm, setShowForm] = useState(false)
   const seededRef = useRef(false)
-  const [open, setOpen] = useState(() => new Set())
-  const toggleOpen = id => setOpen(prev => {
-    const next = new Set(prev)
-    next.has(id) ? next.delete(id) : next.add(id)
-    return next
-  })
+  const [selected, setSelected] = useState(null)   // strategy shown in the modal
 
   /* Seeding now happens on app load (see AppLayout) so every account has the
      model whether or not they open this page. This is just a safety net for
@@ -100,54 +95,84 @@ export default function Playbook() {
           <p style={{ color: '#A0A0A0' }}>No strategies yet. Add your first one!</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', maxWidth: 760 }}>
+        /* Cards in a grid; the rules live in a modal so the page stays scannable */
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
           {playbook.map(s => {
             const stats = getStats(s.name)
             return (
-              <div key={s.id} style={{ background: '#242424', borderRadius: '12px', border: '1px solid #3A3A3A', borderTop: '3px solid #3B82F6', padding: '14px 16px' }}>
-                {/* Collapsed by default — click the header to reveal the rules */}
-                <div
-                  onClick={() => toggleOpen(s.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
-                >
-                  <ChevronRight
-                    size={15}
-                    color="#6A6A6A"
-                    style={{ flexShrink: 0, transition: 'transform .18s', transform: open.has(s.id) ? 'rotate(90deg)' : 'none' }}
-                  />
-                  <h3 style={{ fontFamily: 'Poppins, sans-serif', color: '#F5F5F5', fontSize: '0.92rem', fontWeight: 600, margin: 0, flex: 1, minWidth: 0 }}>{s.name}</h3>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#3B82F6', fontSize: '0.78rem', fontWeight: 700, flexShrink: 0 }}>{stats.count}</span>
-                  <span style={{ color: '#555', fontSize: '0.72rem', flexShrink: 0 }}>trades</span>
-                  <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#4CAF7D', fontSize: '0.78rem', fontWeight: 700, flexShrink: 0 }}>{stats.winRate}%</span>
+              <div
+                key={s.id}
+                onClick={() => setSelected(s)}
+                style={{ background: '#242424', borderRadius: '12px', border: '1px solid #3A3A3A', borderTop: '3px solid #3B82F6', padding: '18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '10px', transition: 'border-color 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(59,130,246,0.5)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = '#3A3A3A'}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                  <h3 style={{ fontFamily: 'Poppins, sans-serif', color: '#F5F5F5', fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>{s.name}</h3>
                   <button
                     onClick={e => { e.stopPropagation(); deletePlaybookStrategy(s.id) }}
-                    style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', padding: '2px', flexShrink: 0, display: 'flex' }}
+                    style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', padding: '2px', flexShrink: 0 }}
                     aria-label={`Delete ${s.name}`}
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
 
-                {open.has(s.id) && (
-                  <div style={{ marginTop: 14, paddingTop: 13, borderTop: '1px solid #303030' }}>
-                    {s.description && <p style={{ color: '#9A9A9A', fontSize: '0.83rem', margin: '0 0 14px', lineHeight: 1.6 }}>{s.description}</p>}
-                    {[
-                      ['entryRules', 'Entry Rules', '#3B82F6'],
-                      ['exitRules',  'Exit Rules',  '#4CAF7D'],
-                      ['riskRules',  'Risk Rules',  '#E0A752'],
-                    ].map(([key, label, color]) => (
-                      s[key] ? (
-                        <div key={key} style={{ marginBottom: '12px' }}>
-                          <div style={{ color, fontSize: '0.7rem', fontWeight: 700, marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
-                          <p style={{ color: '#A0A0A0', fontSize: '0.81rem', margin: 0, whiteSpace: 'pre-line', lineHeight: 1.65 }}>{s[key]}</p>
-                        </div>
-                      ) : null
-                    ))}
-                  </div>
+                {s.description && (
+                  <p style={{ color: '#888', fontSize: '0.8rem', margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.description}</p>
                 )}
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '2px' }}>
+                  <span style={{ color: '#666', fontSize: '0.72rem' }}>Trades <b style={{ color: '#3B82F6' }}>{stats.count}</b></span>
+                  <span style={{ color: '#666', fontSize: '0.72rem' }}>Win Rate <b style={{ color: '#4CAF7D' }}>{stats.winRate}%</b></span>
+                </div>
               </div>
             )
           })}
+        </div>
+      )}
+
+      {selected && (
+        <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: '#242424', borderRadius: 16, border: '1px solid #3A3A3A', borderTop: '3px solid #3B82F6', padding: 28, width: 560, maxWidth: '96vw', maxHeight: '86vh', overflowY: 'auto', boxShadow: '0 24px 64px rgba(0,0,0,0.6)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
+              <h2 style={{ fontFamily: 'Poppins, sans-serif', color: '#F5F5F5', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>{selected.name}</h2>
+              <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', padding: 4 }} aria-label="Close">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', gap: '20px', margin: '14px 0 18px' }}>
+              <div style={{ background: '#1A1A1A', borderRadius: '8px', padding: '10px 16px', flex: 1, textAlign: 'center' }}>
+                <div style={{ color: '#A0A0A0', fontSize: '0.72rem', marginBottom: '2px' }}>Trades</div>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', color: '#3B82F6', fontWeight: 700 }}>{getStats(selected.name).count}</div>
+              </div>
+              <div style={{ background: '#1A1A1A', borderRadius: '8px', padding: '10px 16px', flex: 1, textAlign: 'center' }}>
+                <div style={{ color: '#A0A0A0', fontSize: '0.72rem', marginBottom: '2px' }}>Win Rate</div>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', color: '#4CAF7D', fontWeight: 700 }}>{getStats(selected.name).winRate}%</div>
+              </div>
+            </div>
+
+            {selected.description && <p style={{ color: '#A0A0A0', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: 18 }}>{selected.description}</p>}
+
+            {[
+              ['entryRules', 'Entry Rules'],
+              ['exitRules',  'Exit Rules'],
+              ['riskRules',  'Risk Rules'],
+            ].map(([k, label]) => selected[k] && (
+              <div key={k} style={{ marginBottom: '16px' }}>
+                <div style={{ color: '#3B82F6', fontSize: '0.74rem', fontWeight: 700, marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+                <p style={{ color: '#C7CBD0', fontSize: '0.87rem', margin: 0, whiteSpace: 'pre-line', lineHeight: 1.6 }}>{selected[k]}</p>
+              </div>
+            ))}
+
+            <button
+              onClick={() => { deletePlaybookStrategy(selected.id); setSelected(null) }}
+              style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(224,82,82,0.3)', background: 'rgba(224,82,82,0.08)', color: '#E05252', cursor: 'pointer', fontSize: '0.82rem' }}
+            >
+              <Trash2 size={14} /> Delete Strategy
+            </button>
+          </div>
         </div>
       )}
     </div>
