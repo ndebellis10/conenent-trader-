@@ -76,6 +76,7 @@ export function serverTradeToClient(t) {
     stressLevel:         t.stress_level,
     energyLevel:         t.energy_level,
     revengeTrade:        t.revenge_trade,
+    customAnswers:       t.custom_answers || {},
   }
 }
 
@@ -123,6 +124,9 @@ export function clientTradeToServer(t) {
     stress_level:         t.stressLevel,
     energy_level:         t.energyLevel,
     revenge_trade:        t.revengeTrade,
+    // Answers to the trader's own custom questions — without this they only
+    // ever lived in localStorage and never followed the account.
+    custom_answers:       t.customAnswers || {},
   }
 }
 

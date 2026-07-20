@@ -95,8 +95,8 @@ function PsychStateImpact({ trades }) {
                 <div key={e.val} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', borderBottom: i < arr.length - 1 ? '1px solid #252525' : 'none', opacity: e.hasData ? 1 : 0.4 }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: e.isGood ? '#4CAF7D' : e.isBad ? '#E05252' : '#3B82F6' }} />
                   <span style={{ color: '#A0A0A0', fontSize: '0.78rem', flex: 1 }}>{e.val}</span>
-                  <span style={{ color: '#555', fontSize: '0.7rem', minWidth: 28 }}>{e.hasData ? `${e.count}T` : '—'}</span>
-                  <span style={{ color: '#555', fontSize: '0.7rem', minWidth: 38, textAlign: 'right' }}>{e.hasData ? `${e.winRate}%W` : '—'}</span>
+                  <span style={{ color: '#9A9A9A', fontSize: '0.7rem', minWidth: 28 }}>{e.hasData ? `${e.count}T` : '—'}</span>
+                  <span style={{ color: '#9A9A9A', fontSize: '0.7rem', minWidth: 38, textAlign: 'right' }}>{e.hasData ? `${e.winRate}%W` : '—'}</span>
                   <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '0.78rem', minWidth: 60, textAlign: 'right', color: e.hasData ? (e.pnl >= 0 ? '#4CAF7D' : '#E05252') : '#444' }}>
                     {e.hasData ? `${e.pnl >= 0 ? '+' : ''}$${e.pnl.toFixed(2)}` : '—'}
                   </span>
@@ -155,9 +155,9 @@ function EmotionSection({ trades, field, title, emotions = EMOTIONS }) {
               { label: 'Best Emotion',   value: bestEmotion, sub: activeEmotions.length ? `$${Math.max(...emotions.map(e => stats[e].netPnl)).toFixed(0)}` : '', color: '#4CAF7D' },
             ].map(({ label, value, sub, color }) => (
               <div key={label} style={{ background: '#1E1E1E', borderRadius: '10px', border: '1px solid #2A2A2A', borderLeft: `3px solid ${color}`, padding: '14px 16px' }}>
-                <div style={{ color: '#555', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>{label}</div>
+                <div style={{ color: '#9A9A9A', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>{label}</div>
                 <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '1.1rem', color }}>{value}</div>
-                <div style={{ color: '#444', fontSize: '0.68rem', marginTop: '3px' }}>{sub}</div>
+                <div style={{ color: '#8A8A8A', fontSize: '0.68rem', marginTop: '3px' }}>{sub}</div>
               </div>
             ))}
           </div>
@@ -169,7 +169,7 @@ function EmotionSection({ trades, field, title, emotions = EMOTIONS }) {
               <ResponsiveContainer width="100%" height={140}>
                 <BarChart data={barData} barCategoryGap="35%">
                   <XAxis dataKey="name" tick={{ fill: '#666', fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#444', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+                  <YAxis tick={{ fill: '#8A8A8A', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
                   <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ background: '#2E2E2E', border: '1px solid #3A3A3A', borderRadius: '8px', color: '#F5F5F5', fontSize: '0.78rem' }} formatter={v => [`${v >= 0 ? '+' : ''}$${v}`, 'Net P&L']} />
                   <Bar dataKey="pnl" radius={[5, 5, 0, 0]}>
                     {barData.map(entry => <Cell key={entry.name} fill={EMOTION_COLOR[entry.name]?.dot || '#3B82F6'} fillOpacity={0.85} />)}
@@ -206,7 +206,7 @@ function EmotionSection({ trades, field, title, emotions = EMOTIONS }) {
                       ['W / L',    hasData ? `${s.wins} / ${s.losses}`                         : '—', '#A0A0A0'],
                     ].map(([label, val, color], i, arr) => (
                       <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: i < arr.length - 1 ? '8px' : 0, borderBottom: i < arr.length - 1 ? '1px solid #252525' : 'none' }}>
-                        <span style={{ color: '#555', fontSize: '0.73rem' }}>{label}</span>
+                        <span style={{ color: '#9A9A9A', fontSize: '0.73rem' }}>{label}</span>
                         <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '0.8rem', color }}>{val}</span>
                       </div>
                     ))}
@@ -218,7 +218,7 @@ function EmotionSection({ trades, field, title, emotions = EMOTIONS }) {
         </>
       ) : (
         <div style={{ background: '#1A1A1A', borderRadius: '10px', border: '1px solid #2A2A2A', padding: '16px 20px' }}>
-          <span style={{ color: '#444', fontSize: '0.8rem' }}>No {title.toLowerCase()} data yet — tag emotions when logging trades.</span>
+          <span style={{ color: '#8A8A8A', fontSize: '0.8rem' }}>No {title.toLowerCase()} data yet — tag emotions when logging trades.</span>
         </div>
       )}
     </div>
@@ -273,8 +273,8 @@ function NetPnlChart({ trades }) {
               <stop offset="95%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <XAxis dataKey="date" tick={{ fill: '#444', fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-          <YAxis tick={{ fill: '#444', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 0 ? '' : '-'}${Math.abs(v)}`} width={60} />
+          <XAxis dataKey="date" tick={{ fill: '#8A8A8A', fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+          <YAxis tick={{ fill: '#8A8A8A', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v >= 0 ? '' : '-'}${Math.abs(v)}`} width={60} />
           <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ background: '#2E2E2E', border: '1px solid #3A3A3A', borderRadius: '8px', color: '#F5F5F5', fontSize: '0.8rem' }} formatter={v => [`${v >= 0 ? '+' : ''}$${v}`, 'Net P&L']} />
           <ReferenceLine y={0} stroke="rgba(255,255,255,0.08)" strokeDasharray="4 4" />
           <Area type="monotone" dataKey="value" stroke={color} fill="url(#perfCumGrad)" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: color }} />
@@ -302,8 +302,8 @@ function DailyPnlChart({ trades }) {
       <div style={{ color: '#666', fontSize: '0.72rem', marginBottom: '12px' }}>{data.length} trading day{data.length !== 1 ? 's' : ''}</div>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} barCategoryGap="25%">
-          <XAxis dataKey="date" tick={{ fill: '#444', fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-          <YAxis tick={{ fill: '#444', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={60} />
+          <XAxis dataKey="date" tick={{ fill: '#8A8A8A', fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+          <YAxis tick={{ fill: '#8A8A8A', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={60} />
           <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ background: '#2E2E2E', border: '1px solid #3A3A3A', borderRadius: '8px', color: '#F5F5F5', fontSize: '0.8rem' }} formatter={v => [`${v >= 0 ? '+' : ''}$${v}`, 'Daily P&L']} />
           <ReferenceLine y={0} stroke="rgba(255,255,255,0.08)" />
           <Bar dataKey="pnl" radius={[4, 4, 0, 0]}>
@@ -384,7 +384,7 @@ function SummaryTab({ trades }) {
     { label: 'Avg Hold Time',        value: s.holdTime.ms != null ? formatDuration(s.holdTime.ms) : '—', color: s.holdTime.ms != null ? '#F5F5F5' : '#555' },
     { label: 'Avg Net Trade P&L',    value: `${s.avgNetTrade >= 0 ? '+' : ''}$${s.avgNetTrade.toFixed(2)}`, color: s.avgNetTrade >= 0 ? '#4CAF7D' : '#E05252' },
     { label: 'Avg Daily Net P&L',    value: `${s.avgDayPnl >= 0 ? '+' : ''}$${s.avgDayPnl.toFixed(2)}`,   color: s.avgDayPnl >= 0 ? '#4CAF7D' : '#E05252' },
-    { label: 'Avg Planned R',        value: '—',                                                        color: '#555' },
+    { label: 'Avg Planned R',        value: '—',                                                        color: '#9A9A9A' },
     { label: 'Avg Realized R',       value: s.avgR !== 0 ? `${s.avgR.toFixed(2)}R` : '—',             color: s.avgR >= 1 ? '#4CAF7D' : s.avgR > 0 ? '#3B82F6' : '#555' },
     { label: 'Avg Daily Volume',     value: s.avgDailyVol.toFixed(1),                                  color: '#F5F5F5' },
     { label: 'Logged Days',          value: s.loggedDays,                                              color: '#F5F5F5' },
@@ -400,7 +400,7 @@ function SummaryTab({ trades }) {
           borderRight:  (i + 1) % 4 !== 0 ? '1px solid #3A3A3A' : 'none',
           borderBottom: i < 12            ? '1px solid #3A3A3A' : 'none',
         }}>
-          <div style={{ color: '#555', fontSize: '0.72rem', marginBottom: '6px', letterSpacing: '0.02em' }}>{label}</div>
+          <div style={{ color: '#9A9A9A', fontSize: '0.72rem', marginBottom: '6px', letterSpacing: '0.02em' }}>{label}</div>
           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '1.1rem', color }}>{value}</div>
         </div>
       ))}
@@ -430,7 +430,7 @@ function DaysTab({ trades }) {
         <thead>
           <tr style={{ background: '#1E1E1E', borderBottom: '1px solid #3A3A3A' }}>
             {['Date','Trades','Winners','Losers','Win Rate','Gross P&L','Commissions','Net P&L'].map(h => (
-              <th key={h} style={{ textAlign: 'left', padding: '10px 16px', color: '#555', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+              <th key={h} style={{ textAlign: 'left', padding: '10px 16px', color: '#9A9A9A', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -468,7 +468,7 @@ function TradesTab({ trades }) {
         <thead>
           <tr style={{ background: '#1E1E1E', borderBottom: '1px solid #3A3A3A' }}>
             {['Date','Symbol','Side','Status','Entry','Exit','Contracts','Net P&L'].map(h => (
-              <th key={h} style={{ textAlign: 'left', padding: '10px 16px', color: '#555', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
+              <th key={h} style={{ textAlign: 'left', padding: '10px 16px', color: '#9A9A9A', fontWeight: 600, whiteSpace: 'nowrap' }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -541,6 +541,45 @@ function PerformanceView({ trades }) {
 /* ═══════════════════════════════════════════
    EXECUTION QUALITY TAB
 ═══════════════════════════════════════════ */
+/* One rule, as a single scannable row. Rows beat cards here: the whole point
+   is comparing rules against each other, and a column of aligned bars can be
+   read top-to-bottom in one pass. */
+function RuleRow({ label, rate, goodCount, badCount, badPnl, goodLabel, badLabel }) {
+  const total = goodCount + badCount
+  const cost  = badPnl < 0 ? badPnl : 0
+  const tone  = rate >= 70 ? '#4CAF7D' : rate >= 50 ? '#E8A33D' : '#E05252'
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '13px 16px', borderBottom: '1px solid #232323' }}>
+      <div style={{ width: 148, flexShrink: 0, minWidth: 0 }}>
+        <div style={{ color: '#E4E4E4', fontSize: '0.85rem', fontWeight: 600 }}>{label}</div>
+        <div style={{ color: '#8A8A8A', fontSize: '0.71rem', marginTop: 2 }}>
+          {goodCount} {goodLabel} · {badCount} {badLabel}
+        </div>
+      </div>
+
+      <div style={{ flex: 1, minWidth: 60, height: 8, background: '#242424', borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{ width: `${rate}%`, height: '100%', background: tone, borderRadius: 4, transition: 'width .3s' }} />
+      </div>
+
+      <div style={{ width: 46, textAlign: 'right', flexShrink: 0, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '0.86rem', color: tone }}>
+        {rate.toFixed(0)}%
+      </div>
+
+      {/* What breaking this rule actually cost — the number that changes behaviour */}
+      <div style={{ width: 96, textAlign: 'right', flexShrink: 0 }}>
+        {cost < 0 ? (
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '0.83rem', color: '#E05252' }}>
+            -${Math.abs(cost).toFixed(0)}
+          </span>
+        ) : (
+          <span style={{ color: '#5E5E5E', fontSize: '0.75rem' }}>{total ? 'no loss' : '—'}</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ScoreRing({ score }) {
   const color = score >= 80 ? '#4CAF7D' : score >= 60 ? '#3B82F6' : '#E05252'
   const label = score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Fair' : 'Needs Work'
@@ -557,57 +596,10 @@ function ScoreRing({ score }) {
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 900, fontSize: '1.8rem', color, lineHeight: 1 }}>{score}</span>
-          <span style={{ color: '#444', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: '2px' }}>/ 100</span>
+          <span style={{ color: '#8A8A8A', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: '2px' }}>/ 100</span>
         </div>
       </div>
       <span style={{ color, fontWeight: 700, fontSize: '0.88rem' }}>{label}</span>
-    </div>
-  )
-}
-
-function MetricPillar({ label, icon, rate, goodCount, badCount, goodPnl, badPnl, goodLabel, badLabel, color }) {
-  const impact = goodPnl - badPnl
-  return (
-    <div style={{ background: '#242424', borderRadius: '12px', border: `1px solid ${color}22`, overflow: 'hidden', flex: 1 }}>
-      <div style={{ padding: '16px 20px', background: `${color}10`, borderBottom: `1px solid ${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '1.3rem' }}>{icon}</span>
-          <span style={{ color, fontWeight: 700, fontSize: '0.92rem', fontFamily: 'Poppins, sans-serif' }}>{label}</span>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: '1.4rem', color, lineHeight: 1 }}>{rate.toFixed(0)}%</div>
-          <div style={{ color: '#444', fontSize: '0.65rem', marginTop: '2px' }}>adherence</div>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div style={{ padding: '14px 20px 8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <div style={{ height: 6, background: '#1A1A1A', borderRadius: 3, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${rate}%`, background: color, borderRadius: 3, transition: 'width 0.6s ease' }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#555' }}>
-          <span>{goodCount} {goodLabel}</span>
-          <span>{badCount} {badLabel}</span>
-        </div>
-      </div>
-
-      {/* P&L comparison */}
-      <div style={{ padding: '10px 20px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #2A2A2A', paddingBottom: '9px' }}>
-          <span style={{ color: '#555', fontSize: '0.75rem' }}>P&L when {goodLabel}</span>
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '0.9rem', color: goodPnl >= 0 ? '#4CAF7D' : '#E05252' }}>{goodPnl >= 0 ? '+' : ''}${goodPnl.toFixed(2)}</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #2A2A2A', paddingBottom: '9px' }}>
-          <span style={{ color: '#555', fontSize: '0.75rem' }}>P&L when {badLabel}</span>
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '0.9rem', color: badPnl >= 0 ? '#4CAF7D' : '#E05252' }}>{badPnl >= 0 ? '+' : ''}${badPnl.toFixed(2)}</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#666', fontSize: '0.75rem', fontWeight: 600 }}>Impact</span>
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: '0.95rem', color: impact >= 0 ? '#4CAF7D' : '#E05252' }}>
-            {impact >= 0 ? '+' : ''}${impact.toFixed(2)}
-          </span>
-        </div>
-      </div>
     </div>
   )
 }
@@ -627,9 +619,9 @@ function QualityPillar({ label, icon, color, avg, tradesWithData, dist, highPnl,
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: '1.4rem', color, lineHeight: 1 }}>
-            {avg > 0 ? avg.toFixed(1) : '—'}<span style={{ fontSize: '0.7rem', color: '#444', fontWeight: 400 }}>/10</span>
+            {avg > 0 ? avg.toFixed(1) : '—'}<span style={{ fontSize: '0.7rem', color: '#8A8A8A', fontWeight: 400 }}>/10</span>
           </div>
-          <div style={{ color: '#444', fontSize: '0.65rem', marginTop: '2px' }}>avg score</div>
+          <div style={{ color: '#8A8A8A', fontSize: '0.65rem', marginTop: '2px' }}>avg score</div>
         </div>
       </div>
 
@@ -638,7 +630,7 @@ function QualityPillar({ label, icon, color, avg, tradesWithData, dist, highPnl,
         <div style={{ height: 6, background: '#1A1A1A', borderRadius: 3, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3, transition: 'width 0.6s ease' }} />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#555' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.68rem', color: '#9A9A9A' }}>
           <span>1</span><span>5</span><span>10</span>
         </div>
       </div>
@@ -648,7 +640,7 @@ function QualityPillar({ label, icon, color, avg, tradesWithData, dist, highPnl,
         {[['Low (1-4)', dist.low, '#E05252'], ['Mid (5-7)', dist.mid, '#3B82F6'], ['High (8-10)', dist.high, '#4CAF7D']].map(([lbl, count, c]) => (
           <div key={lbl} style={{ flex: 1, background: '#1A1A1A', borderRadius: 7, padding: '8px 10px', textAlign: 'center' }}>
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '1rem', color: c }}>{count}</div>
-            <div style={{ color: '#444', fontSize: '0.62rem', marginTop: '2px' }}>{lbl}</div>
+            <div style={{ color: '#8A8A8A', fontSize: '0.62rem', marginTop: '2px' }}>{lbl}</div>
             <div style={{ color: '#333', fontSize: '0.6rem' }}>{total > 0 ? ((count / total) * 100).toFixed(0) : 0}%</div>
           </div>
         ))}
@@ -658,11 +650,11 @@ function QualityPillar({ label, icon, color, avg, tradesWithData, dist, highPnl,
       {tradesWithData > 0 && (
         <div style={{ padding: '4px 20px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #2A2A2A', paddingTop: '10px' }}>
-            <span style={{ color: '#555', fontSize: '0.73rem' }}>P&L on high quality (8-10)</span>
+            <span style={{ color: '#9A9A9A', fontSize: '0.73rem' }}>P&L on high quality (8-10)</span>
             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '0.9rem', color: highPnl >= 0 ? '#4CAF7D' : '#E05252' }}>{highPnl >= 0 ? '+' : ''}${highPnl.toFixed(2)}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #2A2A2A', paddingBottom: '10px' }}>
-            <span style={{ color: '#555', fontSize: '0.73rem' }}>P&L on low quality (1-4)</span>
+            <span style={{ color: '#9A9A9A', fontSize: '0.73rem' }}>P&L on low quality (1-4)</span>
             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, fontSize: '0.9rem', color: lowPnl >= 0 ? '#4CAF7D' : '#E05252' }}>{lowPnl >= 0 ? '+' : ''}${lowPnl.toFixed(2)}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -673,6 +665,17 @@ function QualityPillar({ label, icon, color, avg, tradesWithData, dist, highPnl,
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/* Section divider inside the execution report. Defined at module scope —
+   declaring it inside the component remounts it on every render. */
+function SecHead({ label }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: '4px' }}>
+      <span style={{ color: '#3B82F6', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: '#2A2A2A' }} />
     </div>
   )
 }
@@ -743,35 +746,27 @@ function ExecutionQualityReport({ trades }) {
     const entryQ = qualStat('entryQuality')
     const exitQ  = qualStat('exitQuality')
 
-    return { plan, stop, size, waited, level, rushed, exitTime, liquidity, pStop, score, chartData, untagged, taggedTrades, flawed, entryQ, exitQ }
+    /* Every rule in one list, weakest first — so the rule costing the most
+       money is the first thing read, not buried in the third card grid. */
+    const allRules = [
+      { label: 'Plan Adherence',      data: plan,      goodLabel: 'followed',  badLabel: 'broke' },
+      { label: 'Stop Discipline',     data: stop,      goodLabel: 'held',      badLabel: 'moved' },
+      { label: 'Risk Discipline',     data: size,      goodLabel: 'sized ok',  badLabel: 'over-risked' },
+      { label: 'Waited Confirmation', data: waited,    goodLabel: 'waited',    badLabel: 'jumped in' },
+      { label: 'Entered at Level',    data: level,     goodLabel: 'at level',  badLabel: 'missed' },
+      { label: 'Entry Patience',      data: rushed,    goodLabel: 'patient',   badLabel: 'rushed' },
+      { label: 'Protected Stop',      data: pStop,     goodLabel: 'protected', badLabel: 'unprotected' },
+      { label: 'Exit Timing',         data: exitTime,  goodLabel: 'on plan',   badLabel: 'off plan' },
+      { label: 'Targeted Liquidity',  data: liquidity, goodLabel: 'targeted',  badLabel: 'skipped' },
+    ]
+      .filter(r => r.data.goodCount + r.data.badCount > 0)
+      .map(r => ({ label: r.label, goodLabel: r.goodLabel, badLabel: r.badLabel, ...r.data }))
+      .sort((a, b) => a.rate - b.rate)
+
+    return { plan, stop, size, waited, level, rushed, exitTime, liquidity, pStop, score, chartData, untagged, taggedTrades, flawed, entryQ, exitQ, allRules }
   }, [trades])
 
-  const { plan, stop, size, waited, level, rushed, exitTime, liquidity, pStop, score, chartData, untagged, taggedTrades, flawed, entryQ, exitQ } = stats
-
-  const SecHead = ({ label }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: '4px' }}>
-      <span style={{ color: '#3B82F6', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{label}</span>
-      <div style={{ flex: 1, height: 1, background: '#2A2A2A' }} />
-    </div>
-  )
-  const EmptyPillar = ({ label, icon }) => (
-    <div style={{ background: '#1A1A1A', borderRadius: '12px', border: '1px solid #242424', padding: '20px 18px', display: 'flex', alignItems: 'center', gap: 10 }}>
-      <span style={{ fontSize: '1.1rem', opacity: 0.25 }}>{icon}</span>
-      <div>
-        <div style={{ color: '#3A3A3A', fontSize: '0.82rem', fontWeight: 600 }}>{label}</div>
-        <div style={{ color: '#2C2C2C', fontSize: '0.7rem', marginTop: 3 }}>No data yet</div>
-      </div>
-    </div>
-  )
-  const pillarRow = (items) => (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
-      {items.map(({ label, icon, data, goodLabel, badLabel, color }) =>
-        data.goodCount + data.badCount > 0
-          ? <MetricPillar key={label} label={label} icon={icon} rate={data.rate} goodCount={data.goodCount} badCount={data.badCount} goodPnl={data.goodPnl} badPnl={data.badPnl} goodLabel={goodLabel} badLabel={badLabel} color={color} />
-          : <EmptyPillar key={label} label={label} icon={icon} />
-      )}
-    </div>
-  )
+  const { plan, stop, size, score, chartData, untagged, taggedTrades, flawed, entryQ, exitQ, allRules } = stats
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -779,9 +774,9 @@ function ExecutionQualityReport({ trades }) {
       {/* ── Overview ── */}
       <div style={{ display: 'flex', gap: '16px', alignItems: 'stretch', flexWrap: 'wrap' }}>
         <div style={{ background: '#242424', borderRadius: '14px', border: '1px solid #3A3A3A', padding: '24px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', minWidth: '170px' }}>
-          <div style={{ color: '#555', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Execution Score</div>
+          <div style={{ color: '#9A9A9A', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Execution Score</div>
           <ScoreRing score={score} />
-          <div style={{ color: '#3A3A3A', fontSize: '0.68rem', textAlign: 'center' }}>{taggedTrades.length} tagged trade{taggedTrades.length !== 1 ? 's' : ''}</div>
+          <div style={{ color: '#8A8A8A', fontSize: '0.68rem', textAlign: 'center' }}>{taggedTrades.length} tagged trade{taggedTrades.length !== 1 ? 's' : ''}</div>
         </div>
         <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px', minWidth: '260px' }}>
           {[
@@ -804,36 +799,25 @@ function ExecutionQualityReport({ trades }) {
 
       <DayOfWeekBreakdown trades={trades} />
 
-      {/* ── Core Discipline ── */}
-      <SecHead label="Core Discipline" />
-      {pillarRow([
-        { label: 'Plan Adherence',  icon: '📋', data: plan,  goodLabel: 'followed',    badLabel: 'broke plan',   color: '#4CAF7D' },
-        { label: 'Stop Discipline', icon: '🛡️', data: stop,  goodLabel: 'held stop',   badLabel: 'moved to BE',  color: '#9B8FE8' },
-        { label: 'Risk Discipline', icon: '⚖️', data: size,  goodLabel: 'no over-risk', badLabel: 'over-risked', color: '#3B82F6' },
-      ])}
-
-      {/* ── Entry Execution — only show if any pillar has data ── */}
-      {[waited, level, rushed, pStop].some(d => d.goodCount + d.badCount > 0) && (
-        <>
-          <SecHead label="Entry Execution" />
-          {pillarRow([
-            { label: 'Waited Confirmation', icon: '⏳', data: waited, goodLabel: 'waited',      badLabel: 'jumped in',    color: '#5B9BD5' },
-            { label: 'Entered at Level',    icon: '🎯', data: level,  goodLabel: 'at key level', badLabel: 'missed level', color: '#4CAF7D' },
-            { label: 'Entry Patience',      icon: '🐢', data: rushed, goodLabel: 'patient',      badLabel: 'rushed',       color: '#3B82F6' },
-            { label: 'Protected Stop',      icon: '🔒', data: pStop,  goodLabel: 'protected',    badLabel: 'unprotected',  color: '#E8A87C' },
-          ])}
-        </>
-      )}
-
-      {/* ── Exit Execution — only show if any pillar has data ── */}
-      {[exitTime, liquidity].some(d => d.goodCount + d.badCount > 0) && (
-        <>
-          <SecHead label="Exit Execution" />
-          {pillarRow([
-            { label: 'Exit Timing',        icon: '⏱️', data: exitTime,  goodLabel: 'on plan',  badLabel: 'too early/late', color: '#4FC3F7' },
-            { label: 'Heat Map Liquidity', icon: '🌊', data: liquidity, goodLabel: 'targeted', badLabel: 'skipped',        color: '#38BDF8' },
-          ])}
-        </>
+      {/* ── Rule adherence — every rule in one place, worst first ──
+          Previously this was four separate card grids (Core / Entry / Exit),
+          which made you hunt for the rule that was actually hurting you. */}
+      {allRules.length > 0 && (
+        <div style={{ background: '#1E1E1E', borderRadius: 12, border: '1px solid #2A2A2A', overflow: 'hidden' }}>
+          <div style={{ padding: '16px 18px 12px' }}>
+            <h3 style={{ color: '#F5F5F5', fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>Rule Adherence</h3>
+            <p style={{ color: '#8A8A8A', fontSize: '0.75rem', margin: '4px 0 0' }}>
+              Weakest first. The last column is what breaking that rule has cost you.
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '0 16px 8px' }}>
+            <div style={{ width: 148, flexShrink: 0, color: '#5E5E5E', fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>Rule</div>
+            <div style={{ flex: 1, minWidth: 60 }} />
+            <div style={{ width: 46, textAlign: 'right', flexShrink: 0, color: '#5E5E5E', fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>Kept</div>
+            <div style={{ width: 96, textAlign: 'right', flexShrink: 0, color: '#5E5E5E', fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>Cost</div>
+          </div>
+          {allRules.map(r => <RuleRow key={r.label} {...r} />)}
+        </div>
       )}
 
       {/* ── Quality Scores ── */}
@@ -853,11 +837,11 @@ function ExecutionQualityReport({ trades }) {
           <div style={{ marginBottom: '4px' }}>
             <span style={{ color: '#E0E0E0', fontSize: '0.92rem', fontWeight: 600 }}>P&L Impact — Disciplined vs Undisciplined</span>
           </div>
-          <div style={{ color: '#3A3A3A', fontSize: '0.72rem', marginBottom: '16px' }}>Total P&L when each core rule was followed vs broken</div>
+          <div style={{ color: '#8A8A8A', fontSize: '0.72rem', marginBottom: '16px' }}>Total P&L when each core rule was followed vs broken</div>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={chartData} barCategoryGap="30%" barGap={6}>
-              <XAxis dataKey="name" tick={{ fill: '#555', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#444', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={65} />
+              <XAxis dataKey="name" tick={{ fill: '#9A9A9A', fontSize: 13, fontWeight: 700 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#8A8A8A', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={65} />
               <Tooltip cursor={{ fill: 'rgba(255,255,255,0.02)' }} contentStyle={{ background: '#2A2A2A', border: '1px solid #3A3A3A', borderRadius: '8px', color: '#F5F5F5', fontSize: '0.8rem' }}
                 formatter={(v, name) => [`${v >= 0 ? '+' : ''}$${v.toFixed(2)}`, name === 'followed' ? '✅ Disciplined' : '❌ Broke rule']} />
               <ReferenceLine y={0} stroke="rgba(255,255,255,0.05)" />
@@ -866,8 +850,8 @@ function ExecutionQualityReport({ trades }) {
             </BarChart>
           </ResponsiveContainer>
           <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginTop: '10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 9, height: 9, borderRadius: 2, background: '#4CAF7D' }} /><span style={{ color: '#444', fontSize: '0.7rem' }}>Disciplined</span></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 9, height: 9, borderRadius: 2, background: '#E05252' }} /><span style={{ color: '#444', fontSize: '0.7rem' }}>Broke rule</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 9, height: 9, borderRadius: 2, background: '#4CAF7D' }} /><span style={{ color: '#8A8A8A', fontSize: '0.7rem' }}>Disciplined</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 9, height: 9, borderRadius: 2, background: '#E05252' }} /><span style={{ color: '#8A8A8A', fontSize: '0.7rem' }}>Broke rule</span></div>
           </div>
         </div>
       )}
@@ -885,7 +869,7 @@ function ExecutionQualityReport({ trades }) {
               <thead>
                 <tr style={{ background: '#1A1A1A' }}>
                   {['Date','Symbol','Side','Net P&L','Result','Followed Plan','Moved Stop','Over-Risked','Notes'].map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '10px 16px', color: '#444', fontWeight: 600, whiteSpace: 'nowrap', borderBottom: '1px solid #2A2A2A' }}>{h}</th>
+                    <th key={h} style={{ textAlign: 'left', padding: '10px 16px', color: '#8A8A8A', fontWeight: 600, whiteSpace: 'nowrap', borderBottom: '1px solid #2A2A2A' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -924,7 +908,7 @@ function ExecutionQualityReport({ trades }) {
                       <td style={{ padding: '10px 16px' }}>{flag(brokePlan, brokePlan ? 'No' : 'Yes')}</td>
                       <td style={{ padding: '10px 16px' }}>{flag(movedStop, movedStop ? 'Yes' : 'No')}</td>
                       <td style={{ padding: '10px 16px' }}>{flag(wrongSize, wrongSize ? 'Yes' : 'No')}</td>
-                      <td style={{ padding: '10px 16px', color: '#444', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.75rem' }} title={t.tradeNotes}>{t.tradeNotes || '—'}</td>
+                      <td style={{ padding: '10px 16px', color: '#8A8A8A', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.75rem' }} title={t.tradeNotes}>{t.tradeNotes || '—'}</td>
                     </tr>
                   )
                 })}
@@ -936,7 +920,7 @@ function ExecutionQualityReport({ trades }) {
 
       {untagged > 0 && (
         <div style={{ background: '#1E1E1E', borderRadius: '10px', border: '1px solid #2A2A2A', padding: '14px 20px' }}>
-          <span style={{ color: '#555', fontSize: '0.82rem' }}>
+          <span style={{ color: '#9A9A9A', fontSize: '0.82rem' }}>
             <span style={{ color: '#3B82F6', fontWeight: 600 }}>{untagged} trade{untagged !== 1 ? 's' : ''}</span> have no execution fields. Fill in "Followed Plan", "Moved Stop", and "Did You Over-Risk?" when logging trades to include them here.
           </span>
         </div>
@@ -985,7 +969,7 @@ function DayOfWeekBreakdown({ trades }) {
   return (
     <div style={{ background: '#1E1E1E', borderRadius: '10px', border: '1px solid #2A2A2A', padding: '20px 22px' }}>
       <h3 style={{ color: '#F5F5F5', fontSize: '0.95rem', fontWeight: 600, margin: '0 0 4px' }}>Performance by Day of Week</h3>
-      <p style={{ color: '#555', fontSize: '0.78rem', margin: '0 0 18px' }}>Which days you actually make money on.</p>
+      <p style={{ color: '#9A9A9A', fontSize: '0.78rem', margin: '0 0 18px' }}>Which days you actually make money on.</p>
 
       {/* Best / worst callouts */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 20 }}>
@@ -994,7 +978,7 @@ function DayOfWeekBreakdown({ trades }) {
           { tag: 'Least profitable day', row: worst, color: '#E05252' },
         ].map(({ tag, row, color }) => (
           <div key={tag} style={{ background: '#191919', border: `1px solid ${color}33`, borderRadius: 10, padding: '14px 16px' }}>
-            <div style={{ color: '#555', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{tag}</div>
+            <div style={{ color: '#9A9A9A', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{tag}</div>
             <div style={{ color: '#F5F5F5', fontSize: '1.05rem', fontWeight: 700, marginTop: 4 }}>{row.label}</div>
             <div style={{ fontFamily: 'JetBrains Mono, monospace', color, fontSize: '0.9rem', fontWeight: 700, marginTop: 2 }}>{money(row.pnl)}</div>
             <div style={{ color: '#666', fontSize: '0.74rem', marginTop: 3 }}>{row.trades} trade{row.trades !== 1 ? 's' : ''} · {row.winRate}% win</div>
