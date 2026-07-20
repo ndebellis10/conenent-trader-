@@ -1,7 +1,7 @@
 /**
  * POST /api/analyze-chart
  *
- * Accepts a trading chart screenshot (admin only).
+ * Accepts a trading chart screenshot from a signed-in trader.
  * Uses Claude Vision (claude-sonnet-4-6) to extract entry, stop loss,
  * and take profit price levels from the chart image.
  *
@@ -10,12 +10,21 @@
  */
 import Anthropic from '@anthropic-ai/sdk'
 import { applySecurity, handleOptions, requireMethod, limitBody } from './_lib/security.js'
+import { requireAuth, unauthorized } from './_lib/auth-middleware.js'
+import { checkRateLimit, tooManyRequests } from './_lib/rate-limit.js'
 
 export default async function handler(req, res) {
   applySecurity(req, res)
   if (handleOptions(req, res)) return
   if (!requireMethod(req, res, 'POST')) return
   if (!limitBody(req, res, 10_000_000)) return
+
+  // Vision calls bill the Anthropic account — signed-in users only
+  const user = await requireAuth(req, res)
+  if (!user) return unauthorized(res)
+
+  const rl = await checkRateLimit(user.id, 'analyze-chart', { limit: 30, windowMinutes: 60 })
+  if (!rl.allowed) return tooManyRequests(res, rl.retry_after)
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {

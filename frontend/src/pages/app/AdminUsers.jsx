@@ -106,11 +106,6 @@ export default function AdminUsers() {
   const [viewing, setViewing] = useState(null)
   const [lastRefresh, setLastRefresh] = useState(null)
 
-  if (!isAdmin) {
-    navigate('/app/dashboard')
-    return null
-  }
-
   async function loadUsers() {
     try {
       const res = await fetch('/api/admin/users', {
@@ -126,11 +121,24 @@ export default function AdminUsers() {
     setLoading(false)
   }
 
+  /* Non-admins are redirected from an effect, not during render. Previously
+     this was an `if (!isAdmin) { navigate(...); return null }` above the
+     hooks — which both called navigate() mid-render and skipped every hook
+     below it. Once auth resolved and isAdmin flipped false→true, React threw
+     "rendered fewer hooks than expected" and the page crashed. */
   useEffect(() => {
+    if (!isAdmin) navigate('/app/dashboard', { replace: true })
+  }, [isAdmin, navigate])
+
+  useEffect(() => {
+    if (!isAdmin) return undefined
     loadUsers()
     const id = setInterval(loadUsers, 30000)
     return () => clearInterval(id)
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin])
+
+  if (!isAdmin) return null
 
   async function viewUser(user) {
     setActiveEmail(null)

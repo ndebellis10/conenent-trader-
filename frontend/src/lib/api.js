@@ -113,6 +113,9 @@ async function faithFetch(body) {
   const res  = await fetch('/api/faith-ai', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    // Alan costs real money per call — the endpoint requires a signed-in user,
+    // so the auth cookie has to travel with the request.
+    credentials: 'include',
     body: JSON.stringify(body),
   })
   const data = await res.json().catch(() => null)

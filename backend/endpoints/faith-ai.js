@@ -1,11 +1,11 @@
 ﻿/**
  * POST /api/faith-ai
  *
- * Admin-only AI endpoints. Dispatches on req.body.type:
+ * Signed-in AI endpoints. Dispatches on req.body.type:
  *   "coach"   — analyze a single trade + last 20 trades
  *   "summary" — 30-day pattern summary
  *
- * Auth: x-admin-key header
+ * Auth: signed-in user (HttpOnly cookie), rate limited per account
  *
  * ── Supabase: run this once in the SQL editor ────────────────────────
  * CREATE TABLE IF NOT EXISTS ai_feedback (
@@ -18,7 +18,9 @@
  * ────────────────────────────────────────────────────────────────────
  */
 import Anthropic from '@anthropic-ai/sdk'
-import { applySecurity, handleOptions, requireMethod, limitBody, getClientIP } from './_lib/security.js'
+import { applySecurity, handleOptions, requireMethod, limitBody } from './_lib/security.js'
+import { requireAuth, unauthorized } from './_lib/auth-middleware.js'
+import { checkRateLimit, tooManyRequests } from './_lib/rate-limit.js'
 import KNOWLEDGE from './_lib/knowledge-data.js'
 
 // Read the API key and strip any leading BOM (﻿) or surrounding whitespace.
@@ -30,19 +32,6 @@ function getApiKey() {
   return raw.replace(/[^ -~]/g, '').trim()
 }
 
-// In-memory rate limit — chat: 50/hr, coach/summary: 20/hr
-const _rl = new Map()
-function rateLimit(ip, type) {
-  const now = Date.now()
-  const window = 60 * 60 * 1000
-  const limit = type === 'chat' ? 50 : 20
-  const key = `${ip}:${type}`
-  const entry = _rl.get(key) || { count: 0, reset: now + window }
-  if (now > entry.reset) { entry.count = 0; entry.reset = now + window }
-  entry.count++
-  _rl.set(key, entry)
-  return entry.count <= limit
-}
 
 const CHAT_SYSTEM = `You are Alan — the "Ask Alan" AI, an elite trading coach and spiritual mentor inside Covenant Trader, a Christian trading journal. You are like a blend of an ICT futures master and a wise pastor. The user trades ES and NQ futures using the Covenant Model (liquidity hunts, Market Structure Shifts, Fair Value Gaps, Order Blocks, PD arrays, AMD, PDI, killzones, London/NY sessions).
 
@@ -540,9 +529,21 @@ export default async function handler(req, res) {
   if (!requireMethod(req, res, 'POST')) return
   if (!limitBody(req, res, 1_000_000)) return
 
-  const ip = getClientIP(req)
+  /* Every call here bills the Anthropic account, so it must be a signed-in
+     user. This endpoint was previously open to the internet. */
+  const user = await requireAuth(req, res)
+  if (!user) return unauthorized(res)
+
   const { type } = req.body || {}
-  if (!rateLimit(ip, type)) return res.status(429).json({ error: 'Too many requests. Please wait and try again.' })
+
+  /* Limits are per account and stored in Postgres. The old limiter was an
+     in-memory Map, which resets whenever the serverless instance recycles —
+     so the cap never really held — and it keyed on IP, which rotates. */
+  const rl = await checkRateLimit(user.id, `faith-ai:${type}`, {
+    limit: type === 'chat' ? 50 : 20,
+    windowMinutes: 60,
+  })
+  if (!rl.allowed) return tooManyRequests(res, rl.retry_after)
 
   try {
     if (type === 'chat')    return await handleChat(req.body, res)
