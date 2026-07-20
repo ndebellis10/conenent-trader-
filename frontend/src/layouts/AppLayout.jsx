@@ -72,6 +72,13 @@ const TRADING_ITEMS = [
   { to: '/app/settings', label: 'Settings', icon: Settings },
 ]
 
+/* The admin account exists to manage traders, not to trade. It gets the
+   account list and nothing else — no AI, no journal, no course. */
+const ADMIN_ITEMS = [
+  { to: '/app/admin-users', label: 'All Accounts', icon: ShieldAlert },
+  { to: '/app/settings',    label: 'Settings',     icon: Settings },
+]
+
 /* ── Rail icon button with slide-out label tab ── */
 function RailBtn({ icon: Icon, label, isActive, onClick, danger = false }) {
   const [hovered, setHovered] = useState(false)
@@ -261,6 +268,16 @@ export default function AppLayout() {
 
   useEffect(() => { checkTokenExpiry() }, [])
 
+  /* Admins manage accounts and nothing else. Guarding here rather than at
+     login also covers typing a trader URL straight into the address bar. */
+  useEffect(() => {
+    if (!isAdmin) return
+    const allowed = ['/app/admin-users', '/app/settings']
+    if (!allowed.includes(location.pathname)) {
+      navigate('/app/admin-users', { replace: true })
+    }
+  }, [isAdmin, location.pathname, navigate])
+
   // Every account gets the Covenant Model, whether or not they open Strategy
   const { addPlaybookStrategy, deletePlaybookStrategy } = useTradeStore()
   useEffect(() => {
@@ -287,9 +304,8 @@ export default function AppLayout() {
   // Admin cannot log trades or see Faith Journal
   // Admins get everything except logging trades and the two private sections —
   // Faith Journal and Daily Goals stay the trader's own.
-  const items = isAdmin
-    ? TRADING_ITEMS.filter(i => !['/app/log', '/app/faith', '/app/goals'].includes(i.to))
-    : TRADING_ITEMS
+  // Admins get an account-management view only — no AI, no journal, no course.
+  const items = isAdmin ? ADMIN_ITEMS : TRADING_ITEMS
 
   // Inside Ask Alan the sidebar shows the AI's sections instead of the journal nav
   const inAskAlan    = location.pathname === '/app/faith-ai'
@@ -334,6 +350,8 @@ export default function AppLayout() {
             <Logo size={32} showText={false} />
           </div>
 
+          {/* Traders see the app; admins only manage accounts */}
+          {!isAdmin && (<>
           {/* Ask Alan — first in the rail */}
           <RailBtn
             icon={AlanMascot}
@@ -373,6 +391,7 @@ export default function AppLayout() {
             isActive={activeRail === 'course'}
             onClick={() => { setActiveRail('course'); navigate('/app/course') }}
           />
+          </>)}
 
           {/* Admin-only: All Traders */}
           {isAdmin && (
