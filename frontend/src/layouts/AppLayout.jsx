@@ -43,6 +43,7 @@ const ASK_ALAN_NAV = [
 ]
 import { isSecureMode, serverCreateTrade } from '../lib/syncManager'
 import { useTradeStore } from '../store/tradeStore'
+import { ensureCovenantSeeded } from '../lib/covenantPlaybook'
 import Logo from '../components/Logo'
 import AlanMascot from '../components/AlanMascot'
 import AdminBanner from '../components/app/AdminBanner'
@@ -183,7 +184,7 @@ export default function AppLayout() {
   const now       = new Date()
   const { checkTokenExpiry }    = useTradovateStore()
   const clearUser               = useAuthStore(s => s.clearUser)
-  const { logout: secureLogout, isAdmin } = useAuth()
+  const { logout: secureLogout, isAdmin, user } = useAuth()
 
   const handleLogout = useCallback(() => {
     setShowLogoutConfirm(true)
@@ -259,6 +260,14 @@ export default function AppLayout() {
   })
 
   useEffect(() => { checkTokenExpiry() }, [])
+
+  // Every account gets the Covenant Model, whether or not they open Strategy
+  const { addPlaybookStrategy, deletePlaybookStrategy } = useTradeStore()
+  useEffect(() => {
+    ensureCovenantSeeded({
+      email: user?.email, playbook, addPlaybookStrategy, deletePlaybookStrategy,
+    })
+  }, [user?.email, playbook, addPlaybookStrategy, deletePlaybookStrategy])
 
   // Sync activeRail when navigating via links (not rail clicks)
   useEffect(() => {

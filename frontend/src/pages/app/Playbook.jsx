@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { PlusCircle, Trash2, BookOpen, Sparkles, ChevronRight } from 'lucide-react'
 import { useTradeStore } from '../../store/tradeStore'
-import { COVENANT_SEED_FLAG, COVENANT_STRATEGY, hasCovenantStrategy, legacyCovenantEntries } from '../../lib/covenantPlaybook'
+import { COVENANT_STRATEGY, hasCovenantStrategy, ensureCovenantSeeded } from '../../lib/covenantPlaybook'
+import { useAuth } from '../../contexts/AuthContext'
 
 export default function Playbook() {
   const { playbook, addPlaybookStrategy, deletePlaybookStrategy, trades } = useTradeStore()
+  const email = useAuth().user?.email || null
   const [showForm, setShowForm] = useState(false)
   const seededRef = useRef(false)
   const [open, setOpen] = useState(() => new Set())
@@ -14,16 +16,14 @@ export default function Playbook() {
     return next
   })
 
-  /* Seed the Covenant model once, and fold away the older three-card version.
-     Deleting it afterwards is respected — it won't come back on its own. */
+  /* Seeding now happens on app load (see AppLayout) so every account has the
+     model whether or not they open this page. This is just a safety net for
+     anyone who lands here first. */
   useEffect(() => {
     if (seededRef.current) return
     seededRef.current = true
-    legacyCovenantEntries(playbook).forEach(p => deletePlaybookStrategy(p.id))
-    if (localStorage.getItem(COVENANT_SEED_FLAG)) return
-    localStorage.setItem(COVENANT_SEED_FLAG, '1')
-    if (!hasCovenantStrategy(playbook)) addPlaybookStrategy(COVENANT_STRATEGY)
-  }, [addPlaybookStrategy, deletePlaybookStrategy, playbook])
+    ensureCovenantSeeded({ email, playbook, addPlaybookStrategy, deletePlaybookStrategy })
+  }, [email, playbook, addPlaybookStrategy, deletePlaybookStrategy])
 
   const needsCovenant = !hasCovenantStrategy(playbook)
   const [form, setForm] = useState({ name: '', description: '', entryRules: '', exitRules: '', riskRules: '' })

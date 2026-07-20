@@ -44,6 +44,30 @@ export const COVENANT_STRATEGY = {
     'Think like a risk manager first and a trader second.',
 }
 
+/* Per-account seed flag. The old flag was global to the browser, so on a
+   shared machine the second account to sign in was skipped entirely. */
+export const seedKey = email =>
+  `${COVENANT_SEED_FLAG}__${String(email || 'guest').replace(/[^a-z0-9]/gi, '_').toLowerCase()}`
+
+/**
+ * Put the Covenant Model in this account's strategies. Runs on app load rather
+ * than on the Strategy page, so every trader has it whether or not they ever
+ * open that tab. Deleting it is still respected — the flag is what remembers.
+ */
+export function ensureCovenantSeeded({ email, playbook, addPlaybookStrategy, deletePlaybookStrategy }) {
+  // Fold away the older three-card version wherever it still exists
+  legacyCovenantEntries(playbook).forEach(p => deletePlaybookStrategy?.(p.id))
+
+  if (hasCovenantStrategy(playbook)) return false
+  try {
+    if (localStorage.getItem(seedKey(email))) return false  // they deleted it on purpose
+    localStorage.setItem(seedKey(email), '1')
+  } catch { /* private mode — seed anyway, it just may repeat */ }
+
+  addPlaybookStrategy?.(COVENANT_STRATEGY)
+  return true
+}
+
 export function hasCovenantStrategy(playbook = []) {
   return (playbook || []).some(
     p => String(p.name || '').toLowerCase() === COVENANT_STRATEGY.name.toLowerCase()
