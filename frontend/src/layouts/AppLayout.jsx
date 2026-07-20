@@ -43,6 +43,7 @@ const ASK_ALAN_NAV = [
 ]
 import { isSecureMode, serverCreateTrade } from '../lib/syncManager'
 import { useTradeStore } from '../store/tradeStore'
+import { useAdminStore } from '../store/adminStore'
 import { ensureCovenantSeeded } from '../lib/covenantPlaybook'
 import Logo from '../components/Logo'
 import AlanMascot from '../components/AlanMascot'
@@ -192,6 +193,7 @@ export default function AppLayout() {
   const { checkTokenExpiry }    = useTradovateStore()
   const clearUser               = useAuthStore(s => s.clearUser)
   const { logout: secureLogout, isAdmin, user } = useAuth()
+  const viewingUser = useAdminStore(s => s.viewingUser)
 
   const handleLogout = useCallback(() => {
     setShowLogoutConfirm(true)
@@ -271,12 +273,12 @@ export default function AppLayout() {
   /* Admins manage accounts and nothing else. Guarding here rather than at
      login also covers typing a trader URL straight into the address bar. */
   useEffect(() => {
-    if (!isAdmin) return
+    if (!isAdmin || viewingUser) return   // viewing a trader shows their whole app
     const allowed = ['/app/admin-users', '/app/settings']
     if (!allowed.includes(location.pathname)) {
       navigate('/app/admin-users', { replace: true })
     }
-  }, [isAdmin, location.pathname, navigate])
+  }, [isAdmin, viewingUser, location.pathname, navigate])
 
   // Every account gets the Covenant Model, whether or not they open Strategy
   const { addPlaybookStrategy, deletePlaybookStrategy } = useTradeStore()
@@ -304,8 +306,10 @@ export default function AppLayout() {
   // Admin cannot log trades or see Faith Journal
   // Admins get everything except logging trades and the two private sections —
   // Faith Journal and Daily Goals stay the trader's own.
-  // Admins get an account-management view only — no AI, no journal, no course.
-  const items = isAdmin ? ADMIN_ITEMS : TRADING_ITEMS
+  /* On their own account an admin only manages accounts. The moment they view
+     a trader, they get that trader's full app — dashboard, AI, everything. */
+  const adminOnly = isAdmin && !viewingUser
+  const items = adminOnly ? ADMIN_ITEMS : TRADING_ITEMS
 
   // Inside Ask Alan the sidebar shows the AI's sections instead of the journal nav
   const inAskAlan    = location.pathname === '/app/faith-ai'
@@ -350,8 +354,8 @@ export default function AppLayout() {
             <Logo size={32} showText={false} />
           </div>
 
-          {/* Traders see the app; admins only manage accounts */}
-          {!isAdmin && (<>
+          {/* Traders see the app; so does an admin viewing a trader */}
+          {!adminOnly && (<>
           {/* Ask Alan — first in the rail */}
           <RailBtn
             icon={AlanMascot}
