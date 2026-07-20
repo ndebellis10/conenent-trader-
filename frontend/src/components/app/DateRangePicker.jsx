@@ -175,9 +175,13 @@ export default function DateRangePicker({ value, onChange }) {
           border: '1px solid #3A3A3A',
           borderRadius: '14px',
           boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+          // Side-by-side calendars need the width on desktop, but a hard 620px
+          // pushes the panel off a phone screen. Stack them when it won't fit.
           display: 'flex',
+          flexWrap: 'wrap',
           overflow: 'hidden',
-          minWidth: '620px',
+          minWidth: 'min(620px, calc(100vw - 32px))',
+          maxWidth: 'calc(100vw - 32px)',
         }}>
           {/* Left: dual calendar */}
           <div style={{ padding: '20px 22px', flex: 1 }}>

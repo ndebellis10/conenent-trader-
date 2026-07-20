@@ -104,8 +104,9 @@ function DayCard({ dateKey, dayTrades }) {
       )}
 
       {expanded && (
-        <div style={{ borderTop: '1px solid #3A3A3A' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+        <div style={{ borderTop: '1px solid #3A3A3A', overflowX: 'auto' }}>
+          {/* Eight columns can't fit a phone — scroll the table, not the page */}
+          <table style={{ width: '100%', minWidth: 620, borderCollapse: 'collapse', fontSize: '0.8rem' }}>
             <thead>
               <tr style={{ background: '#2E2E2E' }}>
                 {['Symbol','Side','Entry','Exit','Contracts','Net P&L','Result','Strategy'].map(h => (
