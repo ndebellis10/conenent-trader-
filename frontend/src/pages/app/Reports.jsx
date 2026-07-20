@@ -797,6 +797,9 @@ function ExecutionQualityReport({ trades }) {
         </div>
       </div>
 
+      {/* The trader's own questions, right under their score */}
+      <CustomQuestions category="execution" accent="#4CAF7D" trades={trades} />
+
       <DayOfWeekBreakdown trades={trades} />
 
       {/* ── Rule adherence — every rule in one place, worst first ──
@@ -1077,11 +1080,7 @@ export default function Reports() {
         </div>
       )}
       {tab === 'execution'   && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {/* The trader's own questions lead — they asked them for a reason */}
-          <CustomQuestions category="execution" accent="#4CAF7D" trades={trades} />
-          <ExecutionQualityReport trades={trades} />
-        </div>
+        <ExecutionQualityReport trades={trades} />
       )}
       {tab === 'backtest'    && <BacktestReport trades={btTrades} onImport={() => navigate('/app/backtest')} />}
     </div>
