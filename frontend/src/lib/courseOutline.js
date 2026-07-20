@@ -182,6 +182,7 @@ export const COURSE_MODULES = [
       { id: 'ms-heat-5', title: 'Smarter Take Profits', video: 'https://youtu.be/DGHrikdWsDE' },
       { id: 'ms-heat-6', title: 'Incorporating Heatmaps', video: 'https://youtu.be/3jzuFD0om9w' },
       { id: 'ms-heat-7', title: 'Real World Application', video: 'https://youtu.be/3lkqHYzOuI8' },
+      { id: 'ms-heat-8', title: 'NQ Heatmap — Live Stream', video: 'https://www.youtube.com/watch?v=5tenAhShLlA' },
     ],
   },
   {
