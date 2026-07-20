@@ -84,16 +84,18 @@ const ADMIN_ITEMS = [
 function RailBtn({ icon: Icon, label, isActive, onClick, danger = false }) {
   const [hovered, setHovered] = useState(false)
 
+  // Log Out used to rest at #3A3A3A — near-invisible against the rail. It now
+  // carries a muted red at rest and brightens on hover.
   const color = danger
-    ? (hovered ? '#E05252' : '#3A3A3A')
+    ? (hovered ? '#FF6B6B' : '#C86A6A')
     : (isActive ? '#3B82F6' : hovered ? '#3B82F6' : '#4A4A4A')
 
   const bg = danger
-    ? 'transparent'
+    ? (hovered ? 'rgba(224,82,82,0.18)' : 'rgba(224,82,82,0.08)')
     : isActive ? 'rgba(59,130,246,0.15)' : hovered ? 'rgba(59,130,246,0.08)' : 'transparent'
 
   const border = danger
-    ? (hovered ? 'rgba(224,82,82,0.25)' : 'transparent')
+    ? (hovered ? 'rgba(224,82,82,0.55)' : 'rgba(224,82,82,0.28)')
     : isActive ? 'rgba(59,130,246,0.35)' : 'transparent'
 
   return (
@@ -115,7 +117,7 @@ function RailBtn({ icon: Icon, label, isActive, onClick, danger = false }) {
           flexShrink: 0,
         }}
       >
-        <Icon size={danger ? 16 : 18} />
+        <Icon size={18} />
       </button>
 
       {/* Slide-out label tab */}
