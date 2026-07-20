@@ -1078,8 +1078,9 @@ export default function Reports() {
       )}
       {tab === 'execution'   && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <ExecutionQualityReport trades={trades} />
+          {/* The trader's own questions lead — they asked them for a reason */}
           <CustomQuestions category="execution" accent="#4CAF7D" trades={trades} />
+          <ExecutionQualityReport trades={trades} />
         </div>
       )}
       {tab === 'backtest'    && <BacktestReport trades={btTrades} onImport={() => navigate('/app/backtest')} />}
