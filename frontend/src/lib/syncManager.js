@@ -77,6 +77,25 @@ export function serverTradeToClient(t) {
     energyLevel:         t.energy_level,
     revengeTrade:        t.revenge_trade,
     customAnswers:       t.custom_answers || {},
+    // Time in trade — without these the duration stats have nothing to read
+    entryTime:           t.entry_time,
+    exitTime:            t.exit_time,
+    accountsTraded:      t.accounts_traded,
+    riskReward:          t.risk_reward,
+    protectedStop:       t.protected_stop,
+    targetedLiquidity:   t.targeted_liquidity,
+    movedStopFear:       t.moved_stop_fear,
+    tradingSession:      t.trading_session,
+    htfBias:             t.htf_bias,
+    marketStructure:     t.market_structure,
+    setupType:           t.setup_type,
+    newsEvent:           t.news_event,
+    confluences:         t.confluences   || [],
+    wentWell:            t.went_well,
+    toImprove:           t.to_improve,
+    takeAgain:           t.take_again,
+    chartImage:          t.chart_image,
+    chartMarkers:        t.chart_markers || [],
   }
 }
 
@@ -127,6 +146,24 @@ export function clientTradeToServer(t) {
     // Answers to the trader's own custom questions — without this they only
     // ever lived in localStorage and never followed the account.
     custom_answers:       t.customAnswers || {},
+    entry_time:           t.entryTime || null,
+    exit_time:            t.exitTime  || null,
+    accounts_traded:      parseFloat(t.accountsTraded) || null,
+    risk_reward:          parseFloat(t.riskReward)     || null,
+    protected_stop:       t.protectedStop,
+    targeted_liquidity:   t.targetedLiquidity,
+    moved_stop_fear:      t.movedStopFear,
+    trading_session:      t.tradingSession,
+    htf_bias:             t.htfBias,
+    market_structure:     t.marketStructure,
+    setup_type:           t.setupType,
+    news_event:           t.newsEvent,
+    confluences:          Array.isArray(t.confluences)   ? t.confluences   : [],
+    went_well:            t.wentWell,
+    to_improve:           t.toImprove,
+    take_again:           t.takeAgain,
+    chart_image:          t.chartImage || null,
+    chart_markers:        Array.isArray(t.chartMarkers) ? t.chartMarkers : [],
   }
 }
 
