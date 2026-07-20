@@ -258,8 +258,8 @@ function DisplayNameCapture({ initialName, email, onDone }) {
             </span>
           </h1>
           <p style={{ color: '#555', fontSize: '0.95rem', marginBottom: 36, lineHeight: 1.6 }}>
-            This is your display name — it shows on your dashboard,<br />
-            leaderboard, and to other traders.
+            This shows on your dashboard and the leaderboard.<br />
+            Use your full name so other traders know who you are.
           </p>
         </motion.div>
 
@@ -275,7 +275,7 @@ function DisplayNameCapture({ initialName, email, onDone }) {
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            placeholder="e.g. Nick, CovenantTrader, or your full name"
+            placeholder="Your full name"
             autoFocus
             maxLength={40}
             style={{
@@ -440,7 +440,8 @@ export default function SignupPage() {
           name={welcome.name}
           onDone={() => {
             setWelcome(null)
-            setCaptureName({ name: welcome.name.split(' ')[0], email: welcome.email })
+            // Their full name, not just the first — the leaderboard shows surnames
+            setCaptureName({ name: welcome.name, email: welcome.email })
           }}
         />
       </AnimatePresence>
