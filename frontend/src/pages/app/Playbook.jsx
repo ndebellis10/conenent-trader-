@@ -4,6 +4,16 @@ import { useTradeStore } from '../../store/tradeStore'
 import { COVENANT_STRATEGY, hasCovenantStrategy, ensureCovenantSeeded } from '../../lib/covenantPlaybook'
 import { useAuth } from '../../contexts/AuthContext'
 
+/* Section heading above each strategy grid. */
+function SectionHead({ title, sub }) {
+  return (
+    <div style={{ margin: '26px 0 12px' }}>
+      <h2 style={{ fontFamily: 'Poppins, sans-serif', color: '#F5F5F5', fontSize: '1.02rem', fontWeight: 700, margin: 0 }}>{title}</h2>
+      <p style={{ color: '#777', fontSize: '0.78rem', marginTop: '3px' }}>{sub}</p>
+    </div>
+  )
+}
+
 export default function Playbook() {
   const { playbook, addPlaybookStrategy, deletePlaybookStrategy, trades } = useTradeStore()
   const email = useAuth().user?.email || null
@@ -39,10 +49,54 @@ export default function Playbook() {
 
   const inputStyle = { width: '100%', background: '#2E2E2E', border: '1px solid #3A3A3A', borderRadius: '8px', padding: '10px 14px', color: '#F5F5F5', fontSize: '0.9rem', fontFamily: 'Inter, sans-serif', outline: 'none' }
 
+  const isCovenant = s => String(s.name || '').toLowerCase() === COVENANT_STRATEGY.name.toLowerCase()
+  const covenantCards = playbook.filter(isCovenant)
+  const mine          = playbook.filter(s => !isCovenant(s))
+
+  const renderGrid = (items) => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+      {items.map(s => {
+        const stats = getStats(s.name)
+        return (
+          <div
+            key={s.id}
+            onClick={() => setSelected(s)}
+            style={{ background: '#242424', borderRadius: '12px', border: '1px solid #3A3A3A', borderTop: '3px solid #3B82F6', padding: '18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '10px', transition: 'border-color 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(59,130,246,0.5)'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = '#3A3A3A'}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+              <h3 style={{ fontFamily: 'Poppins, sans-serif', color: '#F5F5F5', fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>{s.name}</h3>
+              <button
+                onClick={e => { e.stopPropagation(); deletePlaybookStrategy(s.id) }}
+                style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', padding: '2px', flexShrink: 0 }}
+                aria-label={`Delete ${s.name}`}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+
+            {s.description && (
+              <p style={{ color: '#888', fontSize: '0.8rem', margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.description}</p>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '2px' }}>
+              <span style={{ color: '#666', fontSize: '0.72rem' }}>Trades <b style={{ color: '#3B82F6' }}>{stats.count}</b></span>
+              <span style={{ color: '#666', fontSize: '0.72rem' }}>Win Rate <b style={{ color: '#4CAF7D' }}>{stats.winRate}%</b></span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <h1 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#F5F5F5', fontSize: '1.5rem', margin: 0 }}>Strategy</h1>
+        <div>
+          <h1 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#F5F5F5', fontSize: '1.5rem', margin: 0 }}>Strategies</h1>
+          <p style={{ color: '#888', fontSize: '0.82rem', marginTop: '4px' }}>Click a strategy to see the full playbook. Alan knows all of these too.</p>
+        </div>
         <button onClick={() => setShowForm(!showForm)} className="btn-gold" style={{ padding: '10px 20px', borderRadius: '10px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem' }}>
           <PlusCircle size={16} /> New Strategy
         </button>
@@ -89,48 +143,22 @@ export default function Playbook() {
         </div>
       )}
 
-      {!playbook.length ? (
-        <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-          <BookOpen size={48} color="#3A3A3A" style={{ margin: '0 auto 16px' }} />
-          <p style={{ color: '#A0A0A0' }}>No strategies yet. Add your first one!</p>
-        </div>
-      ) : (
-        /* Cards in a grid; the rules live in a modal so the page stays scannable */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
-          {playbook.map(s => {
-            const stats = getStats(s.name)
-            return (
-              <div
-                key={s.id}
-                onClick={() => setSelected(s)}
-                style={{ background: '#242424', borderRadius: '12px', border: '1px solid #3A3A3A', borderTop: '3px solid #3B82F6', padding: '18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '10px', transition: 'border-color 0.15s' }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(59,130,246,0.5)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = '#3A3A3A'}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                  <h3 style={{ fontFamily: 'Poppins, sans-serif', color: '#F5F5F5', fontSize: '0.95rem', fontWeight: 600, margin: 0 }}>{s.name}</h3>
-                  <button
-                    onClick={e => { e.stopPropagation(); deletePlaybookStrategy(s.id) }}
-                    style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', padding: '2px', flexShrink: 0 }}
-                    aria-label={`Delete ${s.name}`}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-
-                {s.description && (
-                  <p style={{ color: '#888', fontSize: '0.8rem', margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.description}</p>
-                )}
-
-                <div style={{ display: 'flex', gap: '10px', marginTop: '2px' }}>
-                  <span style={{ color: '#666', fontSize: '0.72rem' }}>Trades <b style={{ color: '#3B82F6' }}>{stats.count}</b></span>
-                  <span style={{ color: '#666', fontSize: '0.72rem' }}>Win Rate <b style={{ color: '#4CAF7D' }}>{stats.winRate}%</b></span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+      {/* The Covenant model is the built-in reference — the same one Alan is
+          trained on. Anything the trader writes themselves sits below it. */}
+      {covenantCards.length > 0 && (
+        <>
+          <SectionHead title="Strategy Library" sub="The Covenant model — the same one Alan is trained on." />
+          {renderGrid(covenantCards)}
+        </>
       )}
+
+      <SectionHead title="My Strategies" sub="Your own strategies, tracked against your trade history." />
+      {mine.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+          <BookOpen size={40} color="#3A3A3A" style={{ margin: '0 auto 14px' }} />
+          <p style={{ color: '#A0A0A0', fontSize: '0.88rem' }}>No strategies of your own yet. Add your first one.</p>
+        </div>
+      ) : renderGrid(mine)}
 
       {selected && (
         <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
