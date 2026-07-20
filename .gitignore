@@ -58,3 +58,4 @@ venv/
 *.egg-info/
 .pytest_cache/
 .claude/worktrees/
+frontend/public/mobile-preview.html
