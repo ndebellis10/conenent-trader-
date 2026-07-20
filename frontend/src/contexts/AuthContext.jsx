@@ -83,7 +83,7 @@ async function activateUser(email, mode, displayName) {
   // Sync leaderboard on every login so dashboard → leaderboard stays in sync
   try {
     const { trades, settings } = useTradeStore.getState()
-    const name = settings?.name || displayName || email?.split('@')[0]
+    const name = settings?.fullName || settings?.name || displayName || email?.split('@')[0]
     syncLeaderboard(name, email, trades).catch(() => {})
   } catch {}
 }

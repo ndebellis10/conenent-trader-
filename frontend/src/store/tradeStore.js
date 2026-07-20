@@ -13,7 +13,7 @@ import {
 function syncAfterChange(trades, settingsName) {
   const email = getCurrentUserEmail()
   if (!email) return
-  // Settings name takes priority, then the display name stored at login, then email prefix
+  // Real first + last name wins, then the display name stored at login, then email prefix
   const authDisplayName = getCurrentUserDisplayName()
   const name = (settingsName && settingsName !== 'Trader')
     ? settingsName
@@ -55,7 +55,7 @@ export const useTradeStore = create((set) => ({
     const newTrade = { ...trade, id: tempId, createdAt: new Date().toISOString() }
     set((s) => {
       const newTrades = [newTrade, ...s.trades]
-      syncAfterChange(newTrades, s.settings?.name)
+      syncAfterChange(newTrades, s.settings?.fullName || s.settings?.name)
       return { trades: newTrades }
     })
     // Background sync to server in secure mode — swap temp id with server UUID on success
@@ -71,7 +71,7 @@ export const useTradeStore = create((set) => ({
   deleteTrade: (id) => {
     set((s) => {
       const newTrades = s.trades.filter(t => t.id !== id)
-      syncAfterChange(newTrades, s.settings?.name)
+      syncAfterChange(newTrades, s.settings?.fullName || s.settings?.name)
       return { trades: newTrades }
     })
     serverDeleteTrade(id)
@@ -79,7 +79,7 @@ export const useTradeStore = create((set) => ({
   updateTrade: (id, data) => {
     set((s) => {
       const newTrades = s.trades.map(t => t.id === id ? { ...t, ...data } : t)
-      syncAfterChange(newTrades, s.settings?.name)
+      syncAfterChange(newTrades, s.settings?.fullName || s.settings?.name)
       return { trades: newTrades }
     })
     serverUpdateTrade(id, data)
@@ -99,7 +99,7 @@ export const useTradeStore = create((set) => ({
     if (data.name) {
       // Update the stored display name so leaderboard uses the new name immediately
       setCurrentUser(getCurrentUserEmail(), data.name)
-      syncAfterChange(s.trades, data.name)
+      syncAfterChange(s.trades, data.fullName || data.name)
     }
     return { settings: newSettings }
   }),

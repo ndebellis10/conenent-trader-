@@ -185,14 +185,16 @@ function DisplayNameCapture({ initialName, email, onDone }) {
     if (!trimmed) return
     setSaving(true)
 
-    // 1. Save to local trade store settings
-    updateSettings({ name: trimmed, email })
+    // 1. Save to local trade store settings. Keep the real first + last name
+    //    from signup alongside the display name — the leaderboard ranks people
+    //    by their actual name, so a casual handle here can't erase it.
+    updateSettings({ name: trimmed, fullName: initialName || trimmed, email })
 
     // 2. Push to Supabase profile + leaderboard so admin can see it
     try { await userApi.updateProfile({ display_name: trimmed }) } catch {}
     try {
       const { syncLeaderboard } = await import('../lib/leaderboardApi')
-      await syncLeaderboard(trimmed, email, [])
+      await syncLeaderboard(initialName || trimmed, email, [])
     } catch {}
 
     setSaving(false)

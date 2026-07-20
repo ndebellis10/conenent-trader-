@@ -202,7 +202,11 @@ export default function Leaderboard() {
     if (!trades.length || !myEmail || isAdmin) return null
     // Don't inject local stats if this account has been banned by admin
     if (localStorage.getItem(`ft-lb-banned-${myEmail.toLowerCase()}`)) return null
-    const displayName = (currentName && currentName !== 'Trader') ? currentName : emailPrefix || myEmail.split('@')[0]
+    // Rank by the real first + last name from signup. The display name is a
+    // casual handle and often drops the surname.
+    const realName = settings?.fullName?.trim()
+    const displayName = realName
+      || ((currentName && currentName !== 'Trader') ? currentName : emailPrefix || myEmail.split('@')[0])
     // Backtest-tagged trades are paper results — ranked separately, never in live stats
     const live       = liveTrades(trades)
     const btStats    = summarize(backtestTrades(trades))
