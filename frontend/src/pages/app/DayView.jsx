@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { toTimeInput } from '../../lib/csvImport'
 import { useTradeStore } from '../../store/tradeStore'
 import { format, parseISO, startOfWeek, endOfWeek } from 'date-fns'
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts'
@@ -109,7 +110,7 @@ function DayCard({ dateKey, dayTrades }) {
           <table style={{ width: '100%', minWidth: 620, borderCollapse: 'collapse', fontSize: '0.8rem' }}>
             <thead>
               <tr style={{ background: '#2E2E2E' }}>
-                {['Symbol','Side','Entry','Exit','Contracts','Net P&L','Result','Strategy'].map(h => (
+                {['Symbol','Side','Time','Entry','Exit','Contracts','Net P&L','Result','Strategy'].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '8px 16px', color: '#555', fontWeight: 500 }}>{h}</th>
                 ))}
               </tr>
@@ -127,6 +128,7 @@ function DayCard({ dateKey, dayTrades }) {
                     <td style={{ padding: '10px 16px' }}>
                       <span style={{ background: t.direction === 'Long' ? 'rgba(76,175,125,0.15)' : 'rgba(224,82,82,0.15)', color: t.direction === 'Long' ? '#4CAF7D' : '#E05252', padding: '2px 8px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600 }}>{t.direction}</span>
                     </td>
+                    <td style={{ padding: '10px 16px', color: '#A0A0A0', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.76rem', whiteSpace: 'nowrap' }}>{(toTimeInput(t.entryTime) || toTimeInput(t.exitTime)) ? `${toTimeInput(t.entryTime) || '—'} → ${toTimeInput(t.exitTime) || '—'}` : '—'}</td>
                     <td style={{ padding: '10px 16px', color: '#A0A0A0', fontFamily: 'JetBrains Mono, monospace' }}>${parseFloat(t.entryPrice||0).toFixed(2)}</td>
                     <td style={{ padding: '10px 16px', color: '#A0A0A0', fontFamily: 'JetBrains Mono, monospace' }}>${parseFloat(t.exitPrice||0).toFixed(2)}</td>
                     <td style={{ padding: '10px 16px', color: '#A0A0A0', fontFamily: 'JetBrains Mono, monospace' }}>{t.positionSize || '—'}</td>

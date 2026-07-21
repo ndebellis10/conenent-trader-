@@ -5,6 +5,7 @@ import { useTradeStore } from '../../store/tradeStore'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import TradeChartViewer from '../../components/app/TradeChartViewer'
+import { toTimeInput } from '../../lib/csvImport'
 
 // Small colored tag pill
 function Tag({ label, value, color }) {
@@ -174,7 +175,7 @@ export default function TradeHistory() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
             <thead>
               <tr style={{ background: '#2E2E2E', borderBottom: '1px solid #3A3A3A' }}>
-                {['#','Date','Symbol','Side','Strategy','Entry','Exit','Net P&L','Result','Execution','Psychology','Chart',''].map(h => (
+                {['#','Date','Time','Symbol','Side','Strategy','Entry','Exit','Net P&L','Result','Execution','Psychology','Chart',''].map(h => (
                   <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: '#666', fontWeight: 500, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -188,6 +189,11 @@ export default function TradeHistory() {
                 >
                   <td style={{ padding: '10px 12px', color: '#666' }}>{i + 1}</td>
                   <td style={{ padding: '10px 12px', color: '#A0A0A0', whiteSpace: 'nowrap' }}>{format((() => { const dt = new Date(t.createdAt || Date.now()); return isNaN(dt.getTime()) ? new Date() : dt })(), 'MM/dd/yy')}</td>
+                  <td style={{ padding: '10px 12px', color: '#A0A0A0', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.76rem', whiteSpace: 'nowrap' }}>{
+                    (toTimeInput(t.entryTime) || toTimeInput(t.exitTime))
+                      ? `${toTimeInput(t.entryTime) || '—'} → ${toTimeInput(t.exitTime) || '—'}`
+                      : '—'
+                  }</td>
                   <td style={{ padding: '10px 12px', color: '#F5F5F5', fontWeight: 600 }}>{t.symbol}</td>
                   <td style={{ padding: '10px 12px' }}>
                     <span style={{ background: t.direction === 'Long' ? 'rgba(76,175,125,0.15)' : 'rgba(224,82,82,0.15)', color: t.direction === 'Long' ? '#4CAF7D' : '#E05252', padding: '2px 8px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600 }}>{t.direction}</span>
@@ -267,7 +273,7 @@ export default function TradeHistory() {
                     {expandedRow === t.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </td>
                 </tr>
-                {expandedRow === t.id && <TradeDetailRow trade={t} colSpan={13} />}
+                {expandedRow === t.id && <TradeDetailRow trade={t} colSpan={14} />}
               </Fragment>))}
             </tbody>
           </table>
