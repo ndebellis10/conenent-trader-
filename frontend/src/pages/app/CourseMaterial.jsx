@@ -248,7 +248,13 @@ export default function CourseMaterial() {
   return (
     <div className="course">
       <style>{`
-        .course { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 18px; align-items: start; }
+        /* Two independent scroll panes: the whole page fills the viewport and
+           does not scroll — the lesson rail scrolls on its own (all the way to
+           Mastery Suite) and the video/notes column scrolls on its own, so
+           moving one never moves the other. */
+        .course { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 18px; align-items: stretch; height: 100%; min-height: 0; overflow: hidden; }
+        /* Right pane scrolls by itself — video, lesson meta, and notes */
+        .course-stage-col { overflow-y: auto; min-height: 0; padding-right: 6px; }
         .course-stage { background: #000; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; }
         .course-stage video, .course-stage iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: none; background: #000; }
         /* In fullscreen the wrapper becomes the viewport — fill it */
@@ -270,8 +276,9 @@ export default function CourseMaterial() {
         }
         .course-fsnotes textarea:focus { border-color: rgba(59,130,246,0.5); }
         /* No cap — the player fills whatever width the rail leaves */
-        .course-stage-col { max-width: none; }
-        .course-rail { background: #1C1C1C; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; position: sticky; top: 16px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
+        .course-stage-col.course-stage-col { max-width: none; }
+        /* Rail fills the pane height and scrolls internally (not the page) */
+        .course-rail { background: #1C1C1C; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; height: 100%; min-height: 0; display: flex; flex-direction: column; }
         /* flex:1 + min-height:0 is what makes this actually scroll inside the
            capped rail — without it the list grows past the cap and the bottom
            sections (Mastery Suite and below) get clipped and unreachable. */
@@ -280,9 +287,11 @@ export default function CourseMaterial() {
         .course-lesson:hover { background: rgba(255,255,255,0.035); }
         .course-lesson.on { background: rgba(59,130,246,0.12); }
         @media (max-width: 1100px) {
-          .course { grid-template-columns: 1fr; }
-          .course-stage-col { max-width: none; }
-          .course-rail { position: static; max-height: none; }
+          /* Stack and scroll the page normally — no fixed-height panes on mobile */
+          .course { grid-template-columns: 1fr; height: auto; min-height: 0; overflow: visible; }
+          .course-stage-col { overflow: visible; min-height: 0; padding-right: 0; }
+          .course-rail { height: auto; }
+          .course-rail-scroll { max-height: 60vh; }
         }
       `}</style>
 
