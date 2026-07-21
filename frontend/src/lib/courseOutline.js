@@ -11,26 +11,10 @@ export const COURSE_MODULES = [
     title: 'Start Here',
     blurb: 'Get set up and oriented before anything else.',
     lessons: [
-      {
-        id: 'start-here-1',
-        title: 'Onboarding 1',
-        video: 'https://cdn.discordapp.com/attachments/1438611387772567564/1504316886903689348/onboarding_1.mp4?ex=6a5d8ec6&is=6a5c3d46&hm=87fb3f1cf442f7dd294d1e5f5934dc7e48cda7fac00df2f1be838669df42a92a&',
-      },
-      {
-        id: 'start-here-2',
-        title: 'Onboarding 2',
-        video: 'https://cdn.discordapp.com/attachments/1438611387772567564/1504317024887636048/onboarding_2.mp4?ex=6a5d8ee7&is=6a5c3d67&hm=f89758a3da69410eccc6f510bd73492d6dfa0f941b4d50ca7f9b6f4ef216820b&',
-      },
-      {
-        id: 'start-here-3',
-        title: 'Onboarding 3',
-        video: 'https://cdn.discordapp.com/attachments/1438611387772567564/1504317310863933540/onboarding_3.mp4?ex=6a5d8f2b&is=6a5c3dab&hm=9e5d19d989784934f33d6867cf72a8df9175e3093f175b8db12fa28621b98645&',
-      },
-      {
-        id: 'start-here-4',
-        title: 'Onboarding 4',
-        video: 'https://cdn.discordapp.com/attachments/1438611387772567564/1504317377356234812/onboarding_4.mp4?ex=6a5d8f3b&is=6a5c3dbb&hm=e2274ee629b1455dd285e0ba2a292b729bfe6ae303c08060cffb6c65b895b75e&',
-      },
+      { id: 'start-here-1', title: 'Onboarding 1', video: 'https://youtu.be/fiEW4HXHjwM' },
+      { id: 'start-here-2', title: 'Onboarding 2', video: 'https://youtu.be/6h9WKTUB3cs' },
+      { id: 'start-here-3', title: 'Onboarding 3', video: 'https://youtu.be/NxD8_MWQtpc' },
+      { id: 'start-here-4', title: 'Onboarding 4', video: 'https://youtu.be/8jd57I07pc0' },
     ],
   },
   {
