@@ -46,6 +46,7 @@ import { useTradeStore } from '../store/tradeStore'
 import { useAdminStore } from '../store/adminStore'
 import { ensureCovenantSeeded } from '../lib/covenantPlaybook'
 import OnboardingFormGate, { isOnboardingFormComplete } from '../components/app/OnboardingFormGate'
+import OnboardingVideoGate, { isOnboardingVideosComplete } from '../components/app/OnboardingVideoGate'
 import Logo from '../components/Logo'
 import AlanMascot from '../components/AlanMascot'
 import AdminBanner from '../components/app/AdminBanner'
@@ -344,8 +345,15 @@ export default function AppLayout() {
   // already logged trades (so this doesn't suddenly wall off current accounts).
   const email = user?.email || null
   const isExistingUser = (trades?.length || 0) > 0
-  if (!isAdmin && !viewingUser && !isExistingUser && !isOnboardingFormComplete(tradeSettings, email)) {
-    return <OnboardingFormGate email={email} onComplete={() => navigate('/app/faith-ai', { replace: true })} />
+  if (!isAdmin && !viewingUser && !isExistingUser) {
+    // Step 1: the intake form
+    if (!isOnboardingFormComplete(tradeSettings, email)) {
+      return <OnboardingFormGate email={email} onComplete={() => { /* re-render falls through to the video gate */ }} />
+    }
+    // Step 2: the onboarding videos — must be watched before the app
+    if (!isOnboardingVideosComplete(tradeSettings, email)) {
+      return <OnboardingVideoGate email={email} onComplete={() => navigate('/app/faith-ai', { replace: true })} />
+    }
   }
 
   return (
