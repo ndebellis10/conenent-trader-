@@ -314,7 +314,8 @@ export default function Leaderboard() {
   }
 
   const tab    = TABS.find(t => t.id === activeTab) ?? TABS[0]
-  const sorted = useMemo(() => tab.sort(mergedRows), [mergedRows, activeTab])
+  // Only the top 10 are shown, whichever tab you're on
+  const sorted = useMemo(() => tab.sort(mergedRows).slice(0, 10), [mergedRows, activeTab])
 
   return (
     <div>
@@ -503,7 +504,9 @@ export default function Leaderboard() {
           </table>
         </div>
         <div style={{ padding: '12px 20px', borderTop: '1px solid #2E2E2E' }}>
-          <span style={{ color: '#444', fontSize: '0.75rem' }}>{mergedRows.length} trader{mergedRows.length !== 1 ? 's' : ''} ranked</span>
+          <span style={{ color: '#444', fontSize: '0.75rem' }}>
+            {mergedRows.length > 10 ? `Top 10 of ${mergedRows.length} traders` : `${mergedRows.length} trader${mergedRows.length !== 1 ? 's' : ''} ranked`}
+          </span>
         </div>
       </div>
 
