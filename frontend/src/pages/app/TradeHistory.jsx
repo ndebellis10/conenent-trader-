@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import TradeChartViewer from '../../components/app/TradeChartViewer'
 import { toTimeInput } from '../../lib/csvImport'
+import { tradeDurationMs, formatDuration } from '../../lib/tradeTime'
 
 // Small colored tag pill
 function Tag({ label, value, color }) {
@@ -34,6 +35,13 @@ function tagColor(val) {
 
 // Expanded detail panel shown below a trade row
 function TradeDetailRow({ trade, colSpan }) {
+  const held = tradeDurationMs(trade)
+  const timing = [
+    toTimeInput(trade.entryTime) && ['Entry Time', toTimeInput(trade.entryTime)],
+    toTimeInput(trade.exitTime)  && ['Exit Time',  toTimeInput(trade.exitTime)],
+    held != null && ['Time in Trade', formatDuration(held)],
+  ].filter(Boolean)
+
   const exec = [
     ['Followed Plan',    trade.followedPlan],
     ['Moved Stop',       trade.movedStop],
@@ -69,13 +77,22 @@ function TradeDetailRow({ trade, colSpan }) {
     trade.gratitude    && ['Gratitude', trade.gratitude],
   ].filter(Boolean)
 
-  const hasData = exec.length || qual.length || psych.length || notes.length
+  const hasData = timing.length || exec.length || qual.length || psych.length || notes.length
 
   return (
     <tr>
       <td colSpan={colSpan} style={{ padding: 0, background: 'rgba(59,130,246,0.03)', borderBottom: '1px solid #2A2A2A' }}>
         <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {!hasData && <span style={{ color: '#444', fontSize: '0.8rem' }}>No tags recorded for this trade.</span>}
+
+          {timing.length > 0 && (
+            <div>
+              <div style={{ color: '#555', fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Timing</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {timing.map(([l, v]) => <Tag key={l} label={l} value={v} color="#3B82F6" />)}
+              </div>
+            </div>
+          )}
 
           {exec.length > 0 && (
             <div>

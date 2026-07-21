@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { AreaChart, Area, ResponsiveContainer } from 'recharts'
 import { useNavigate } from 'react-router-dom'
 import { PlusCircle, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { toTimeInput } from '../../lib/csvImport'
 import { SemiGauge, CircleGauge } from '../../components/app/GaugeKPIs'
 
 /* ── Top stat cards ── */
@@ -388,9 +389,10 @@ export default function TradeView() {
                     onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = 'rgba(59,130,246,0.04)' }}
                     onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = isEven ? 'transparent' : 'rgba(255,255,255,0.012)' }}
                   >
-                    {/* Open Date */}
+                    {/* Open Date — with entry time below when known */}
                     <td style={{ padding: '11px 14px', color: '#888', whiteSpace: 'nowrap' }}>
                       {format((() => { const dt = new Date(t.createdAt || Date.now()); return isNaN(dt.getTime()) ? new Date() : dt })(), 'MM/dd/yyyy')}
+                      {toTimeInput(t.entryTime) && <div style={{ color: '#5E5E5E', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', marginTop: 2 }}>{toTimeInput(t.entryTime)}</div>}
                     </td>
                     {/* Symbol */}
                     <td style={{ padding: '11px 14px', color: '#F5F5F5', fontWeight: 700 }}>
@@ -407,9 +409,10 @@ export default function TradeView() {
                         {t.result?.toUpperCase()}
                       </span>
                     </td>
-                    {/* Close Date (same day for day trades) */}
+                    {/* Close Date (same day for day trades) — with exit time below */}
                     <td style={{ padding: '11px 14px', color: '#888', whiteSpace: 'nowrap' }}>
                       {format((() => { const dt = new Date(t.createdAt || Date.now()); return isNaN(dt.getTime()) ? new Date() : dt })(), 'MM/dd/yyyy')}
+                      {toTimeInput(t.exitTime) && <div style={{ color: '#5E5E5E', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem', marginTop: 2 }}>{toTimeInput(t.exitTime)}</div>}
                     </td>
                     {/* Entry */}
                     <td style={{ padding: '11px 14px', color: '#A0A0A0', fontFamily: 'JetBrains Mono, monospace' }}>
