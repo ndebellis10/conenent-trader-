@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { track, EVENTS } from '../lib/analytics'
 import { syncLeaderboard } from '../lib/leaderboardApi'
 import {
   isSecureMode,
@@ -56,6 +57,7 @@ export const useTradeStore = create((set) => ({
     set((s) => {
       const newTrades = [newTrade, ...s.trades]
       syncAfterChange(newTrades, s.settings?.fullName || s.settings?.name)
+      track(s.trades.length === 0 ? EVENTS.FIRST_TRADE : EVENTS.TRADE_LOGGED)
       return { trades: newTrades }
     })
     // Background sync to server in secure mode — swap temp id with server UUID on success

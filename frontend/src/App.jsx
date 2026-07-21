@@ -28,6 +28,7 @@ import Heatmap           from './pages/app/Heatmap'
 import News              from './pages/app/News'
 import Leaderboard       from './pages/app/Leaderboard'
 import AdminUsers        from './pages/app/AdminUsers'
+import AdminAnalytics    from './pages/app/AdminAnalytics'
 import FaithAI           from './pages/app/FaithAI'
 import AppLayout         from './layouts/AppLayout'
 
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="settings"       element={<Settings />} />
             <Route path="leaderboard"   element={<Leaderboard />} />
             <Route path="admin-users"   element={<AdminUsers />} />
+            <Route path="admin-analytics" element={<AdminAnalytics />} />
             <Route path="faith-ai"      element={<FaithAI />} />
           </Route>
         </Routes>

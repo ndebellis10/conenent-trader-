@@ -40,6 +40,69 @@ export default async function handler(req, res) {
 
   const sub = route(req)
 
+  /* ── GET /api/admin/analytics ────────────────────────────────────
+     Aggregated product analytics for the admin dashboard: active users,
+     the onboarding funnel, event counts, and daily-active for a chart.
+     Reads the analytics_events table (events only — no personal data). */
+  if (sub === 'analytics' && req.method === 'GET') {
+    if (!supabaseConfigured) return res.status(200).json({ ok: false, reason: 'not_configured' })
+    try {
+      const now = Date.now()
+      const since30 = new Date(now - 30 * 864e5).toISOString()
+      const { data: rows, error } = await supabaseAdmin
+        .from('analytics_events')
+        .select('email, event, created_at')
+        .gte('created_at', since30)
+        .order('created_at', { ascending: false })
+        .limit(50000)
+      if (error) throw error
+      const evs = rows || []
+
+      const within = (days) => {
+        const cut = now - days * 864e5
+        return evs.filter(e => new Date(e.created_at).getTime() >= cut)
+      }
+      const distinctEmails = (list) => new Set(list.map(e => e.email).filter(Boolean)).size
+      const countEvent = (list, name) => list.filter(e => e.event === name).length
+      const distinctEmailsForEvent = (list, name) =>
+        new Set(list.filter(e => e.event === name).map(e => e.email).filter(Boolean)).size
+
+      const e7 = within(7)
+
+      // Onboarding funnel — distinct people who reached each step (last 30d)
+      const funnel = [
+        { step: 'Signed up',        count: distinctEmailsForEvent(evs, 'signup_completed') },
+        { step: 'Completed form',   count: distinctEmailsForEvent(evs, 'onboarding_form_done') },
+        { step: 'Watched videos',   count: distinctEmailsForEvent(evs, 'onboarding_videos_done') },
+        { step: 'Logged 1st trade', count: distinctEmailsForEvent(evs, 'first_trade_logged') },
+        { step: 'Talked to Alan',   count: distinctEmailsForEvent(evs, 'alan_message_sent') },
+      ]
+
+      // Event totals (last 30d)
+      const EVENT_NAMES = ['signup_completed','login','onboarding_form_done','onboarding_videos_done','first_trade_logged','trade_logged','alan_message_sent','lesson_completed','chart_analyzed']
+      const eventCounts = EVENT_NAMES.map(name => ({ event: name, count: countEvent(evs, name) }))
+
+      // Daily active users, last 14 days
+      const daily = []
+      for (let d = 13; d >= 0; d--) {
+        const dayStart = now - d * 864e5
+        const key = new Date(dayStart).toISOString().slice(0, 10)
+        const dayEvents = evs.filter(e => new Date(e.created_at).toISOString().slice(0, 10) === key)
+        daily.push({ date: key, active: distinctEmails(dayEvents) })
+      }
+
+      return res.status(200).json({
+        ok: true,
+        activeUsers7d:  distinctEmails(e7),
+        activeUsers30d: distinctEmails(evs),
+        totalEvents30d: evs.length,
+        funnel, eventCounts, daily,
+      })
+    } catch (e) {
+      return res.status(200).json({ ok: false, error: String(e.message || e) })
+    }
+  }
+
   /* ── GET /api/admin/course-progress ──────────────────────────────
      Every trader's completed lesson ids, so admins can see who has
      watched what without impersonating each account. */

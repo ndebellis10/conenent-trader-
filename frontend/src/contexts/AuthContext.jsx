@@ -8,6 +8,7 @@
 import { createContext, useContext, useState,
          useEffect, useCallback, useRef }    from 'react'
 import { Navigate, useLocation }             from 'react-router-dom'
+import { track, EVENTS } from '../lib/analytics'
 import { useAuthStore }                      from '../store/authStore'
 import { useTradeStore }                     from '../store/tradeStore'
 import { useGoalStore }                      from '../store/goalStore'
@@ -186,6 +187,7 @@ export function AuthProvider({ children }) {
       setMode('secure')
       setIsAdmin(false)
       await activateUser(u.email, 'secure', u.display_name)
+      track(EVENTS.LOGIN)
       return { ok: true }
     } catch (e) {
       const code = e instanceof ApiError ? e.data?.code : null
@@ -236,6 +238,7 @@ export function AuthProvider({ children }) {
       setUser(u)
       setMode('secure')
       await activateUser(u.email, 'secure', u.display_name || displayName)
+      track(EVENTS.SIGNUP)
       return { ok: true }
     } catch (e) {
       const code = e instanceof ApiError ? e.data?.code : null

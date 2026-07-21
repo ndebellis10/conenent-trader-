@@ -3,6 +3,7 @@ import AlanMascot from '../AlanMascot'
 import { faithAiApi } from '../../lib/api'
 import { Send, ImagePlus, X, Volume2, Square, Mic } from 'lucide-react'
 import { compressImage } from '../../lib/imageUtils'
+import { track, EVENTS } from '../../lib/analytics'
 
 const SUGGESTED = [
   'What should I work on the most?',
@@ -137,6 +138,7 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
     const next = [...messages, { role: 'user', content: msg || 'What do you make of this chart?', image: img }]
     setMessages(next)
     setLoading(true)
+    track(EVENTS.ALAN_MESSAGE, { lesson: !!lessonMode })
     try {
       const history = messages.slice(-10)
       const reply = await faithAiApi.chat(msg || 'What do you make of this chart?', history, trades, stats, goals, completions, settings, playbook, img, lessonContext, courseProgress)

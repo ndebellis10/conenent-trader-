@@ -79,8 +79,9 @@ const TRADING_ITEMS = [
 /* The admin account exists to manage traders, not to trade. It gets the
    account list and nothing else — no AI, no journal, no course. */
 const ADMIN_ITEMS = [
-  { to: '/app/admin-users', label: 'All Accounts', icon: ShieldAlert },
-  { to: '/app/settings',    label: 'Settings',     icon: Settings },
+  { to: '/app/admin-users',     label: 'All Accounts', icon: ShieldAlert },
+  { to: '/app/admin-analytics', label: 'Analytics',    icon: BarChart2 },
+  { to: '/app/settings',        label: 'Settings',     icon: Settings },
 ]
 
 /* ── Rail icon button with slide-out label tab ── */
@@ -279,7 +280,7 @@ export default function AppLayout() {
      login also covers typing a trader URL straight into the address bar. */
   useEffect(() => {
     if (!isAdmin || viewingUser) return   // viewing a trader shows their whole app
-    const allowed = ['/app/admin-users', '/app/settings']
+    const allowed = ['/app/admin-users', '/app/admin-analytics', '/app/settings']
     if (!allowed.includes(location.pathname)) {
       navigate('/app/admin-users', { replace: true })
     }

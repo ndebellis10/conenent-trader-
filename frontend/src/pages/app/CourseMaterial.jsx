@@ -4,6 +4,7 @@ import { Play, Check, ChevronRight, Maximize2, Trophy, Lock, NotebookPen } from 
 import { COURSE_MODULES, TOTAL_LESSONS } from '../../lib/courseOutline'
 import ChatDrawer from '../../components/app/ChatDrawer'
 import { summarizeCourseProgress } from '../../lib/courseProgress'
+import { track, EVENTS } from '../../lib/analytics'
 import AlanMascot from '../../components/AlanMascot'
 import { useTradeStore } from '../../store/tradeStore'
 import { useAuth } from '../../contexts/AuthContext'
@@ -134,7 +135,7 @@ export default function CourseMaterial() {
     return () => clearTimeout(id)
   }, [done, email])
 
-  const complete = (id) => setDone(prev => (prev.has(id) ? prev : new Set([...prev, id])))
+  const complete = (id) => setDone(prev => { if (prev.has(id)) return prev; track(EVENTS.LESSON_COMPLETED, { lesson: id }); return new Set([...prev, id]) })
 
 
   const toggleModule = (slug) => setOpenModules(prev => {

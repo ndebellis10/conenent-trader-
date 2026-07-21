@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Widget } from '@typeform/embed-react'
 import { useTradeStore } from '../../store/tradeStore'
 import Logo from '../Logo'
+import { track, EVENTS } from '../../lib/analytics'
 
 // Safety escape appears after this long, so a broken embed can never trap
 // anyone permanently. Once you've confirmed the form loads and submits, this
@@ -40,6 +41,7 @@ export default function OnboardingFormGate({ email, onComplete }) {
     // the local cache (so a refresh right after submit doesn't re-gate them).
     try { localStorage.setItem(onboardingFormKey(email), '1') } catch { /* private mode */ }
     updateSettings({ onboardingFormComplete: true })
+    track(EVENTS.ONBOARDING_FORM)
     // Small beat so Typeform's own "thank you" screen is seen before we move on
     setTimeout(() => onComplete?.(), 1400)
   }

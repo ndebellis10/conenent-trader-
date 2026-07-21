@@ -3,6 +3,7 @@ import { Check, Play, Lock, ArrowRight } from 'lucide-react'
 import { useTradeStore } from '../../store/tradeStore'
 import { COURSE_MODULES } from '../../lib/courseOutline'
 import { markStartHereWatched } from '../../lib/courseProgress'
+import { track, EVENTS } from '../../lib/analytics'
 import Logo from '../Logo'
 
 const BLUE = '#3B82F6'
@@ -103,6 +104,7 @@ export default function OnboardingVideoGate({ email, onComplete }) {
       // These are the Start Here lessons — tick them in the course too, so the
       // trader isn't asked to watch the same four videos again.
       markStartHereWatched(email)
+      track(EVENTS.ONBOARDING_VIDEOS)
       onComplete?.()
     } else {
       setIdx(i => i + 1)

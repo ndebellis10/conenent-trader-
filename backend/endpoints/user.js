@@ -30,6 +30,32 @@ export default async function handler(req, res) {
   const user = await requireAuth(req, res)
   if (!user) return unauthorized(res)
 
+  /* ══ /api/user/track — product analytics ingestion (EVENTS ONLY) ══
+     Placed before the CSRF check: it's a logged-in, low-risk write (a single
+     event name), and it's fire-and-forget from the client. Only whitelisted
+     event names are stored, with tiny scalar props — never trade content. */
+  if (getSubRoute(req) === 'track') {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
+    if (!limitBody(req, res, 4000)) return
+    const ALLOWED = new Set([
+      'signup_completed', 'login', 'onboarding_form_done', 'onboarding_videos_done',
+      'first_trade_logged', 'trade_logged', 'alan_message_sent', 'lesson_completed', 'chart_analyzed',
+    ])
+    const event = String(req.body?.event || '')
+    if (!ALLOWED.has(event)) return res.status(200).json({ ok: true })  // ignore unknown
+    const rawProps = (req.body?.props && typeof req.body.props === 'object') ? req.body.props : {}
+    const props = {}
+    for (const [k, v] of Object.entries(rawProps)) {
+      if (k.length <= 40 && ['string', 'number', 'boolean'].includes(typeof v)) {
+        props[k] = typeof v === 'string' ? v.slice(0, 120) : v
+      }
+    }
+    supabaseAdmin.from('analytics_events').insert({
+      email: String(user.email || '').toLowerCase() || null, event, props,
+    }).then(() => {}, () => {})
+    return res.status(200).json({ ok: true })
+  }
+
   if (!validateCsrf(req, res)) return
 
   const route = getSubRoute(req)
