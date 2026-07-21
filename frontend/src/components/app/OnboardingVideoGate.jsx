@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Check, Play, Lock } from 'lucide-react'
 import { useTradeStore } from '../../store/tradeStore'
 import { COURSE_MODULES } from '../../lib/courseOutline'
+import { markStartHereWatched } from '../../lib/courseProgress'
 
 /* Mandatory onboarding videos, shown after the intake form and before the app.
    The four Start Here lessons play in order; the trader has to get through each
@@ -12,7 +13,12 @@ import { COURSE_MODULES } from '../../lib/courseOutline'
    end). A per-video fallback timer also unlocks Next, so a detection miss or a
    slow embed can never trap anyone. */
 
-const ESCAPE_FALLBACK_MS = 30000  // per-video: unlock Next even if end isn't detected
+// Unlock "Next" once this fraction of the video has been watched
+const WATCH_THRESHOLD = 0.9
+// Safety only: if YouTube never reports progress (broken/blocked embed), unlock
+// after this long so a detection failure can't trap anyone. Doesn't apply once
+// real progress is coming in — then WATCH_THRESHOLD governs.
+const NO_PROGRESS_FALLBACK_MS = 45000
 
 export const onboardingVideosKey = email =>
   `ct-intake-videos__${String(email || 'guest').replace(/[^a-z0-9]/gi, '_').toLowerCase()}`
@@ -33,25 +39,45 @@ export default function OnboardingVideoGate({ email, onComplete }) {
   const updateSettings = useTradeStore(s => s.updateSettings)
   const [idx, setIdx] = useState(0)
   const [canAdvance, setCanAdvance] = useState(false)
+  const [watchedPct, setWatchedPct] = useState(0)
   const frameRef = useRef(null)
+  const gotProgress = useRef(false)
 
   const lessons = START_HERE
   const current = lessons[idx]
   const vid = ytId(current?.video)
   const isLast = idx >= lessons.length - 1
 
-  // Reset the gate for each video, then arm end-detection + a safety fallback
+  // Reset for each video, then track watch progress via YouTube's postMessage
   useEffect(() => {
     setCanAdvance(false)
-    const fallback = setTimeout(() => setCanAdvance(true), ESCAPE_FALLBACK_MS)
+    setWatchedPct(0)
+    gotProgress.current = false
 
-    // Listen for YouTube's "video ended" (playerState 0) via postMessage
+    // Only unlocks if progress never arrives (broken embed) — not a shortcut
+    const fallback = setTimeout(() => {
+      if (!gotProgress.current) setCanAdvance(true)
+    }, NO_PROGRESS_FALLBACK_MS)
+
+    // YouTube streams currentTime/duration once we're "listening". Unlock Next
+    // when enough of the video has played (or it ends outright).
     const onMsg = e => {
-      if (!/youtube\.com$/.test(new URL(e.origin).host)) return
+      try {
+        if (!/(^|\.)youtube\.com$/.test(new URL(e.origin).host)) return
+      } catch { return }
       let data = e.data
       try { data = typeof data === 'string' ? JSON.parse(data) : data } catch { return }
-      const state = data?.info?.playerState ?? (data?.event === 'onStateChange' ? data.info : undefined)
-      if (state === 0) setCanAdvance(true)  // 0 = ended
+      const info = data?.info
+      const state = info?.playerState ?? (data?.event === 'onStateChange' ? data.info : undefined)
+      if (state === 0) { setWatchedPct(100); setCanAdvance(true); return }  // ended
+      const cur = Number(info?.currentTime)
+      const dur = Number(info?.duration)
+      if (dur > 0 && Number.isFinite(cur)) {
+        gotProgress.current = true
+        const frac = Math.min(1, cur / dur)
+        setWatchedPct(Math.round(frac * 100))
+        if (frac >= WATCH_THRESHOLD) setCanAdvance(true)
+      }
     }
     window.addEventListener('message', onMsg)
 
@@ -71,6 +97,9 @@ export default function OnboardingVideoGate({ email, onComplete }) {
     if (isLast) {
       try { localStorage.setItem(onboardingVideosKey(email), '1') } catch { /* private mode */ }
       updateSettings({ onboardingVideosComplete: true })
+      // These are the Start Here lessons — tick them in the course too, so the
+      // trader isn't asked to watch the same four videos again.
+      markStartHereWatched(email)
       onComplete?.()
     } else {
       setIdx(i => i + 1)
@@ -141,7 +170,9 @@ export default function OnboardingVideoGate({ email, onComplete }) {
           {isLast ? 'Enter the App' : 'Next video'}
         </button>
         {!canAdvance && (
-          <span style={{ color: '#5E5E5E', fontSize: '0.75rem' }}>Finish the video to continue.</span>
+          <span style={{ color: '#5E5E5E', fontSize: '0.75rem' }}>
+            {watchedPct > 0 ? `Keep watching to continue — ${watchedPct}%` : 'Keep watching to continue.'}
+          </span>
         )}
       </div>
     </div>

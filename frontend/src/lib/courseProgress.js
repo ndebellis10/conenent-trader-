@@ -6,6 +6,7 @@
  * (the AI home page, the dashboard) without mounting the course.
  */
 import { COURSE_MODULES } from './courseOutline'
+import { courseApi } from './api'
 
 export const courseProgressKey = email =>
   `ct-course-progress__${String(email || 'guest').replace(/[^a-z0-9]/gi, '_').toLowerCase()}`
@@ -14,6 +15,29 @@ export const courseProgressKey = email =>
 export function readCompleted(email) {
   try { return new Set(JSON.parse(localStorage.getItem(courseProgressKey(email)) || '[]')) }
   catch { return new Set() }
+}
+
+/** Lesson ids in the Start Here module (the onboarding videos). */
+export function startHereLessonIds() {
+  return (COURSE_MODULES.find(m => m.slug === 'start-here')?.lessons || []).map(l => l.id)
+}
+
+/**
+ * Mark the Start Here lessons complete in the course. Called when the
+ * onboarding video gate finishes, so the same videos show up already
+ * checked in Course Material instead of asking the trader to re-watch them.
+ * Merges into existing progress (the server POST replaces the whole list).
+ */
+export async function markStartHereWatched(email) {
+  const done = readCompleted(email)
+  let changed = false
+  for (const id of startHereLessonIds()) {
+    if (!done.has(id)) { done.add(id); changed = true }
+  }
+  if (!changed) return
+  const merged = [...done]
+  try { localStorage.setItem(courseProgressKey(email), JSON.stringify(merged)) } catch { /* private mode */ }
+  try { await courseApi.saveProgress(merged) } catch { /* offline — the local cache still shows the ticks */ }
 }
 
 /**
