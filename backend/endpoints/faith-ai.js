@@ -451,7 +451,7 @@ IMPORTANT RULES:
 
   const client = new Anthropic({ apiKey })
   const response = await client.messages.create({
-    model: 'claude-opus-4-8', max_tokens: 1024,
+    model: 'claude-sonnet-5', max_tokens: 1024,
     // Two blocks, and the order is load-bearing. Block 1 (persona + knowledge
     // base) is byte-identical for every user on every request, so the
     // cache_control breakpoint at its end is shared across the whole community
