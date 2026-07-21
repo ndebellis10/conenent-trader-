@@ -249,9 +249,7 @@ export default function CourseMaterial() {
     <div className="course">
       <style>{`
         .course { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 18px; align-items: start; }
-        /* The video stays pinned while the lesson meta and notes below it
-           scroll — so you never lose sight of what you're watching. */
-        .course-stage { background: #000; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; position: sticky; top: 16px; z-index: 2; }
+        .course-stage { background: #000; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; }
         .course-stage video, .course-stage iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: none; background: #000; }
         /* In fullscreen the wrapper becomes the viewport — fill it */
         .course-stage:fullscreen { border-radius: 0; border: none; display: flex; align-items: stretch; background: #000; }
