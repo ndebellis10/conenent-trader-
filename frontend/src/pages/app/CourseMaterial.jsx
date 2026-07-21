@@ -249,7 +249,9 @@ export default function CourseMaterial() {
     <div className="course">
       <style>{`
         .course { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 18px; align-items: start; }
-        .course-stage { background: #000; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; }
+        /* The video stays pinned while the lesson meta and notes below it
+           scroll — so you never lose sight of what you're watching. */
+        .course-stage { background: #000; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; position: sticky; top: 16px; z-index: 2; }
         .course-stage video, .course-stage iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: none; background: #000; }
         /* In fullscreen the wrapper becomes the viewport — fill it */
         .course-stage:fullscreen { border-radius: 0; border: none; display: flex; align-items: stretch; background: #000; }
@@ -272,7 +274,10 @@ export default function CourseMaterial() {
         /* No cap — the player fills whatever width the rail leaves */
         .course-stage-col { max-width: none; }
         .course-rail { background: #1C1C1C; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; position: sticky; top: 16px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
-        .course-rail-scroll { overflow-y: auto; padding: 8px; }
+        /* flex:1 + min-height:0 is what makes this actually scroll inside the
+           capped rail — without it the list grows past the cap and the bottom
+           sections (Mastery Suite and below) get clipped and unreachable. */
+        .course-rail-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; }
         .course-lesson { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: none; border: none; cursor: pointer; text-align: left; border-radius: 9px; transition: background .15s; }
         .course-lesson:hover { background: rgba(255,255,255,0.035); }
         .course-lesson.on { background: rgba(59,130,246,0.12); }
