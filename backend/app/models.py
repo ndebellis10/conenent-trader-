@@ -17,6 +17,10 @@ class RegisterIn(BaseModel):
     captchaToken: Optional[str] = None
 
 
+class ResetPasswordIn(BaseModel):
+    email: EmailStr
+
+
 class MfaVerifyIn(BaseModel):
     factor_id: str = Field(min_length=1)
     code: str = Field(pattern=r"^\d{6}$")

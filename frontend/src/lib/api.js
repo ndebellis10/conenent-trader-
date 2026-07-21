@@ -65,6 +65,7 @@ export const authApi = {
   login:      (email, password, captchaToken)                     => request('POST', '/auth/login',    { email, password, captchaToken }),
   register:   (email, password, displayName, captchaToken)        => request('POST', '/auth/register', { email, password, displayName, captchaToken }),
   logout:     ()                                                  => request('POST', '/auth/logout',   {}),
+  resetPassword: (email)                                          => request('POST', '/auth/reset-password', { email }),
   mfaSetup:   ()                                                  => request('POST', '/auth/mfa-setup',  {}),
   mfaVerify:  (factor_id, code, challenge_id)                     => request('POST', '/auth/mfa-verify', { factor_id, code, challenge_id }),
   getCsrf:    ()                                                  => fetch('/api/auth/csrf', { credentials: 'include' }).then(r => r.json()),

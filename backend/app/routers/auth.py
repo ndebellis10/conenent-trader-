@@ -15,7 +15,7 @@ from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
 from .. import config, security
-from ..models import LoginIn, MfaVerifyIn, RegisterIn
+from ..models import LoginIn, MfaVerifyIn, RegisterIn, ResetPasswordIn
 from ..supabase_client import supabase_admin, user_client
 
 router = APIRouter(prefix="/api/auth")
@@ -238,6 +238,38 @@ async def logout(request: Request, response: Response):
     security.clear_auth_cookies(response)
     return JSONResponse(status_code=200, headers=dict(response.headers),
                         content={"message": "Logged out successfully"})
+
+
+@router.post("/reset-password")
+async def reset_password(request: Request, body: ResetPasswordIn):
+    """Send a password-reset email via Supabase. Always returns ok — never
+    reveal whether an email is registered (prevents account enumeration).
+    The email link lands on {origin}/reset-password, where the user sets a
+    new password (that page must be allow-listed in Supabase Auth settings)."""
+    if not config.SUPABASE_CONFIGURED:
+        return _err(503, "Authentication service not configured.", code="SUPABASE_NOT_CONFIGURED")
+
+    # Redirect back to this app's own origin, so it works on any deployment
+    origin = request.headers.get("origin") or config.APP_URL
+    redirect_to = f"{origin.rstrip('/')}/reset-password"
+
+    try:
+        auth = supabase_admin.auth
+        # Method name has varied across supabase-py versions — use whichever exists
+        send = getattr(auth, "reset_password_for_email", None) or getattr(auth, "reset_password_email", None)
+        if send is None:
+            raise RuntimeError("no reset-password method on supabase client")
+        try:
+            send(body.email, {"redirect_to": redirect_to})
+        except TypeError:
+            # Some versions take an options= keyword instead of a positional dict
+            send(body.email, options={"redirect_to": redirect_to})
+    except Exception as e:
+        # Log the real cause but still return ok, so failures are diagnosable
+        # in Vercel logs without leaking anything to the caller.
+        print(f"[auth/reset-password] send failed for a request: {e}", flush=True)
+
+    return {"ok": True}
 
 
 # ── MFA — user-scoped (supabase-py exposes enroll/challenge/verify on the

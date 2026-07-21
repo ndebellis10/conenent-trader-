@@ -8,6 +8,7 @@ import LandingPage       from './pages/LandingPage'
 import LoginPage         from './pages/LoginPage'
 import SignupPage        from './pages/SignupPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import WelcomePage       from './pages/WelcomePage'
 import Dashboard         from './pages/app/Dashboard'
 import LogTrade          from './pages/app/LogTrade'
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/login"           element={<LoginPage />} />
           <Route path="/signup"          element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password"  element={<ResetPasswordPage />} />
           <Route path="/welcome"         element={<WelcomePage />} />
           <Route path="/privacy"         element={<Privacy />} />
           <Route path="/terms"           element={<Terms />} />

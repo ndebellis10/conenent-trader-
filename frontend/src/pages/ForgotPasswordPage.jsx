@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Mail } from 'lucide-react'
 import AuthCard from '../components/AuthCard'
 import FloatingVerses from '../components/FloatingVerses'
+import { authApi } from '../lib/api'
 
 const schema = z.object({ email: z.string().email('Please enter a valid email') })
 
@@ -13,11 +14,14 @@ export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false)
   const [sentTo, setSentTo] = useState('')
   const [loading, setLoading] = useState(false)
-  const { register, handleSubmit, getValues, formState: { errors } } = useForm({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(schema) })
 
   const onSubmit = async (data) => {
     setLoading(true)
-    await new Promise(r => setTimeout(r, 1200))
+    // Always resolves ok — the server never reveals whether the email exists,
+    // so we show the same "check your inbox" either way. This actually sends
+    // the email now (it used to just wait and pretend).
+    try { await authApi.resetPassword(data.email) } catch { /* still show success */ }
     setLoading(false)
     setSentTo(data.email)
     setSent(true)
