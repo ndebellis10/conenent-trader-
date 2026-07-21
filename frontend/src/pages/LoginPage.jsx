@@ -3,8 +3,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff, Loader2, ShieldCheck, Calendar } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useUsdNews, impactMeta } from '../lib/usdNews'
 import AuthCard from '../components/AuthCard'
 import FloatingVerses from '../components/FloatingVerses'
 import { useAuth } from '../contexts/AuthContext'
@@ -22,6 +23,56 @@ const GRATITUDE_VERSES = [
   { text: 'Oh, give thanks to the LORD, for He is good! For His mercy endures forever.', ref: '1 Chronicles 16:34' },
   { text: 'The LORD has done great things for us, and we are filled with joy.', ref: 'Psalm 126:3' },
 ]
+
+/* Today's remaining Forex Factory (USD) news, shown on the welcome-back
+   screen so traders see what's coming before they start. Hidden entirely when
+   the feed is empty/unavailable so it never shows a broken box. */
+function UpcomingNews() {
+  const { todaysEvents, loading } = useUsdNews()
+  const now = Date.now()
+  const upcoming = todaysEvents.filter(ev => ev._et.allDay || ev._et.ts > now).slice(0, 4)
+
+  if (loading || !todaysEvents.length) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 1.1, duration: 0.6 }}
+      style={{
+        background: 'rgba(255,255,255,0.03)', border: '1px solid #2A2A2A',
+        borderRadius: 14, padding: '16px 20px', marginBottom: 32, textAlign: 'left',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: upcoming.length ? 12 : 0 }}>
+        <Calendar size={14} color="#3B82F6" />
+        <span style={{ color: '#B0B0B0', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Coming up today — USD news
+        </span>
+      </div>
+      {upcoming.length ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          {upcoming.map((ev, i) => {
+            const im = impactMeta(ev.impact)
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                <span style={{ color: '#8A8A8A', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.76rem', width: 66, flexShrink: 0 }}>
+                  {ev._et.time || '—'}
+                </span>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: im.color, flexShrink: 0 }} />
+                <span style={{ color: '#E4E4E4', fontSize: '0.83rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {ev.title}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      ) : (
+        <span style={{ color: '#6E6E6E', fontSize: '0.8rem' }}>No major USD news left today. Clear runway.</span>
+      )}
+    </motion.div>
+  )
+}
 
 function WelcomeBackOverlay({ name, onDone }) {
   const verse     = GRATITUDE_VERSES[Math.floor(Math.random() * GRATITUDE_VERSES.length)]
@@ -135,6 +186,9 @@ function WelcomeBackOverlay({ name, onDone }) {
             — {verse.ref}
           </cite>
         </motion.div>
+
+        {/* Upcoming Forex Factory (USD) news for today */}
+        <UpcomingNews />
 
         {/* Enter button */}
         <motion.button
