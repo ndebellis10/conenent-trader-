@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { compressImage } from '../../lib/imageUtils'
 import { getCustomQuestions } from '../../lib/customQuestions'
 import { toTimeInput, extractCsvData, buildAutoMapping, tradesFromMapping, parseTradeCSV } from '../../lib/csvImport'
+import { tradeDurationMs, formatDuration } from '../../lib/tradeTime'
 import TradeChartAnnotator from '../../components/app/TradeChartAnnotator'
 import TradeProjectionView from '../../components/app/TradeProjectionView'
 import { useAuth } from '../../contexts/AuthContext'
@@ -821,6 +822,19 @@ export default function LogTrade() {
                 Exit Time <span style={{ color: '#555' }}>(optional)</span>
               </label>
               <input value={exitTime} onChange={e => setExitTime(e.target.value)} type="time" style={inputStyle} />
+            </div>
+            {/* Time in trade — computed live from entry + exit so the trader
+                sees the duration being logged. Read-only. */}
+            <div>
+              <label style={{ color: '#A0A0A0', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>Time in Trade</label>
+              {(() => {
+                const held = tradeDurationMs({ date, entryTime, exitTime })
+                return (
+                  <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', color: held != null ? '#3B82F6' : '#555', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
+                    {held != null ? formatDuration(held) : '—'}
+                  </div>
+                )
+              })()}
             </div>
             <div>
               <label style={{ color: '#A0A0A0', fontSize: '0.8rem', display: 'block', marginBottom: '6px' }}>Symbol</label>
