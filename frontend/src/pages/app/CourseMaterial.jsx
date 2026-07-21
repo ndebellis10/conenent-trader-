@@ -252,7 +252,10 @@ export default function CourseMaterial() {
            does not scroll — the lesson rail scrolls on its own (all the way to
            Mastery Suite) and the video/notes column scrolls on its own, so
            moving one never moves the other. */
-        .course { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 18px; align-items: stretch; height: 100%; min-height: 0; overflow: hidden; }
+        /* Height is viewport-based (not 100%) so it always resolves regardless
+           of the parent chain: full viewport minus the top chrome (header +
+           verse bar + main padding). dvh line wins where supported. */
+        .course { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 18px; align-items: stretch; height: calc(100vh - 140px); height: calc(100dvh - 140px); min-height: 420px; overflow: hidden; }
         /* Right pane scrolls by itself — video, lesson meta, and notes */
         .course-stage-col { overflow-y: auto; min-height: 0; padding-right: 6px; }
         .course-stage { background: #000; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; }
