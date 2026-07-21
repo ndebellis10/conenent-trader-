@@ -54,4 +54,25 @@ app.include_router(auth.router)
 
 @app.get("/api/health")
 async def health():
-    return {"ok": True, "runtime": "python", "supabase_configured": config.SUPABASE_CONFIGURED}
+    # Actually exercise the service-role key so a broken/rotated key shows up
+    # here BEFORE a real user hits it at sign-up. Point an uptime monitor at
+    # this endpoint. Returns no secrets.
+    registration = "unknown"
+    if config.SUPABASE_CONFIGURED:
+        try:
+            from .supabase_client import supabase_admin
+            supabase_admin.auth.admin.list_users()  # exercises the service-role key
+            registration = "ok"
+        except Exception as e:
+            print(f"[health] service-role check failed: {e}", flush=True)
+            registration = "down"
+    else:
+        registration = "not_configured"
+
+    ok = registration == "ok"
+    return JSONResponse(
+        status_code=200 if ok else 503,
+        content={"ok": ok, "runtime": "python",
+                 "supabase_configured": config.SUPABASE_CONFIGURED,
+                 "registration": registration},
+    )

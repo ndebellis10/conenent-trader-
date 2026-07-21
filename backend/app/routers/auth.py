@@ -170,9 +170,10 @@ async def register(request: Request, response: Response, body: RegisterIn):
 
     if not await verify_captcha(body.captchaToken):
         return _err(400, "CAPTCHA verification failed")
-    if await is_password_breached(body.password):
-        return _err(422, "This password was found in a data breach. Please choose a different password.",
-                    code="PASSWORD_BREACHED")
+
+    # Breach check intentionally NOT enforced — a password appearing in a public
+    # breach corpus does not block signup. Requirements are 8+ chars and one
+    # special character (validated on the model).
 
     try:
         created = supabase_admin.auth.admin.create_user({
@@ -180,9 +181,31 @@ async def register(request: Request, response: Response, body: RegisterIn):
             "user_metadata": {"display_name": body.displayName},
         })
     except Exception as e:
-        msg = ("An account with this email already exists"
-               if "already" in str(e).lower() else "Registration failed. Please try again.")
-        return _err(409, msg)
+        raw = str(e)
+        low = raw.lower()
+
+        # 1) Duplicate — expected user error, not an outage
+        if "already" in low or "registered" in low or "duplicate" in low:
+            return _err(409, "An account with this email already exists")
+
+        # 2) Bad service-role key / permission — a CONFIG outage, not the user's
+        #    fault. This exact failure once took digging through Supabase logs to
+        #    find. Log it loudly and return a distinct 503 so it can't hide as a
+        #    generic 409 and monitoring can tell config from user error.
+        if ("service_role" in low or "not authorized" in low or "unauthorized" in low
+                or "403" in low or "401" in low or "role" in low):
+            print(f"[auth/register] MISCONFIG — create_user rejected, likely a bad "
+                  f"SUPABASE_SERVICE_ROLE_KEY: {raw}", flush=True)
+            return _err(503, "Sign-up is temporarily unavailable. Please try again shortly.",
+                        code="AUTH_SERVICE_MISCONFIGURED")
+
+        # 3) Password rejected by Supabase's own policy — say why
+        if "password" in low:
+            return _err(400, raw or "Password does not meet the requirements.")
+
+        # 4) Anything else — log the real cause, return a real server error
+        print(f"[auth/register] create_user failed: {raw}", flush=True)
+        return _err(500, "Registration failed. Please try again.")
 
     try:
         session = supabase_admin.auth.sign_in_with_password({"email": body.email, "password": body.password})

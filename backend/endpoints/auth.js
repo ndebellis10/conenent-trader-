@@ -91,27 +91,6 @@ export default async function handler(req, res) {
 
   const sub = route(req)
 
-  /* ════ GET /api/auth/health ══════════════════════════════════
-     Verifies sign-up is actually able to run — specifically that the
-     service-role key still works — WITHOUT creating a user. Point an uptime
-     monitor at this; a non-200 means registration is down before any real
-     user hits it. Returns no secrets. */
-  if (sub === 'health') {
-    if (!requireMethod(req, res, 'GET')) return
-    try {
-      // Cheapest admin call that exercises the service-role key
-      const { error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1 })
-      if (error) {
-        console.error('[auth/health] admin check failed:', error.status, error.message)
-        return res.status(503).json({ ok: false, registration: 'down', reason: 'auth_admin_unavailable' })
-      }
-      return res.status(200).json({ ok: true, registration: 'ok' })
-    } catch (e) {
-      console.error('[auth/health] threw:', e?.message)
-      return res.status(503).json({ ok: false, registration: 'down', reason: 'exception' })
-    }
-  }
-
   /* ════ GET /api/auth/csrf ════════════════════════════════════ */
   if (sub === 'csrf') {
     if (!requireMethod(req, res, 'GET')) return
@@ -223,37 +202,10 @@ export default async function handler(req, res) {
       user_metadata: { display_name: displayName },
     })
     if (createErr) {
-      const raw    = String(createErr.message || '')
-      const lower  = raw.toLowerCase()
-      const status = createErr.status || createErr.code
-
-      // 1) Duplicate — the user's issue, expected, not an outage
-      if (lower.includes('already') || lower.includes('registered') || lower.includes('duplicate')) {
-        return res.status(409).json({ error: 'An account with this email already exists' })
-      }
-
-      // 2) Bad service-role key / permission — THIS is a config outage, not a
-      //    user problem. Log it loudly so it shows up in Vercel logs instantly
-      //    (this exact failure once took digging through Supabase logs to find),
-      //    and return a distinct 503 so monitoring can tell config from user error.
-      if (lower.includes('service_role') || lower.includes('role') ||
-          lower.includes('not authorized') || lower.includes('unauthorized') ||
-          status === 401 || status === 403) {
-        console.error('[auth/register] MISCONFIG — createUser rejected, likely a bad SUPABASE_SERVICE_ROLE_KEY:', raw)
-        return res.status(503).json({
-          error: 'Sign-up is temporarily unavailable. Please try again shortly.',
-          code: 'AUTH_SERVICE_MISCONFIGURED',
-        })
-      }
-
-      // 3) Password rejected by Supabase's own policy — tell them why
-      if (lower.includes('password')) {
-        return res.status(400).json({ error: raw || 'Password does not meet the requirements.' })
-      }
-
-      // 4) Anything else — log the real cause, return a real server error
-      console.error('[auth/register] createUser failed:', status, raw)
-      return res.status(500).json({ error: 'Registration failed. Please try again.' })
+      const msg = createErr.message?.toLowerCase().includes('already')
+        ? 'An account with this email already exists'
+        : 'Registration failed. Please try again.'
+      return res.status(409).json({ error: msg })
     }
 
     const { data: session } = await supabaseAdmin.auth.signInWithPassword({ email, password })
