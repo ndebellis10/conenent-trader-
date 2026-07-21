@@ -1,14 +1,15 @@
 """
 /api/auth — Python (FastAPI) port of backend/endpoints/auth.js.
 
-Spike scope: csrf · me · login · register · logout · mfa-setup · mfa-verify,
-with the exact cookie + CSRF contract. Security extras that are mechanical DB
-work (rate-limit, account lockout, audit log, login-attempt tracking) are marked
-TODO for the full port — they're straightforward supabase inserts.
+Routes: csrf · me · login · register · logout · reset-password · mfa-setup ·
+mfa-verify, with the exact cookie + CSRF contract. Brute-force protection
+(per-IP rate limiting + account lockout on repeated failures) is implemented
+against the rate_limits / login_attempts tables and fails open on DB errors.
 """
 import asyncio
 import hashlib
 import time
+from datetime import datetime, timezone, timedelta
 
 import httpx
 from fastapi import APIRouter, Request, Response
@@ -23,6 +24,45 @@ router = APIRouter(prefix="/api/auth")
 
 def _err(status: int, message: str, **extra) -> JSONResponse:
     return JSONResponse(status_code=status, content={"error": message, **extra})
+
+
+# ── Brute-force protection — uses the rate_limits + login_attempts tables and
+#    the check_and_increment_rate_limit function that already exist in the DB.
+#    All checks fail OPEN: if the DB hiccups, auth still works rather than
+#    locking everyone out. ──
+def _rate_limited(key: str, limit: int, window_minutes: int) -> dict:
+    try:
+        r = supabase_admin.rpc("check_and_increment_rate_limit", {
+            "p_key": key, "p_limit": limit, "p_window_minutes": window_minutes,
+        }).execute()
+        return r.data or {"allowed": True}
+    except Exception as e:
+        print(f"[rate-limit] {e}", flush=True)
+        return {"allowed": True}
+
+
+def _record_attempt(email: str, ip: str, ua: str, success: bool) -> None:
+    try:
+        supabase_admin.table("login_attempts").insert({
+            "email": email, "ip_address": ip, "user_agent": ua, "success": success,
+        }).execute()
+    except Exception:
+        pass
+
+
+def _is_account_locked(email: str, ip: str) -> bool:
+    """Locked after 5 failed attempts (by email OR IP) in the last 15 minutes."""
+    try:
+        since = (datetime.now(timezone.utc) - timedelta(minutes=15)).isoformat()
+        r = (supabase_admin.table("login_attempts")
+             .select("id", count="exact")
+             .eq("success", False)
+             .gte("created_at", since)
+             .or_(f"email.eq.{email},ip_address.eq.{ip}")
+             .execute())
+        return (r.count or 0) >= 5
+    except Exception:
+        return False
 
 
 # ── CAPTCHA (Cloudflare Turnstile) — mirrors JS: skip when unconfigured ──
@@ -139,9 +179,20 @@ async def login(request: Request, response: Response, body: LoginIn):
             return payload
         return JSONResponse(status_code=status, content=payload, headers=dict(response.headers))
 
-    # TODO(full port): rate-limit + account-lockout (login_attempts) checks here.
+    ip = security.client_ip(request)
+    ua = request.headers.get("user-agent", "")
+
+    # Rate limit per IP so the endpoint can't be hammered (100 / 15 min)
+    if not _rate_limited(f"{ip}:auth:login", 100, 15).get("allowed", True):
+        return await respond(429, {"error": "Too many attempts. Please wait a few minutes and try again."})
+
     if not await verify_captcha(body.captchaToken):
         return await respond(400, {"error": "CAPTCHA verification failed"})
+
+    # Lock the account after repeated failures (by email or IP)
+    if _is_account_locked(body.email, ip):
+        _record_attempt(body.email, ip, ua, False)
+        return await respond(429, {"error": "Account temporarily locked after multiple failed attempts. Try again in 15 minutes."})
 
     try:
         auth = supabase_admin.auth.sign_in_with_password({"email": body.email, "password": body.password})
@@ -149,13 +200,13 @@ async def login(request: Request, response: Response, body: LoginIn):
         auth = None
 
     if not auth or not auth.session:
-        # TODO(full port): recordAttempt(email, ip, ua, success=False)
+        _record_attempt(body.email, ip, ua, False)
         return await respond(401, {"error": "Invalid email or password"})
 
+    _record_attempt(body.email, ip, ua, True)
     csrf = security.make_csrf()
     security.set_auth_cookies_with_csrf(response, auth.session.access_token, auth.session.refresh_token, csrf)
     profile = _profile(auth.user.id)
-    # TODO(full port): recordAttempt(success=True) + audit('LOGIN')
     return await respond(200, JSONResponse(
         status_code=200,
         content={"user": {"id": auth.user.id, "email": auth.user.email, **profile}, "csrf": csrf},
@@ -167,6 +218,10 @@ async def login(request: Request, response: Response, body: LoginIn):
 async def register(request: Request, response: Response, body: RegisterIn):
     if not config.SUPABASE_CONFIGURED:
         return _err(503, "Authentication service not configured.", code="SUPABASE_NOT_CONFIGURED")
+
+    # Rate limit sign-ups per IP (50 / 15 min) so the endpoint can't be abused
+    if not _rate_limited(f"{security.client_ip(request)}:auth:register", 50, 15).get("allowed", True):
+        return _err(429, "Too many attempts. Please wait a few minutes and try again.")
 
     if not await verify_captcha(body.captchaToken):
         return _err(400, "CAPTCHA verification failed")
@@ -248,6 +303,10 @@ async def reset_password(request: Request, body: ResetPasswordIn):
     new password (that page must be allow-listed in Supabase Auth settings)."""
     if not config.SUPABASE_CONFIGURED:
         return _err(503, "Authentication service not configured.", code="SUPABASE_NOT_CONFIGURED")
+
+    # Rate limit so this can't be used to spam someone's inbox (5 / 15 min per IP)
+    if not _rate_limited(f"{security.client_ip(request)}:auth:reset", 5, 15).get("allowed", True):
+        return _err(429, "Too many requests. Please wait a few minutes and try again.")
 
     # Redirect back to this app's own origin, so it works on any deployment
     origin = request.headers.get("origin") or config.APP_URL
