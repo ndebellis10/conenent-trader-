@@ -22,6 +22,7 @@ import Backtest          from './pages/app/Backtest'
 import CourseMaterial    from './pages/app/CourseMaterial'
 import TradeView         from './pages/app/TradeView'
 import Reports           from './pages/app/Reports'
+import Heatmap           from './pages/app/Heatmap'
 
 import News              from './pages/app/News'
 import Leaderboard       from './pages/app/Leaderboard'
@@ -68,6 +69,7 @@ export default function App() {
             <Route path="backtest"       element={<Backtest />} />
             <Route path="course"         element={<CourseMaterial />} />
             <Route path="reports"        element={<Reports />} />
+            <Route path="heatmap"        element={<Heatmap />} />
             <Route path="settings"       element={<Settings />} />
             <Route path="leaderboard"   element={<Leaderboard />} />
             <Route path="admin-users"   element={<AdminUsers />} />

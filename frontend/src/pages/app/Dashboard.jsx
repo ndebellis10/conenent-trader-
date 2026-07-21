@@ -15,7 +15,6 @@ import { useAuthStore } from '../../store/authStore'
 import TradeCalendar from '../../components/app/TradeCalendar'
 import FaithScore from '../../components/app/FaithScore'
 import NewsPanel from '../../components/app/NewsPanel'
-import HeatmapPanel from '../../components/app/HeatmapPanel'
 import DailyInsight from '../../components/app/DailyInsight'
 import LeaderboardMini from '../../components/app/LeaderboardMini'
 import GaugeKPIs from '../../components/app/GaugeKPIs'
@@ -759,9 +758,6 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
-
-          {/* Live heatmap — collapsed by default so it never autoplays on load */}
-          <HeatmapPanel />
 
           {/* Today's USD News — between the breakdown and the Covenant Score */}
           <NewsPanel />

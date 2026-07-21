@@ -267,13 +267,16 @@ export default function FaithAI() {
       <div style={{ minWidth: 0 }}>
         {tab === 'home' && (
           <div style={{ maxWidth: 1080, margin: '0 auto' }}>
-            <OnboardingChecklist
-              email={email} settings={settings} trades={trades}
-              goals={goals} playbook={playbook} courseProgress={courseProgress}
-              onAsk={askAlan}
-              onProfile={() => setProfileOpen(true)}
-            />
+            {/* Alan is the hero; the get-started checklist sits below it */}
             <AskAlanHome name={displayName} onAsk={askAlan} onTab={setTab} />
+            <div style={{ marginTop: 22 }}>
+              <OnboardingChecklist
+                email={email} settings={settings} trades={trades}
+                goals={goals} playbook={playbook} courseProgress={courseProgress}
+                onAsk={askAlan}
+                onProfile={() => setProfileOpen(true)}
+              />
+            </div>
           </div>
         )}
 
