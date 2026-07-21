@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { Check, Play, Lock } from 'lucide-react'
+import { Check, Play, Lock, ArrowRight } from 'lucide-react'
 import { useTradeStore } from '../../store/tradeStore'
 import { COURSE_MODULES } from '../../lib/courseOutline'
 import { markStartHereWatched } from '../../lib/courseProgress'
+import Logo from '../Logo'
+
+const BLUE = '#3B82F6'
 
 /* Mandatory onboarding videos, shown after the intake form and before the app.
    The four Start Here lessons play in order; the trader has to get through each
@@ -110,70 +113,108 @@ export default function OnboardingVideoGate({ email, onComplete }) {
     ? `https://www.youtube.com/embed/${vid}?enablejsapi=1&rel=0`
     : null
 
+  const overallPct = Math.round(((idx + (canAdvance ? 1 : watchedPct / 100)) / lessons.length) * 100)
+
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: '#101010', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '14px 20px', borderBottom: '1px solid #262626', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-        <span style={{ color: '#F2F2F2', fontWeight: 700, fontSize: '0.95rem' }}>Start Here</span>
-        <span style={{ color: '#8A8A8A', fontSize: '0.8rem' }}>Watch these to get set up. Video {idx + 1} of {lessons.length}.</span>
-        {/* Step dots */}
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000, overflowY: 'auto',
+      background: `radial-gradient(120% 90% at 50% -10%, rgba(59,130,246,0.14), transparent 55%), linear-gradient(180deg, #141414 0%, #0C0C0C 100%)`,
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+    }}>
+      {/* ── Branded header ── */}
+      <div style={{ width: '100%', maxWidth: 940, padding: '26px 24px 0', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        <Logo size={30} showText={false} />
+        <div style={{ minWidth: 0 }}>
+          <div style={{ color: '#F5F5F5', fontWeight: 700, fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif' }}>Welcome to Covenant Trader</div>
+          <div style={{ color: '#7E7E7E', fontSize: '0.76rem', marginTop: 1 }}>A few short videos to get you set up.</div>
+        </div>
+        <div style={{ marginLeft: 'auto', color: BLUE, fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }}>
+          Step {idx + 1} of {lessons.length}
+        </div>
+      </div>
+
+      {/* ── Overall progress bar + step chips ── */}
+      <div style={{ width: '100%', maxWidth: 940, padding: '16px 24px 0', flexShrink: 0 }}>
+        <div style={{ height: 5, borderRadius: 3, background: '#242424', overflow: 'hidden' }}>
+          <div style={{ width: `${overallPct}%`, height: '100%', background: BLUE, borderRadius: 3, transition: 'width .4s ease' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
           {lessons.map((l, i) => (
-            <span key={l.id} style={{
-              width: 22, height: 22, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.66rem', fontWeight: 700,
-              background: i < idx ? '#3B82F6' : i === idx ? 'rgba(59,130,246,0.18)' : '#242424',
-              color: i < idx ? '#fff' : i === idx ? '#3B82F6' : '#5E5E5E',
-              border: `1px solid ${i <= idx ? 'rgba(59,130,246,0.5)' : '#333'}`,
-            }}>
-              {i < idx ? <Check size={12} /> : i + 1}
-            </span>
+            <div key={l.id} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+              <span style={{
+                width: 20, height: 20, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.62rem', fontWeight: 700,
+                background: i < idx ? BLUE : i === idx ? 'rgba(59,130,246,0.18)' : '#1E1E1E',
+                color: i < idx ? '#fff' : i === idx ? BLUE : '#5E5E5E',
+                border: `1px solid ${i <= idx ? 'rgba(59,130,246,0.5)' : '#2E2E2E'}`,
+              }}>
+                {i < idx ? <Check size={11} /> : i + 1}
+              </span>
+              <span style={{ color: i === idx ? '#C8C8C8' : '#5E5E5E', fontSize: '0.72rem', fontWeight: i === idx ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {l.title}
+              </span>
+            </div>
           ))}
         </div>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20, gap: 16 }}>
-        <div style={{ width: '100%', maxWidth: 960 }}>
-          <div style={{ color: '#F5F5F5', fontSize: '1.05rem', fontWeight: 700, marginBottom: 10 }}>{current?.title}</div>
-          <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000', borderRadius: 12, overflow: 'hidden', border: '1px solid #2A2A2A' }}>
-            {embed ? (
-              <iframe
-                ref={frameRef}
-                key={current.id}
-                src={embed}
-                title={current.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                allowFullScreen
-                referrerPolicy="strict-origin-when-cross-origin"
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
-              />
-            ) : (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5E5E5E' }}>
-                <Play size={28} />
-              </div>
-            )}
-          </div>
+      {/* ── Video stage ── */}
+      <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 940, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '22px 24px 28px', gap: 18 }}>
+        <div>
+          <div style={{ color: BLUE, fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Now playing</div>
+          <h1 style={{ color: '#F5F5F5', fontSize: '1.35rem', fontWeight: 800, margin: 0, fontFamily: 'Poppins, sans-serif' }}>{current?.title}</h1>
         </div>
 
-        <button
-          onClick={next}
-          disabled={!canAdvance}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '11px 26px', borderRadius: 10, border: 'none',
-            fontSize: '0.9rem', fontWeight: 700,
-            cursor: canAdvance ? 'pointer' : 'not-allowed',
-            background: canAdvance ? '#3B82F6' : '#242424',
-            color: canAdvance ? '#fff' : '#5E5E5E',
-            transition: 'all .15s',
-          }}
-        >
-          {!canAdvance && <Lock size={15} />}
-          {isLast ? 'Enter the App' : 'Next video'}
-        </button>
-        {!canAdvance && (
-          <span style={{ color: '#5E5E5E', fontSize: '0.75rem' }}>
-            {watchedPct > 0 ? `Keep watching to continue — ${watchedPct}%` : 'Keep watching to continue.'}
-          </span>
-        )}
+        <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', background: '#000', borderRadius: 14, overflow: 'hidden', border: '1px solid #2A2A2A', boxShadow: '0 24px 60px rgba(0,0,0,0.5)' }}>
+          {embed ? (
+            <iframe
+              ref={frameRef}
+              key={current.id}
+              src={embed}
+              title={current.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+            />
+          ) : (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5E5E5E' }}>
+              <Play size={28} />
+            </div>
+          )}
+        </div>
+
+        {/* Watch progress + CTA */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <div style={{ height: 4, borderRadius: 2, background: '#242424', overflow: 'hidden' }}>
+              <div style={{ width: `${canAdvance ? 100 : watchedPct}%`, height: '100%', background: canAdvance ? '#4CAF7D' : BLUE, borderRadius: 2, transition: 'width .3s ease' }} />
+            </div>
+            <div style={{ color: canAdvance ? '#4CAF7D' : '#7E7E7E', fontSize: '0.74rem', marginTop: 7 }}>
+              {canAdvance
+                ? (isLast ? "You're all set." : 'Video watched — you can continue.')
+                : (watchedPct > 0 ? `Keep watching — ${watchedPct}%` : 'Press play to begin.')}
+            </div>
+          </div>
+
+          <button
+            onClick={next}
+            disabled={!canAdvance}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '12px 28px', borderRadius: 10, border: 'none',
+              fontSize: '0.92rem', fontWeight: 700, flexShrink: 0,
+              cursor: canAdvance ? 'pointer' : 'not-allowed',
+              background: canAdvance ? BLUE : '#202020',
+              color: canAdvance ? '#fff' : '#5E5E5E',
+              boxShadow: canAdvance ? '0 8px 24px rgba(59,130,246,0.35)' : 'none',
+              transition: 'all .15s',
+            }}
+          >
+            {!canAdvance && <Lock size={15} />}
+            {isLast ? 'Enter the App' : 'Next video'}
+            {canAdvance && <ArrowRight size={16} />}
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Widget } from '@typeform/embed-react'
 import { useTradeStore } from '../../store/tradeStore'
+import Logo from '../Logo'
 
 // Safety escape appears after this long, so a broken embed can never trap
 // anyone permanently. Once you've confirmed the form loads and submits, this
@@ -44,13 +45,22 @@ export default function OnboardingFormGate({ email, onComplete }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: '#101010', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '14px 20px', borderBottom: '1px solid #262626', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        <span style={{ color: '#F2F2F2', fontWeight: 700, fontSize: '0.95rem' }}>Before you start</span>
-        <span style={{ color: '#8A8A8A', fontSize: '0.8rem' }}>Fill this out to set up your account.</span>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', flexDirection: 'column',
+      background: `radial-gradient(120% 90% at 50% -10%, rgba(59,130,246,0.14), transparent 55%), linear-gradient(180deg, #141414 0%, #0C0C0C 100%)`,
+    }}>
+      <div style={{ padding: '20px 24px 14px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        <Logo size={30} showText={false} />
+        <div style={{ minWidth: 0 }}>
+          <div style={{ color: '#F5F5F5', fontWeight: 700, fontSize: '0.9rem', fontFamily: 'Poppins, sans-serif' }}>Welcome to Covenant Trader</div>
+          <div style={{ color: '#7E7E7E', fontSize: '0.76rem', marginTop: 1 }}>Tell us a bit about you to set up your account.</div>
+        </div>
+        <div style={{ marginLeft: 'auto', color: '#3B82F6', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', flexShrink: 0 }}>
+          Step 1 of 2
+        </div>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, borderTop: '1px solid #222', background: '#0E0E0E' }}>
         <Widget
           id={TYPEFORM_ID}
           style={{ width: '100%', height: '100%' }}
