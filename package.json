@@ -20,6 +20,7 @@
     "@hookform/resolvers": "^5.4.0",
     "@supabase/supabase-js": "^2.106.2",
     "@tailwindcss/vite": "^4.3.0",
+    "@typeform/embed-react": "^5.0.0",
     "date-fns": "^4.3.0",
     "framer-motion": "^12.40.0",
     "lightweight-charts": "^4.2.3",

@@ -45,6 +45,7 @@ import { isSecureMode, serverCreateTrade } from '../lib/syncManager'
 import { useTradeStore } from '../store/tradeStore'
 import { useAdminStore } from '../store/adminStore'
 import { ensureCovenantSeeded } from '../lib/covenantPlaybook'
+import OnboardingFormGate, { isOnboardingFormComplete } from '../components/app/OnboardingFormGate'
 import Logo from '../components/Logo'
 import AlanMascot from '../components/AlanMascot'
 import AdminBanner from '../components/app/AdminBanner'
@@ -337,6 +338,15 @@ export default function AppLayout() {
     transition: 'all 0.15s',
     fontSize: '0.87rem', fontWeight: 500,
   })
+
+  // New accounts must complete the intake form before entering the app.
+  // Exempt: admins, admins viewing a trader, and existing users who have
+  // already logged trades (so this doesn't suddenly wall off current accounts).
+  const email = user?.email || null
+  const isExistingUser = (trades?.length || 0) > 0
+  if (!isAdmin && !viewingUser && !isExistingUser && !isOnboardingFormComplete(tradeSettings, email)) {
+    return <OnboardingFormGate email={email} onComplete={() => navigate('/app/faith-ai', { replace: true })} />
+  }
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#1A1A1A', overflow: 'hidden' }}>
