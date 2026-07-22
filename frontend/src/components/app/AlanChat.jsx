@@ -30,7 +30,9 @@ function makeInitMessage(trades, stats) {
    model must never be able to put an arbitrary src into the page. Unknown keys
    render as nothing rather than leaking the raw marker to the user. */
 const DIAGRAMS = {
-  fvg: { src: '/diagrams/fvg.svg', alt: 'Fair Value Gap — bullish and bearish, showing candle A, B and C' },
+  fvg:  { src: '/diagrams/fvg.svg',  alt: 'Fair Value Gap — bullish and bearish, showing candle A, B and C' },
+  ifvg: { src: '/diagrams/ifvg.svg', alt: 'Inversed Fair Value Gap — a gap price closes back through, flipping it to resistance' },
+  rb:   { src: '/diagrams/rejection-block.svg', alt: 'Rejection Block — wicks sweep sell-side liquidity while the bodies hold the block' },
 }
 
 const DIAGRAM_RE = /\[\[diagram:([a-z0-9-]+)\]\]/gi
