@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" width="720" height="400" role="img">
+  <title>Fair Value Gap — bullish and bearish</title>
+  <desc>Two three-candle patterns. In each, candle A's wick does not overlap candle C's wick, leaving an imbalance shaded between them.</desc>
+
+  <style>
+    .ttl { font: 700 15px system-ui, -apple-system, sans-serif; fill: #E8EAED; letter-spacing: .02em }
+    .lbl { font: 600 13px system-ui, -apple-system, sans-serif; fill: #9AA0A6 }
+    .cap { font: 700 11px system-ui, -apple-system, sans-serif; fill: #3B82F6; letter-spacing: .08em }
+    .up   { fill: #22C55E }
+    .dn   { fill: #EF4444 }
+    .wick { stroke: #9AA0A6; stroke-width: 2.5 }
+    .gap  { fill: #3B82F6; fill-opacity: .14; stroke: #3B82F6; stroke-width: 1.5; stroke-dasharray: 5 4 }
+    .arw  { stroke: #3B82F6; stroke-width: 2; fill: none }
+  </style>
+
+  <rect x="0" y="0" width="720" height="400" rx="12" fill="#0E1420"/>
+
+  <text class="ttl" x="40" y="34">Bullish FVG</text>
+  <text class="ttl" x="400" y="34">Bearish FVG</text>
+
+  <!-- ===== Bullish: gap sits between candle A's high and candle C's low ===== -->
+  <rect class="gap" x="70" y="200" width="230" height="70" rx="2"/>
+  <line class="arw" x1="312" y1="200" x2="312" y2="270"/>
+  <path class="arw" d="M308 205 L312 199 L316 205"/>
+  <path class="arw" d="M308 265 L312 271 L316 265"/>
+
+  <line class="wick" x1="110" y1="270" x2="110" y2="345"/>
+  <rect class="up" x="96" y="288" width="28" height="45" rx="1.5"/>
+
+  <line class="wick" x1="185" y1="150" x2="185" y2="322"/>
+  <rect class="up" x="171" y="170" width="28" height="135" rx="1.5"/>
+
+  <line class="wick" x1="260" y1="120" x2="260" y2="200"/>
+  <rect class="up" x="246" y="136" width="28" height="52" rx="1.5"/>
+
+  <text class="lbl" x="110" y="372" text-anchor="middle">A</text>
+  <text class="lbl" x="185" y="372" text-anchor="middle">B</text>
+  <text class="lbl" x="260" y="372" text-anchor="middle">C</text>
+
+  <!-- ===== Bearish: same idea, inverted ===== -->
+  <rect class="gap" x="430" y="200" width="230" height="70" rx="2"/>
+  <line class="arw" x1="672" y1="200" x2="672" y2="270"/>
+  <path class="arw" d="M668 205 L672 199 L676 205"/>
+  <path class="arw" d="M668 265 L672 271 L676 265"/>
+
+  <line class="wick" x1="470" y1="120" x2="470" y2="200"/>
+  <rect class="dn" x="456" y="136" width="28" height="52" rx="1.5"/>
+
+  <line class="wick" x1="545" y1="150" x2="545" y2="322"/>
+  <rect class="dn" x="531" y="170" width="28" height="135" rx="1.5"/>
+
+  <line class="wick" x1="620" y1="270" x2="620" y2="345"/>
+  <rect class="dn" x="606" y="288" width="28" height="45" rx="1.5"/>
+
+  <text class="lbl" x="470" y="372" text-anchor="middle">A</text>
+  <text class="lbl" x="545" y="372" text-anchor="middle">B</text>
+  <text class="lbl" x="620" y="372" text-anchor="middle">C</text>
+
+  <text class="cap" x="70" y="192">FAIR VALUE GAP</text>
+  <text class="cap" x="430" y="192">FAIR VALUE GAP</text>
+</svg>

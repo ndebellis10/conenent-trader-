@@ -25,6 +25,36 @@ function makeInitMessage(trades, stats) {
   return `Peace be with you. I've reviewed your full trading journal — ${trades.length} trades, ${stats?.winRate ?? 0}% win rate, ${pnlSign}$${stats?.totalPnl ?? '0.00'} total P&L.${streakNote} I know what you're doing well and where you're bleeding. Ask me anything — or ask "what should I work on?" and I'll give it to you straight.`
 }
 
+/* Diagrams Alan can show. He writes a [[diagram:key]] marker in his reply and
+   we swap it for the matching file. Deliberately a whitelist, not a URL — the
+   model must never be able to put an arbitrary src into the page. Unknown keys
+   render as nothing rather than leaking the raw marker to the user. */
+const DIAGRAMS = {
+  fvg: { src: '/diagrams/fvg.svg', alt: 'Fair Value Gap — bullish and bearish, showing candle A, B and C' },
+}
+
+const DIAGRAM_RE = /\[\[diagram:([a-z0-9-]+)\]\]/gi
+
+/* Splits a reply into text and diagrams. Returns an array React can render. */
+function renderContent(text) {
+  if (typeof text !== 'string' || !text.includes('[[diagram:')) return text
+
+  const out = []
+  let last = 0
+  for (const m of text.matchAll(DIAGRAM_RE)) {
+    const before = text.slice(last, m.index)
+    if (before) out.push(before)
+
+    const d = DIAGRAMS[m[1].toLowerCase()]
+    if (d) out.push(<img key={`d${m.index}`} src={d.src} alt={d.alt} className="alanchat-diagram" />)
+
+    last = m.index + m[0].length
+  }
+  const rest = text.slice(last)
+  if (rest) out.push(rest)
+  return out
+}
+
 /* Conversations persist per account so closing the panel doesn't lose the
    thread. Threads are capped so the cache can't grow without bound. */
 const HISTORY_LIMIT = 60
@@ -119,7 +149,8 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
     if (!synth) return
     if (speaking === i) { synth.cancel(); setSpeaking(null); return }
     synth.cancel()
-    const u = new SpeechSynthesisUtterance(text)
+    // Read the words only — never the raw [[diagram:…]] markers
+    const u = new SpeechSynthesisUtterance(String(text).replace(DIAGRAM_RE, '').trim())
     u.rate = 1.02
     u.onend = () => setSpeaking(null)
     u.onerror = () => setSpeaking(null)
@@ -223,6 +254,7 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
         }
         .alanchat-attach:hover { color: #3B82F6; background: rgba(59,130,246,0.08); }
         .alanchat-bubble img { max-width: 100%; border-radius: 9px; margin-bottom: 8px; display: block; }
+        .alanchat-bubble img.alanchat-diagram { margin: 10px 0; border: 1px solid #263043; }
         .alanchat-speak {
           background: none; border: none; padding: 3px; margin-top: 5px; cursor: pointer;
           color: #5A5A5A; display: inline-flex; align-items: center; gap: 5px;
@@ -254,7 +286,7 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
                   {m.role === 'assistant' && <div className="alanchat-name">Alan</div>}
                   <div className="alanchat-bubble">
                     {m.image && <img src={m.image} alt="Attached chart" />}
-                    {m.content}
+                    {m.role === 'assistant' ? renderContent(m.content) : m.content}
                   </div>
                   {m.role === 'assistant' && (
                     <button
