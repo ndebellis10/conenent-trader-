@@ -29,6 +29,92 @@ const MOODS = [
   { key: 'red',     label: 'Rough',   color: '#E05252' },
 ]
 
+/* Journaling templates — the questions the average trader actually answers.
+   Each builds its text with the selected day's date filled in. */
+const TEMPLATES = [
+  {
+    name: 'Daily Recap', emoji: '📆',
+    build: d => `📆 DAILY RECAP — ${prettyDate(d)}
+
+How I feel about today (1–10):
+Did I follow my plan? (Yes / Partially / No):
+P&L for the day:
+
+✅ What went well:
+
+❌ What I need to work on:
+
+📈 Best trade and why:
+
+📉 Worst trade and why:
+
+🧠 My emotions while trading:
+
+🎯 One thing to do better tomorrow:
+`,
+  },
+  {
+    name: 'Pre-Market Plan', emoji: '🌅',
+    build: d => `🌅 PRE-MARKET PLAN — ${prettyDate(d)}
+
+Overall bias (Long / Short / Neutral):
+Key levels I'm watching:
+News / events today:
+My A+ setup for today:
+Max loss / risk limit today:
+What would make me NOT trade:
+
+🙏 Pre-market mindset / prayer:
+`,
+  },
+  {
+    name: 'Trade Review', emoji: '🔍',
+    build: d => `🔍 TRADE REVIEW — ${prettyDate(d)}
+
+Symbol:
+Direction (Long / Short):
+Why I entered (the setup):
+Stop / target:
+How I managed it:
+Result (Win / Loss / Breakeven):
+
+✅ What I did well:
+❌ What I'd do differently:
+🧠 How I felt during the trade:
+`,
+  },
+  {
+    name: 'Weekly Review', emoji: '🗓️',
+    build: d => `🗓️ WEEKLY REVIEW — week of ${prettyDate(d)}
+
+This week's P&L:
+Win rate:
+Number of trades:
+
+📈 What's working:
+📉 Recurring mistakes:
+🏆 Best decision this week:
+🎯 Focus for next week:
+
+🙏 What I'm grateful for:
+`,
+  },
+  {
+    name: 'Mindset Check-in', emoji: '🧠',
+    build: d => `🧠 MINDSET CHECK-IN — ${prettyDate(d)}
+
+Where's my head today (1–10):
+Am I trading from discipline or emotion:
+Any revenge trading, FOMO, or fear:
+What am I grateful for:
+
+📖 Verse for today:
+🙏 Prayer:
+One reminder to myself:
+`,
+  },
+]
+
 export default function Notebook() {
   const { user } = useAuth()
   const email = user?.email || null
@@ -91,6 +177,26 @@ export default function Notebook() {
               )
             })}
           </div>
+
+          {/* Templates — offered when the day is blank so you start with structure */}
+          {!entry.text.trim() && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ color: '#7A7A7A', fontSize: '0.73rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                Start with a template
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {TEMPLATES.map(t => (
+                  <button key={t.name} onClick={() => setText(t.build(day))}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 999,
+                      border: '1px solid #333', background: '#1C1C1C', color: '#C8C8C8', fontSize: '0.8rem', cursor: 'pointer' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(59,130,246,0.5)'; e.currentTarget.style.color = '#fff' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#C8C8C8' }}>
+                    <span>{t.emoji}</span> {t.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <textarea
             value={entry.text}
