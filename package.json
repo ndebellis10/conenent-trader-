@@ -10,7 +10,8 @@
     "lint": "eslint --config frontend/eslint.config.js frontend",
     "preview": "vite preview --config frontend/vite.config.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "diagrams:build": "node scripts/build-diagrams.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

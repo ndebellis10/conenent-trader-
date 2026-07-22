@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" width="720" height="380" role="img">
+  <title>Break of Structure</title>
+  <desc>The trend holds until price closes back through the last higher low.</desc>
+  <style>
+  .t{font:700 15px system-ui,-apple-system,sans-serif;fill:#E8EAED}
+  .s{font:500 12px system-ui,-apple-system,sans-serif;fill:#9AA0A6}
+  .c{font:700 10.5px system-ui,-apple-system,sans-serif;fill:#9AA0A6;letter-spacing:.07em}
+  .b{font:700 11px system-ui,-apple-system,sans-serif;fill:#3B82F6;letter-spacing:.06em}
+  .p{font:700 11px system-ui,-apple-system,sans-serif;fill:#A78BFA;letter-spacing:.06em}
+  .g{font:700 11px system-ui,-apple-system,sans-serif;fill:#22C55E;letter-spacing:.06em}
+  .r{font:700 11px system-ui,-apple-system,sans-serif;fill:#EF4444;letter-spacing:.06em}
+  .w{stroke:#9AA0A6;stroke-width:2.2}
+  .lv{stroke:#6B7280;stroke-width:1.4;stroke-dasharray:6 5}
+</style>
+  <rect x="0" y="0" width="720" height="380" rx="12" fill="#0E1420"/>
+  <text class="t" x="40" y="30">Break of Structure</text>
+  <text class="s" x="40" y="50">The trend holds until price closes back through the last higher low.</text>
+<polyline points="70,330 110,230 160,285 210,165 260,220 310,110 360,175 410,240 460,255 510,300 560,275 610,330" fill="none" stroke="#22C55E" stroke-width="2.6" stroke-linejoin="round"/><line x1="70" y1="220" x2="660" y2="220" stroke="#3B82F6" stroke-width="1.5" stroke-dasharray="6 5"/><text class="b" x="540" y="212">LAST HIGHER LOW</text><text class="g" x="110" y="220" text-anchor="middle">HH</text><text class="g" x="210" y="155" text-anchor="middle">HH</text><text class="g" x="310" y="100" text-anchor="middle">HH</text><text class="g" x="160" y="305" text-anchor="middle">HL</text><text class="g" x="260" y="240" text-anchor="middle">HL</text><rect x="455" y="220" width="205" height="115" fill="#EF4444" fill-opacity=".10" stroke="#EF4444" stroke-width="1.4" stroke-dasharray="5 4" rx="2"/><text class="r" x="470" y="258">BREAK OF STRUCTURE</text><text class="s" x="470" y="278">price closes below the last HL —</text><text class="s" x="470" y="295">the uptrend is over</text>
+</svg>

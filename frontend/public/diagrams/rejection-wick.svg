@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" width="720" height="380" role="img">
+  <title>Rejection Wick</title>
+  <desc>A long wick is information. Something refused to let price stay there.</desc>
+  <style>
+  .t{font:700 15px system-ui,-apple-system,sans-serif;fill:#E8EAED}
+  .s{font:500 12px system-ui,-apple-system,sans-serif;fill:#9AA0A6}
+  .c{font:700 10.5px system-ui,-apple-system,sans-serif;fill:#9AA0A6;letter-spacing:.07em}
+  .b{font:700 11px system-ui,-apple-system,sans-serif;fill:#3B82F6;letter-spacing:.06em}
+  .p{font:700 11px system-ui,-apple-system,sans-serif;fill:#A78BFA;letter-spacing:.06em}
+  .g{font:700 11px system-ui,-apple-system,sans-serif;fill:#22C55E;letter-spacing:.06em}
+  .r{font:700 11px system-ui,-apple-system,sans-serif;fill:#EF4444;letter-spacing:.06em}
+  .w{stroke:#9AA0A6;stroke-width:2.2}
+  .lv{stroke:#6B7280;stroke-width:1.4;stroke-dasharray:6 5}
+</style>
+  <rect x="0" y="0" width="720" height="380" rx="12" fill="#0E1420"/>
+  <text class="t" x="40" y="30">Rejection Wick</text>
+  <text class="s" x="40" y="50">A long wick is information. Something refused to let price stay there.</text>
+<rect x="60" y="268" width="600" height="44" fill="#3B82F6" fill-opacity=".12" stroke="#3B82F6" stroke-width="1.4" stroke-dasharray="5 4" rx="2"/><text class="b" x="70" y="294">4H FAIR VALUE GAP</text><line class="w" x1="150" y1="140" x2="150" y2="205"/><rect x="139.5" y="152" width="21" height="44" rx="1.5" fill="#EF4444"/><line class="w" x1="205" y1="175" x2="205" y2="245"/><rect x="194.5" y="186" width="21" height="52" rx="1.5" fill="#EF4444"/><line class="w" x1="260" y1="210" x2="260" y2="312"/><rect x="249.5" y="222" width="21" height="40" rx="1.5" fill="#EF4444"/><line class="w" x1="320" y1="236" x2="320" y2="330"/><rect x="309.5" y="248" width="21" height="20" rx="1.5" fill="#22C55E"/><text class="p" x="348" y="300">huge wick, small body</text><text class="s" x="348" y="320">price tried to close down here</text><text class="s" x="348" y="337">and got rejected hard</text><line class="w" x1="375" y1="175" x2="375" y2="265"/><rect x="364.5" y="190" width="21" height="60" rx="1.5" fill="#22C55E"/><line class="w" x1="430" y1="130" x2="430" y2="215"/><rect x="419.5" y="142" width="21" height="58" rx="1.5" fill="#22C55E"/><line class="w" x1="485" y1="100" x2="485" y2="178"/><rect x="474.5" y="112" width="21" height="53" rx="1.5" fill="#22C55E"/>
+</svg>

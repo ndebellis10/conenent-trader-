@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" width="720" height="380" role="img">
+  <title>PDI — Pre-Distribution Inversion</title>
+  <desc>The manipulation leg leaves a gap. Inverse it and you are in early.</desc>
+  <style>
+  .t{font:700 15px system-ui,-apple-system,sans-serif;fill:#E8EAED}
+  .s{font:500 12px system-ui,-apple-system,sans-serif;fill:#9AA0A6}
+  .c{font:700 10.5px system-ui,-apple-system,sans-serif;fill:#9AA0A6;letter-spacing:.07em}
+  .b{font:700 11px system-ui,-apple-system,sans-serif;fill:#3B82F6;letter-spacing:.06em}
+  .p{font:700 11px system-ui,-apple-system,sans-serif;fill:#A78BFA;letter-spacing:.06em}
+  .g{font:700 11px system-ui,-apple-system,sans-serif;fill:#22C55E;letter-spacing:.06em}
+  .r{font:700 11px system-ui,-apple-system,sans-serif;fill:#EF4444;letter-spacing:.06em}
+  .w{stroke:#9AA0A6;stroke-width:2.2}
+  .lv{stroke:#6B7280;stroke-width:1.4;stroke-dasharray:6 5}
+</style>
+  <rect x="0" y="0" width="720" height="380" rx="12" fill="#0E1420"/>
+  <text class="t" x="40" y="30">PDI — Pre-Distribution Inversion</text>
+  <text class="s" x="40" y="50">The manipulation leg leaves a gap. Inverse it and you are in early.</text>
+<line class="w" x1="90" y1="100" x2="90" y2="165"/><rect x="79.5" y="112" width="21" height="43" rx="1.5" fill="#22C55E"/><line class="w" x1="140" y1="108" x2="140" y2="180"/><rect x="129.5" y="120" width="21" height="50" rx="1.5" fill="#EF4444"/><line class="w" x1="190" y1="130" x2="190" y2="300"/><rect x="179.5" y="145" width="21" height="147" rx="1.5" fill="#EF4444"/><line class="w" x1="240" y1="250" x2="240" y2="340"/><rect x="229.5" y="262" width="21" height="68" rx="1.5" fill="#EF4444"/><rect x="215" y="180" width="420" height="52" fill="#EF4444" fill-opacity=".13" stroke="#EF4444" stroke-width="1.4" stroke-dasharray="5 4" rx="2"/><text class="r" x="215" y="172">MANIPULATION FVG</text><line class="w" x1="290" y1="232" x2="290" y2="320"/><rect x="279.5" y="244" width="21" height="56" rx="1.5" fill="#22C55E"/><line class="w" x1="340" y1="175" x2="340" y2="288"/><rect x="329.5" y="190" width="21" height="42" rx="1.5" fill="#22C55E"/><line class="w" x1="390" y1="150" x2="390" y2="235"/><rect x="379.5" y="162" width="21" height="24" rx="1.5" fill="#22C55E"/><text class="b" x="415" y="205">INVERSION</text><line class="w" x1="440" y1="118" x2="440" y2="195"/><rect x="429.5" y="130" width="21" height="42" rx="1.5" fill="#22C55E"/><line class="w" x1="490" y1="95" x2="490" y2="168"/><rect x="479.5" y="106" width="21" height="42" rx="1.5" fill="#22C55E"/><line class="w" x1="540" y1="80" x2="540" y2="148"/><rect x="529.5" y="92" width="21" height="36" rx="1.5" fill="#22C55E"/><line x1="60" y1="80" x2="660" y2="80" stroke="#A78BFA" stroke-width="1.5" stroke-dasharray="6 5"/><text class="p" x="660" y="72" text-anchor="end">DISTRIBUTION — CAUGHT BEFORE IT HAPPENS</text>
+</svg>

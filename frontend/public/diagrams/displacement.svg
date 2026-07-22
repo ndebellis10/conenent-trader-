@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 380" width="720" height="380" role="img">
+  <title>Displacement</title>
+  <desc>One candle doing what the last ten could not.</desc>
+  <style>
+  .t{font:700 15px system-ui,-apple-system,sans-serif;fill:#E8EAED}
+  .s{font:500 12px system-ui,-apple-system,sans-serif;fill:#9AA0A6}
+  .c{font:700 10.5px system-ui,-apple-system,sans-serif;fill:#9AA0A6;letter-spacing:.07em}
+  .b{font:700 11px system-ui,-apple-system,sans-serif;fill:#3B82F6;letter-spacing:.06em}
+  .p{font:700 11px system-ui,-apple-system,sans-serif;fill:#A78BFA;letter-spacing:.06em}
+  .g{font:700 11px system-ui,-apple-system,sans-serif;fill:#22C55E;letter-spacing:.06em}
+  .r{font:700 11px system-ui,-apple-system,sans-serif;fill:#EF4444;letter-spacing:.06em}
+  .w{stroke:#9AA0A6;stroke-width:2.2}
+  .lv{stroke:#6B7280;stroke-width:1.4;stroke-dasharray:6 5}
+</style>
+  <rect x="0" y="0" width="720" height="380" rx="12" fill="#0E1420"/>
+  <text class="t" x="40" y="30">Displacement</text>
+  <text class="s" x="40" y="50">One candle doing what the last ten could not.</text>
+<line class="w" x1="110" y1="190" x2="110" y2="250"/><rect x="99.5" y="205" width="21" height="35" rx="1.5" fill="#22C55E"/><line class="w" x1="160" y1="200" x2="160" y2="262"/><rect x="149.5" y="212" width="21" height="38" rx="1.5" fill="#EF4444"/><line class="w" x1="210" y1="195" x2="210" y2="255"/><rect x="199.5" y="208" width="21" height="36" rx="1.5" fill="#22C55E"/><line class="w" x1="260" y1="202" x2="260" y2="258"/><rect x="249.5" y="214" width="21" height="34" rx="1.5" fill="#EF4444"/><rect x="292" y="90" width="56" height="190" fill="#3B82F6" fill-opacity=".12" stroke="#3B82F6" stroke-width="1.4" stroke-dasharray="5 4" rx="2"/><line class="w" x1="320" y1="100" x2="320" y2="275"/><rect x="309.5" y="118" width="21" height="144" rx="1.5" fill="#22C55E"/><line class="w" x1="380" y1="95" x2="380" y2="165"/><rect x="369.5" y="108" width="21" height="42" rx="1.5" fill="#22C55E"/><line class="w" x1="430" y1="88" x2="430" y2="155"/><rect x="419.5" y="100" width="21" height="42" rx="1.5" fill="#22C55E"/><line class="w" x1="480" y1="100" x2="480" y2="168"/><rect x="469.5" y="112" width="21" height="46" rx="1.5" fill="#EF4444"/><text class="b" x="300" y="312">STRONG DISPLACEMENT</text><text class="s" x="300" y="332">huge body, little wick — this is</text><text class="s" x="300" y="349">the move we build the trade on</text>
+</svg>

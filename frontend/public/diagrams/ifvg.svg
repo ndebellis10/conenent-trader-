@@ -23,7 +23,7 @@
   <!-- The gap: support while price holds above it, resistance once price closes below -->
   <rect x="60"  y="205" width="295" height="45" fill="#22C55E" fill-opacity=".13" stroke="#22C55E" stroke-width="1.4" stroke-dasharray="5 4"/>
   <rect x="355" y="205" width="265" height="45" fill="#EF4444" fill-opacity=".13" stroke="#EF4444" stroke-width="1.4" stroke-dasharray="5 4"/>
-  <text class="capg" x="66"  y="200">FVG — SUPPORT</text>
+  <text class="capg" x="200" y="232">FVG — SUPPORT</text>
   <text class="capr" x="361" y="200">INVERSED — NOW RESISTANCE</text>
 
   <!-- Stop and target levels -->

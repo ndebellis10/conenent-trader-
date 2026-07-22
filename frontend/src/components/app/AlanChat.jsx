@@ -30,9 +30,17 @@ function makeInitMessage(trades, stats) {
    model must never be able to put an arbitrary src into the page. Unknown keys
    render as nothing rather than leaking the raw marker to the user. */
 const DIAGRAMS = {
-  fvg:  { src: '/diagrams/fvg.svg',  alt: 'Fair Value Gap — bullish and bearish, showing candle A, B and C' },
-  ifvg: { src: '/diagrams/ifvg.svg', alt: 'Inversed Fair Value Gap — a gap price closes back through, flipping it to resistance' },
-  rb:   { src: '/diagrams/rejection-block.svg', alt: 'Rejection Block — wicks sweep sell-side liquidity while the bodies hold the block' },
+  fvg:         { src: '/diagrams/fvg.svg',              alt: 'Fair Value Gap — bullish and bearish, showing candle A, B and C' },
+  ifvg:        { src: '/diagrams/ifvg.svg',             alt: 'Inversed Fair Value Gap — a gap price closes back through, flipping it to resistance' },
+  rb:          { src: '/diagrams/rejection-block.svg',  alt: 'Rejection Block — wicks sweep sell-side liquidity while the bodies hold the block' },
+  structure:   { src: '/diagrams/market-structure.svg', alt: 'Market Structure — uptrend, downtrend and range' },
+  bos:         { src: '/diagrams/bos.svg',              alt: 'Break of Structure — price closes back through the last higher low' },
+  amd:         { src: '/diagrams/amd.svg',              alt: 'AMD — accumulation, manipulation, then distribution' },
+  liquidity:   { src: '/diagrams/liquidity.svg',        alt: 'Liquidity — buy-side above the highs, sell-side below the lows' },
+  sweep:       { src: '/diagrams/liquidity-sweep.svg',  alt: 'Liquidity Sweep — the wick clears the level but the candle closes back inside' },
+  displacement:{ src: '/diagrams/displacement.svg',     alt: 'Displacement — one large-bodied candle driving the move' },
+  wick:        { src: '/diagrams/rejection-wick.svg',   alt: 'Rejection Wick — a long wick where price was refused' },
+  pdi:         { src: '/diagrams/pdi.svg',              alt: 'PDI — pre-distribution inversion, entering before the distribution leg' },
 }
 
 const DIAGRAM_RE = /\[\[diagram:([a-z0-9-]+)\]\]/gi
