@@ -144,7 +144,7 @@ export default function BacktestReport({ trades, onImport }) {
         Import a CSV from the Backtesting page — those trades are tagged and reported<br />
         here, separately from your live results.
       </p>
-      <button onClick={onImport} style={{ padding: '11px 22px', borderRadius: 10, border: '1px solid rgba(185,140,224,0.4)', background: 'rgba(185,140,224,0.12)', color: PURPLE, fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+      <button onClick={onImport} style={{ padding: '11px 22px', borderRadius: 10, border: 'none', background: '#3B82F6', color: '#fff', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
         <Upload size={15} /> Import backtest CSV
       </button>
     </div>

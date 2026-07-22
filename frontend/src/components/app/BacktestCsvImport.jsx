@@ -162,7 +162,7 @@ export default function BacktestCsvImport({ onDone }) {
           </div>
 
           <button onClick={importAll}
-            style={{ width: '100%', padding: '13px', borderRadius: 11, border: '1px solid rgba(185,140,224,0.45)', background: 'rgba(185,140,224,0.16)', color: PURPLE, fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            style={{ width: '100%', padding: '13px', borderRadius: 11, border: 'none', background: '#3B82F6', color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <CheckCircle size={16} /> Import {parsed.length} trade{parsed.length !== 1 ? 's' : ''} as backtest
           </button>
         </div>
