@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import {
   CalendarDays, Check, Star, Share2, MoreHorizontal, ChevronDown,
-  Sparkles, Tag as TagIcon, LayoutTemplate, Plus,
+  Sparkles, LayoutTemplate, Plus,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTradeStore } from '../../store/tradeStore'
@@ -151,7 +151,6 @@ export default function Notebook() {
             {/* Control row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, position: 'relative', flexWrap: 'wrap' }}>
               <button onClick={() => setShowTemplates(s => !s)} style={ghostBtn}><LayoutTemplate size={14} /> Templates</button>
-              <button style={ghostBtn}><TagIcon size={14} /> Add tag <ChevronDown size={12} /></button>
               <button style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7, background: T.accent, border: 'none', borderRadius: 9, color: '#fff', padding: '8px 16px', fontSize: '0.83rem', fontWeight: 600, cursor: 'pointer' }}>
                 <Sparkles size={15} /> Write with AI
               </button>
