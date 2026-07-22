@@ -17,7 +17,7 @@ export default function EditorToolbar({ cmd, fontSize, onFontSize, onFullscreen,
   const btn = (title, onClick, active) => ({
     title, onClick,
     style: {
-      background: active ? 'rgba(139,92,246,0.18)' : 'transparent', border: 'none',
+      background: active ? 'rgba(59,130,246,0.18)' : 'transparent', border: 'none',
       borderRadius: 7, cursor: 'pointer', width: 30, height: 30,
       display: 'flex', alignItems: 'center', justifyContent: 'center', color: active ? T.accent : T.textDim,
     },

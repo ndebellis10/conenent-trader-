@@ -5,16 +5,17 @@
  * html body, favorite flag, tags, and an optional dateKey (YYYY-MM-DD) that
  * lets the editor pull that day's P&L from the trades store.
  */
+// Matches the rest of Covenant Trader — blue accent, the app's dark panels.
 export const NB_THEME = {
-  bg:       '#0d0d0f',
-  panel:    '#1a1a1e',
-  panel2:   '#151518',
-  border:   '#26262c',
-  text:     '#e8e8ea',
-  textDim:  '#8a8a90',
-  accent:   '#8b5cf6',
-  green:    '#22c55e',
-  red:      '#ef4444',
+  bg:       '#1A1A1A',
+  panel:    '#242424',
+  panel2:   '#1E1E1E',
+  border:   '#3A3A3A',
+  text:     '#F5F5F5',
+  textDim:  '#8A8A90',
+  accent:   '#3B82F6',
+  green:    '#4CAF7D',
+  red:      '#E05252',
 }
 
 /* Fixed folders shown in the sidebar. `system` ones can't be deleted. */

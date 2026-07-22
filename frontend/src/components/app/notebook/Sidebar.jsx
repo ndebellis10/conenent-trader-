@@ -125,7 +125,7 @@ function NoteRow({ note, active, onClick }) {
         width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer',
         display: 'block', padding: '8px 12px 8px 22px', borderRadius: 8,
         borderLeft: `2px solid ${active ? T.accent : 'transparent'}`,
-        background: active ? 'rgba(139,92,246,0.12)' : hover ? 'rgba(255,255,255,0.03)' : 'transparent',
+        background: active ? 'rgba(59,130,246,0.12)' : hover ? 'rgba(255,255,255,0.03)' : 'transparent',
       }}
     >
       <div style={{ color: active ? T.text : '#c7c7cc', fontSize: '0.82rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
