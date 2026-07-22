@@ -387,11 +387,37 @@ export default function LogTrade() {
     }
     const reader = new FileReader()
     reader.onload = e => {
-      const data = extractCsvData(e.target.result)
+      const text = e.target.result
+
+      // 1) Fully automatic — parseTradeCSV auto-detects Tradovate fills and
+      //    common formats. If it finds trades, go straight to the preview list
+      //    (all trades shown, one "Import Trades" button) — no column mapping.
+      const auto = parseTradeCSV(text)
+      if (!auto.error && auto.trades.length) {
+        setCsvParsed(auto.trades)
+        setCsvError(null)
+        setCsvStep('preview')
+        return
+      }
+
+      const data = extractCsvData(text)
       if (!data || !data.rawHeaders.length) {
         setCsvError('Could not read CSV — is the file empty?'); return
       }
+
+      // 2) Generic CSV — if the P&L and symbol columns are auto-found, skip the
+      //    manual mapping and jump to the preview too.
       const mapping = buildAutoMapping(data.normHeaders)
+      if (mapping.pnlIdx >= 0 && mapping.symIdx >= 0) {
+        const { trades, error } = tradesFromMapping(data.rawRows, mapping)
+        if (!error && trades.length) {
+          setCsvRawData(data); setCsvMapping(mapping)
+          setCsvParsed(trades); setCsvError(null); setCsvStep('preview')
+          return
+        }
+      }
+
+      // 3) Fallback — couldn't auto-detect; ask which columns once.
       setCsvRawData(data)
       setCsvMapping(mapping)
       setCsvStep('map')
