@@ -5,6 +5,7 @@ import { COURSE_MODULES, TOTAL_LESSONS } from '../../lib/courseOutline'
 import ChatDrawer from '../../components/app/ChatDrawer'
 import { summarizeCourseProgress } from '../../lib/courseProgress'
 import { track, EVENTS } from '../../lib/analytics'
+import { compressImage } from '../../lib/imageUtils'
 import AlanMascot from '../../components/AlanMascot'
 import { useTradeStore } from '../../store/tradeStore'
 import { useAuth } from '../../contexts/AuthContext'
@@ -45,6 +46,45 @@ function loadNotes(email) {
 }
 function cacheNotes(email, notes) {
   try { localStorage.setItem(notesKey(email), JSON.stringify(notes)) } catch { /* private mode */ }
+}
+
+const imagesKey = email => `${progressKey(email)}__images`
+function loadNoteImages(email) {
+  try { return JSON.parse(localStorage.getItem(imagesKey(email)) || '{}') }
+  catch { return {} }
+}
+function cacheNoteImages(email, imgs) {
+  try { localStorage.setItem(imagesKey(email), JSON.stringify(imgs)) } catch { /* quota/private mode */ }
+}
+
+/* Photos attached to a lesson's notes — thumbnails with add + remove. Used in
+   both the fullscreen aside and the main notes panel. */
+function NotePhotos({ images = [], onAdd, onRemove, compact = false }) {
+  const inputRef = useRef(null)
+  const size = compact ? 46 : 62
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 8 }}>
+      {images.map((src, i) => (
+        <div key={i} style={{ position: 'relative', width: size, height: size, borderRadius: 8, overflow: 'hidden', border: '1px solid #333' }}>
+          <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          <button onClick={() => onRemove(i)} title="Remove"
+            style={{ position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.65)', color: '#fff', cursor: 'pointer', fontSize: 10, lineHeight: '16px', padding: 0 }}>
+            ✕
+          </button>
+        </div>
+      ))}
+      {images.length < 6 && (
+        <>
+          <button onClick={() => inputRef.current?.click()} title="Add photo"
+            style={{ width: size, height: size, borderRadius: 8, border: '1px dashed #3A3A3A', background: '#161616', color: '#6A6A6A', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: compact ? 18 : 22 }}>
+            +
+          </button>
+          <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) onAdd(f); e.target.value = '' }} />
+        </>
+      )}
+    </div>
+  )
 }
 
 function saveDone(email, set) {
@@ -93,6 +133,7 @@ export default function CourseMaterial() {
   const firstName = String(displayName).split(' ')[0]
   const [done, setDone]   = useState(() => loadDone(email))
   const [notes, setNotes] = useState(() => loadNotes(email))
+  const [noteImages, setNoteImages] = useState(() => loadNoteImages(email))
   const loadedRef = useRef(false)
   // Everything starts collapsed — only the section you are in opens
   const [openModules, setOpenModules] = useState(() => new Set())
@@ -110,11 +151,12 @@ export default function CourseMaterial() {
     loadedRef.current = true
     let alive = true
     courseApi.load()
-      .then(({ completed, notes: saved }) => {
+      .then(({ completed, notes: saved, noteImages: savedImgs }) => {
         if (!alive) return
         if (Array.isArray(completed)) setDone(prev => new Set([...prev, ...completed]))
         // Server wins for lessons it knows about; unsynced local notes are kept
         if (saved && typeof saved === 'object') setNotes(prev => ({ ...prev, ...saved }))
+        if (savedImgs && typeof savedImgs === 'object') setNoteImages(prev => ({ ...prev, ...savedImgs }))
       })
       .catch(() => { /* offline or unauthenticated — cache still applies */ })
     return () => { alive = false }
@@ -126,6 +168,30 @@ export default function CourseMaterial() {
     const id = setTimeout(() => { courseApi.saveNotes(notes).catch(() => {}) }, 900)
     return () => clearTimeout(id)
   }, [notes, email])
+
+  // Same debounced cache-then-sync for note photos
+  useEffect(() => {
+    cacheNoteImages(email, noteImages)
+    if (!email || !loadedRef.current) return
+    const id = setTimeout(() => { courseApi.saveImages(noteImages).catch(() => {}) }, 900)
+    return () => clearTimeout(id)
+  }, [noteImages, email])
+
+  // Add / remove a photo on the current lesson's notes
+  const addPhoto = async (lessonId, file) => {
+    if (!lessonId || !file || !file.type.startsWith('image/')) return
+    try {
+      const dataUrl = await compressImage(file)
+      setNoteImages(prev => {
+        const cur = prev[lessonId] || []
+        if (cur.length >= 6) return prev
+        return { ...prev, [lessonId]: [...cur, dataUrl] }
+      })
+    } catch { /* couldn't read the image — skip */ }
+  }
+  const removePhoto = (lessonId, idx) => {
+    setNoteImages(prev => ({ ...prev, [lessonId]: (prev[lessonId] || []).filter((_, i) => i !== idx) }))
+  }
 
   // Cache locally straight away, then push to the account
   useEffect(() => {
@@ -395,6 +461,10 @@ export default function CourseMaterial() {
               onChange={e => setNotes(prev => ({ ...prev, [current.id]: e.target.value }))}
               placeholder="Take notes while you watch…"
             />
+            {current && (
+              <NotePhotos images={noteImages[current.id] || []}
+                onAdd={f => addPhoto(current.id, f)} onRemove={i => removePhoto(current.id, i)} compact />
+            )}
           </aside>
         </div>
 
@@ -461,6 +531,10 @@ export default function CourseMaterial() {
               fontFamily: 'Inter, sans-serif', outline: 'none',
             }}
           />
+          {current && (
+            <NotePhotos images={noteImages[current.id] || []}
+              onAdd={f => addPhoto(current.id, f)} onRemove={i => removePhoto(current.id, i)} />
+          )}
         </div>
 
         {/* Quiz — unlocks once every lesson in the module is complete */}

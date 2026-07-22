@@ -70,18 +70,19 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       try {
         const { data, error } = await supabaseAdmin
-          .from('course_progress').select('completed, notes').eq('email', email).maybeSingle()
+          .from('course_progress').select('completed, notes, note_images').eq('email', email).maybeSingle()
         if (error) throw error
-        return res.status(200).json({ completed: data?.completed || [], notes: data?.notes || {} })
+        return res.status(200).json({ completed: data?.completed || [], notes: data?.notes || {}, noteImages: data?.note_images || {} })
       } catch (e) {
-        return res.status(200).json({ completed: [], notes: {}, error: String(e.message || e) })
+        return res.status(200).json({ completed: [], notes: {}, noteImages: {}, error: String(e.message || e) })
       }
     }
 
     if (req.method === 'POST') {
       const list  = Array.isArray(req.body?.completed) ? req.body.completed : null
       const notes = req.body?.notes && typeof req.body.notes === 'object' ? req.body.notes : null
-      if (!list && !notes) return res.status(400).json({ error: 'completed[] or notes{} required' })
+      const noteImages = req.body?.noteImages && typeof req.body.noteImages === 'object' ? req.body.noteImages : null
+      if (!list && !notes && !noteImages) return res.status(400).json({ error: 'completed[], notes{}, or noteImages{} required' })
 
       const row = { email, updated_at: new Date().toISOString() }
       // Cap it — the course is finite, this is just a guard against junk
@@ -92,6 +93,18 @@ export default async function handler(req, res) {
           if (typeof k === 'string' && k.length < 120 && typeof v === 'string') clean[k] = v.slice(0, 20000)
         }
         row.notes = clean
+      }
+      if (noteImages) {
+        // Per lesson: up to 6 compressed data-URL images, each capped in size
+        const clean = {}
+        for (const [k, arr] of Object.entries(noteImages)) {
+          if (typeof k !== 'string' || k.length >= 120 || !Array.isArray(arr)) continue
+          const imgs = arr
+            .filter(u => typeof u === 'string' && u.startsWith('data:image/') && u.length <= 700000)
+            .slice(0, 6)
+          if (imgs.length) clean[k] = imgs
+        }
+        row.note_images = clean
       }
       try {
         const { error } = await supabaseAdmin

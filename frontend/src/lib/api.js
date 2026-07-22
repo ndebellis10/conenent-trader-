@@ -102,6 +102,7 @@ export const courseApi = {
                                  .then(d => ({ completed: d?.completed || [], notes: d?.notes || {} })),
   saveProgress: (completed) => request('POST', '/user/course-progress', { completed }),
   saveNotes:    (notes)     => request('POST', '/user/course-progress', { notes }),
+  saveImages:   (noteImages) => request('POST', '/user/course-progress', { noteImages }),
 }
 
 /* ── Chart AI analysis ────────────────────────────────────── */
