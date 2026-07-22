@@ -263,13 +263,13 @@ export default function CourseMaterial() {
         .course-stage video, .course-stage iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: none; background: #000; }
         /* In fullscreen the wrapper becomes the viewport — fill it */
         .course-stage:fullscreen { border-radius: 0; border: none; display: flex; align-items: stretch; background: #000; }
-        .course-stage:fullscreen .course-player { width: 80%; flex: 0 0 80%; min-width: 0; display: flex; align-items: center; justify-content: center; }
+        .course-stage:fullscreen .course-player { width: 75%; flex: 0 0 75%; min-width: 0; display: flex; align-items: center; justify-content: center; }
         .course-stage:fullscreen video, .course-stage:fullscreen iframe { height: 100%; width: 100%; aspect-ratio: auto; object-fit: contain; }
         /* Notepad rides along in fullscreen only */
         .course-fsnotes { display: none; }
         .course-stage:fullscreen .course-fsnotes {
           display: flex; flex-direction: column;
-          width: 20%; flex: 0 0 20%; min-width: 240px;
+          width: 25%; flex: 0 0 25%; min-width: 280px;
           background: #141414; border-left: 1px solid #2A2A2A; padding: 12px;
         }
         .course-fsnotes textarea {
