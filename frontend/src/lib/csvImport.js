@@ -110,6 +110,9 @@ export function parseTradeCSV(text) {
   const pnlCol     = netPnlCol !== -1 ? netPnlCol : grossPnlCol
   const commCol   = col('Commission','commission','fees','fee','comm')
   const notesCol  = col('notes','comment','description','tradenotes','trade notes')
+  // Separate entry/exit time columns, if the export has them (some do)
+  const entryTimeCol = col('entrytime','entry time','opentime','open time','buytime','boughttime')
+  const exitTimeCol  = col('exittime','exit time','closetime','close time','selltime','soldtime')
 
   const debug = `Row ${headerIdx+1}: [${rawHeaders.slice(0,8).join(' | ')}] action:${actionCol} price:${priceCol} entry:${entryCol} exit:${exitCol} netPnl:${netPnlCol} grossPnl:${grossPnlCol}`
 
@@ -130,6 +133,18 @@ export function parseTradeCSV(text) {
   const hasFillsFormat = actionCol !== -1 && priceCol !== -1 && pnlCol !== -1
 
   if (hasFillsFormat) {
+    // Opening fills (P&L 0/blank) carry the ENTRY time. Queue them FIFO per
+    // symbol so each closing fill can grab its matching entry time → the trade
+    // gets a duration (time in trade).
+    const openTimes = {}
+    for (const r of rows) {
+      const p = parseMoney(get(r, pnlCol))
+      if (p !== null && p !== 0) continue  // this is a closing fill, skip
+      const s = cleanSymbol(get(r, symCol))
+      const t = get(r, dateCol)
+      if (s && t) (openTimes[s] = openTimes[s] || []).push(t)
+    }
+
     const trades = []
     for (const r of rows) {
       const rawPnl = parseMoney(get(r, pnlCol))
@@ -141,6 +156,9 @@ export function parseTradeCSV(text) {
       const direction = isSell ? 'Long' : 'Short'
       const sym = cleanSymbol(get(r, symCol))
       const comm = parseMoney(get(r, commCol)) ?? 0
+      // Exit time = this closing fill; entry time = the matching opening fill
+      const exitRaw  = get(r, dateCol)
+      const entryRaw = (openTimes[sym] && openTimes[sym].shift()) || ''
       // Re-derive gross from net+commission if we only have net
       const netPnl  = netPnlCol  !== -1 ? (parseMoney(get(r, netPnlCol))  ?? rawPnl) : rawPnl
       const grossPnl = grossPnlCol !== -1 ? (parseMoney(get(r, grossPnlCol)) ?? netPnl + comm) : netPnl + comm
@@ -156,6 +174,8 @@ export function parseTradeCSV(text) {
         commission:   String(comm),
         exitPrice:    get(r, priceCol),
         entryPrice:   '',
+        entryTime:    toTimeInput(entryRaw),
+        exitTime:     toTimeInput(exitRaw),
         timeframe:    'Day Trade',
         tradeNotes:   'Imported from Tradovate',
         followedPlan: '', movedStop: '', overRisked: '', strategyName: '',
@@ -222,6 +242,8 @@ export function parseTradeCSV(text) {
       grossPnl:     netPnl + comm,
       entryPrice:   get(r, entryCol),
       exitPrice:    get(r, exitCol),
+      entryTime:    toTimeInput(get(r, entryTimeCol)),
+      exitTime:     toTimeInput(get(r, exitTimeCol)),
       positionSize: String(qty),
       commission:   String(comm),
       tradeNotes:   get(r, notesCol) || 'Imported from CSV',
