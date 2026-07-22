@@ -1,308 +1,190 @@
-import { useState, useEffect, useMemo } from 'react'
-import { NotebookPen, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import {
+  CalendarDays, Check, Star, Share2, MoreHorizontal, ChevronDown,
+  Sparkles, Tag as TagIcon, LayoutTemplate, Plus,
+} from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useTradeStore } from '../../store/tradeStore'
+import { useAdminStore } from '../../store/adminStore'
+import {
+  NB_THEME as T, loadNotebook, saveNotebook, newNote, countsByFolder,
+} from '../../lib/notebookStore'
+import Sidebar from '../../components/app/notebook/Sidebar'
+import SummaryCard from '../../components/app/notebook/SummaryCard'
+import EditorToolbar from '../../components/app/notebook/EditorToolbar'
+import Editor from '../../components/app/notebook/Editor'
 
-const BLUE = '#3B82F6'
-
-/* A daily notebook — journal your day whether or not you took a trade.
-   One entry per calendar day, stored per account. Local-first (survives on
-   this browser); syncs can be layered on later. */
-const nbKey = email => `ct-notebook__${String(email || 'guest').replace(/[^a-z0-9]/gi, '_').toLowerCase()}`
-
-const todayKey = () => {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-const prettyDate = key => {
-  const [y, m, d] = key.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-}
-const shiftDay = (key, delta) => {
-  const [y, m, d] = key.split('-').map(Number)
-  const dt = new Date(y, m - 1, d + delta)
-  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
-}
-
-const MOODS = [
-  { key: 'green',   label: 'Great',   color: '#4CAF7D' },
-  { key: 'neutral', label: 'Okay',    color: '#3B82F6' },
-  { key: 'red',     label: 'Rough',   color: '#E05252' },
-]
-
-/* Journaling templates — the questions the average trader actually answers.
-   Each builds its text with the selected day's date filled in. */
 const TEMPLATES = [
-  {
-    name: 'Daily Recap', emoji: '📆',
-    build: d => `📆 DAILY RECAP — ${prettyDate(d)}
-
-How I feel about today (1–10):
-Did I follow my plan? (Yes / Partially / No):
-P&L for the day:
-
-✅ What went well:
-
-❌ What I need to work on:
-
-📈 Best trade and why:
-
-📉 Worst trade and why:
-
-🧠 My emotions while trading:
-
-🎯 One thing to do better tomorrow:
-`,
-  },
-  {
-    name: 'Pre-Market Plan', emoji: '🌅',
-    build: d => `🌅 PRE-MARKET PLAN — ${prettyDate(d)}
-
-Overall bias (Long / Short / Neutral):
-Key levels I'm watching:
-News / events today:
-My A+ setup for today:
-Max loss / risk limit today:
-What would make me NOT trade:
-
-🙏 Pre-market mindset / prayer:
-`,
-  },
-  {
-    name: 'Trade Review', emoji: '🔍',
-    build: d => `🔍 TRADE REVIEW — ${prettyDate(d)}
-
-Symbol:
-Direction (Long / Short):
-Why I entered (the setup):
-Stop / target:
-How I managed it:
-Result (Win / Loss / Breakeven):
-
-✅ What I did well:
-❌ What I'd do differently:
-🧠 How I felt during the trade:
-`,
-  },
-  {
-    name: 'Weekly Review', emoji: '🗓️',
-    build: d => `🗓️ WEEKLY REVIEW — week of ${prettyDate(d)}
-
-This week's P&L:
-Win rate:
-Number of trades:
-
-📈 What's working:
-📉 Recurring mistakes:
-🏆 Best decision this week:
-🎯 Focus for next week:
-
-🙏 What I'm grateful for:
-`,
-  },
-  {
-    name: 'Mindset Check-in', emoji: '🧠',
-    build: d => `🧠 MINDSET CHECK-IN — ${prettyDate(d)}
-
-Where's my head today (1–10):
-Am I trading from discipline or emotion:
-Any revenge trading, FOMO, or fear:
-What am I grateful for:
-
-📖 Verse for today:
-🙏 Prayer:
-One reminder to myself:
-`,
-  },
+  { name: 'Daily Recap', html: '<b>Daily Recap</b><br>How I feel (1–10):<br>Followed my plan?:<br>What went well:<br>What to work on:<br>One thing to do better tomorrow:<br>' },
+  { name: 'Pre-Market Plan', html: '<b>Pre-Market Plan</b><br>Bias:<br>Key levels:<br>News today:<br>My A+ setup:<br>Max loss limit:<br>' },
+  { name: 'Trade Review', html: '<b>Trade Review</b><br>Symbol:<br>Direction:<br>Why I entered:<br>Result:<br>What I did well:<br>What I would change:<br>' },
+  { name: 'Weekly Review', html: '<b>Weekly Review</b><br>P&L:<br>Win rate:<br>What is working:<br>Recurring mistakes:<br>Focus for next week:<br>' },
+  { name: 'Mindset Check-in', html: '<b>Mindset Check-in</b><br>Head today (1–10):<br>Discipline or emotion?:<br>Grateful for:<br>Verse:<br>Prayer:<br>' },
 ]
 
 export default function Notebook() {
   const { user } = useAuth()
   const email = user?.email || null
+  const { trades } = useTradeStore()
+  const viewingUser = useAdminStore(s => s.viewingUser)
+  const accountLabel = viewingUser?.name || viewingUser?.email || 'All accounts'
 
-  const [entries, setEntries] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(nbKey(email)) || '{}') } catch { return {} }
-  })
-  const [day, setDay] = useState(todayKey)
+  const [data, setData] = useState(() => loadNotebook(email))
+  const [activeId, setActiveId] = useState(() => loadNotebook(email).notes[0]?.id || null)
+  const [search, setSearch] = useState('')
+  const [openFolders, setOpenFolders] = useState(() => new Set(['daily']))
+  const [saved, setSaved] = useState(true)
+  const [fontSize, setFontSize] = useState(14)
+  const [showTemplates, setShowTemplates] = useState(false)
 
-  // Custom templates the trader writes themselves, saved per account
-  const tplKey = `${nbKey(email)}__templates`
-  const [customTpls, setCustomTpls] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(tplKey) || '[]') } catch { return [] }
-  })
+  const editorElRef = useRef(null)
+  const saveTimer = useRef(null)
+
+  const notes = data.notes
+  const counts = useMemo(() => countsByFolder(notes), [notes])
+  const active = notes.find(n => n.id === activeId) || null
+
+  // Debounced persist — drives the "Saved" pill
   useEffect(() => {
-    try { localStorage.setItem(tplKey, JSON.stringify(customTpls)) } catch { /* private mode */ }
-  }, [customTpls, tplKey])
-  const [showTplForm, setShowTplForm] = useState(false)
-  const [tplName, setTplName] = useState('')
-  const [tplBody, setTplBody] = useState('')
+    setSaved(false)
+    clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => { saveNotebook(email, data); setSaved(true) }, 700)
+    return () => clearTimeout(saveTimer.current)
+  }, [data, email])
 
-  const saveTemplate = () => {
-    const name = tplName.trim()
-    if (!name || !tplBody.trim()) return
-    setCustomTpls(prev => [...prev.filter(t => t.name !== name), { name, body: tplBody }])
-    setTplName(''); setTplBody(''); setShowTplForm(false)
+  const patchActive = useCallback((patch) => {
+    setData(d => ({
+      ...d,
+      notes: d.notes.map(n => n.id === activeId ? { ...n, ...patch, updated: new Date().toISOString() } : n),
+    }))
+  }, [activeId])
+
+  const createNote = (folderId) => {
+    const n = newNote(folderId)
+    setData(d => ({ ...d, notes: [n, ...d.notes] }))
+    setActiveId(n.id)
+    setOpenFolders(prev => new Set(prev).add(folderId))
   }
-  // {date} in a custom template becomes the selected day's date
-  const applyTemplate = (body) => setText(body.replace(/\{date\}/gi, prettyDate(day)))
 
-  // Persist on any change
-  useEffect(() => {
-    try { localStorage.setItem(nbKey(email), JSON.stringify(entries)) } catch { /* private mode */ }
-  }, [entries, email])
+  const toggleFolder = id => setOpenFolders(prev => {
+    const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next
+  })
 
-  const entry = entries[day] || { text: '', mood: '' }
-  const setText = text => setEntries(prev => ({ ...prev, [day]: { ...(prev[day] || {}), text } }))
-  const setMood = mood => setEntries(prev => ({ ...prev, [day]: { ...(prev[day] || {}), mood: (prev[day]?.mood === mood ? '' : mood) } }))
+  // P&L for the active note's day, from the trades store
+  const dayStats = useMemo(() => {
+    if (!active?.dateKey) return null
+    const day = trades.filter(t => String(t.date || t.createdAt || '').slice(0, 10) === active.dateKey)
+    if (!day.length) return { pnl: 0, trades: 0, winRate: 0 }
+    const pnl = day.reduce((s, t) => s + (parseFloat(t.netPnl) || 0), 0)
+    const wins = day.filter(t => t.result === 'Win').length
+    return { pnl, trades: day.length, winRate: Math.round((wins / day.length) * 100) }
+  }, [active, trades])
 
-  const pastDays = useMemo(
-    () => Object.keys(entries)
-      .filter(k => (entries[k]?.text || '').trim())
-      .sort((a, b) => b.localeCompare(a)),
-    [entries]
-  )
+  // execCommand on the editor selection
+  const cmd = useCallback((name, value) => {
+    editorElRef.current?.focus()
+    try { document.execCommand('styleWithCSS', false, true) } catch { /* older browsers */ }
+    document.execCommand(name, false, value)
+    if (editorElRef.current) patchActive({ body: editorElRef.current.innerHTML })
+  }, [patchActive])
 
-  const isToday = day === todayKey()
+  const insertTemplate = (html) => {
+    setShowTemplates(false)
+    patchActive({ body: (active?.body || '') + html })
+  }
+
+  if (!active) {
+    return (
+      <div style={{ ...shell }}>
+        <Sidebar notes={notes} counts={counts} activeId={activeId} onSelect={setActiveId}
+          onNewNote={createNote} search={search} onSearch={setSearch}
+          openFolders={openFolders} onToggleFolder={toggleFolder} />
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textDim, flexDirection: 'column', gap: 14 }}>
+          <p>No note selected.</p>
+          <button onClick={() => createNote('daily')} style={primaryBtn}><Plus size={15} /> New note</button>
+        </div>
+      </div>
+    )
+  }
+
+  const created = new Date(active.created).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+  const updated = new Date(active.updated).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 4 }}>
-        <NotebookPen size={20} color={BLUE} />
-        <h1 style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, color: '#F5F5F5', fontSize: '1.5rem', margin: 0 }}>Notebook</h1>
-      </div>
-      <p style={{ color: '#888', fontSize: '0.85rem', margin: '0 0 22px' }}>Journal your day — trade or no trade. One entry per day, private to you.</p>
+    <div style={shell}>
+      <Sidebar notes={notes} counts={counts} activeId={activeId} onSelect={setActiveId}
+        onNewNote={createNote} search={search} onSearch={setSearch}
+        openFolders={openFolders} onToggleFolder={toggleFolder} />
 
-      <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        {/* Today's / selected day's entry */}
-        <div style={{ flex: 2, minWidth: 320 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <button onClick={() => setDay(d => shiftDay(d, -1))} style={navBtn} title="Previous day"><ChevronLeft size={16} /></button>
-            <div style={{ flex: 1, textAlign: 'center' }}>
-              <div style={{ color: '#F0F0F0', fontSize: '0.95rem', fontWeight: 700 }}>{isToday ? 'Today' : prettyDate(day)}</div>
-              {isToday && <div style={{ color: '#6E6E6E', fontSize: '0.72rem' }}>{prettyDate(day)}</div>}
-            </div>
-            <button onClick={() => setDay(d => shiftDay(d, 1))} disabled={isToday} style={{ ...navBtn, opacity: isToday ? 0.35 : 1, cursor: isToday ? 'default' : 'pointer' }} title="Next day"><ChevronRight size={16} /></button>
-            <input type="date" value={day} max={todayKey()} onChange={e => e.target.value && setDay(e.target.value)}
-              style={{ background: '#242424', border: '1px solid #3A3A3A', borderRadius: 8, color: '#C0C0C0', padding: '7px 10px', fontSize: '0.8rem', outline: 'none' }} />
+      {/* Main pane */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {/* Top bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 22px', borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+          <CalendarDays size={20} color={T.textDim} />
+          <input
+            value={active.title}
+            onChange={e => patchActive({ title: e.target.value })}
+            style={{ background: 'none', border: 'none', outline: 'none', color: T.text, fontSize: '1.25rem', fontWeight: 700, minWidth: 0, flex: '0 1 auto', width: `${Math.max(10, active.title.length)}ch` }}
+          />
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(34,197,94,0.14)', color: T.green, borderRadius: 999, padding: '3px 10px', fontSize: '0.72rem', fontWeight: 600, flexShrink: 0 }}>
+            <Check size={12} /> {saved ? 'Saved' : 'Saving…'}
+          </span>
+          <span style={{ color: T.textDim, fontSize: '0.72rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            Created: {created} • Last updated: {updated}
+          </span>
+
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <button onClick={() => patchActive({ favorite: !active.favorite })} title="Favorite" style={ghostIcon}>
+              <Star size={17} color={active.favorite ? '#eab308' : T.textDim} fill={active.favorite ? '#eab308' : 'none'} />
+            </button>
+            <button style={{ ...ghostBtn }}><Share2 size={14} /> Share</button>
+            <button title="More" style={ghostIcon}><MoreHorizontal size={17} color={T.textDim} /></button>
+            <button style={{ ...ghostBtn, gap: 6 }}>{accountLabel} <ChevronDown size={13} /></button>
           </div>
+        </div>
 
-          {/* Mood */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            {MOODS.map(m => {
-              const on = entry.mood === m.key
-              return (
-                <button key={m.key} onClick={() => setMood(m.key)}
-                  style={{ padding: '6px 14px', borderRadius: 999, cursor: 'pointer', fontSize: '0.78rem', fontWeight: on ? 700 : 500,
-                    border: `1px solid ${on ? m.color : '#333'}`, background: on ? `${m.color}22` : 'transparent', color: on ? m.color : '#8A8A8A' }}>
-                  {m.label}
-                </button>
-              )
-            })}
-          </div>
+        {/* Editor scroll area */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '18px 26px 40px' }}>
+          <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+            {dayStats && <SummaryCard pnl={dayStats.pnl} trades={dayStats.trades} winRate={dayStats.winRate} />}
 
-          {/* Templates — offered when the day is blank so you start with structure */}
-          {!entry.text.trim() && (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ color: '#7A7A7A', fontSize: '0.73rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-                Start with a template
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {TEMPLATES.map(t => (
-                  <button key={t.name} onClick={() => setText(t.build(day))}
-                    style={tplChip}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(59,130,246,0.5)'; e.currentTarget.style.color = '#fff' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#C8C8C8' }}>
-                    <span>{t.emoji}</span> {t.name}
-                  </button>
-                ))}
-                {/* the trader's own templates */}
-                {customTpls.map(t => (
-                  <span key={t.name} style={{ ...tplChip, paddingRight: 6 }}>
-                    <button onClick={() => applyTemplate(t.body)} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', font: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span>⭐</span> {t.name}
+            {/* Control row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, position: 'relative', flexWrap: 'wrap' }}>
+              <button onClick={() => setShowTemplates(s => !s)} style={ghostBtn}><LayoutTemplate size={14} /> Templates</button>
+              <button style={ghostBtn}><TagIcon size={14} /> Add tag <ChevronDown size={12} /></button>
+              <button style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7, background: T.accent, border: 'none', borderRadius: 9, color: '#fff', padding: '8px 16px', fontSize: '0.83rem', fontWeight: 600, cursor: 'pointer' }}>
+                <Sparkles size={15} /> Write with AI
+              </button>
+              {showTemplates && (
+                <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 20, background: T.panel, border: `1px solid ${T.border}`, borderRadius: 10, padding: 6, minWidth: 200, boxShadow: '0 12px 30px rgba(0,0,0,0.5)' }}>
+                  {TEMPLATES.map(t => (
+                    <button key={t.name} onClick={() => insertTemplate(t.html)}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', color: T.text, fontSize: '0.83rem', padding: '8px 10px', borderRadius: 7, cursor: 'pointer' }}>
+                      {t.name}
                     </button>
-                    <button onClick={() => setCustomTpls(prev => prev.filter(x => x.name !== t.name))} title="Delete template"
-                      style={{ background: 'none', border: 'none', color: '#6A6A6A', cursor: 'pointer', padding: '0 2px', fontSize: 12 }}>✕</button>
-                  </span>
-                ))}
-                <button onClick={() => setShowTplForm(v => !v)}
-                  style={{ ...tplChip, borderStyle: 'dashed', color: BLUE }}>
-                  + Create template
-                </button>
-              </div>
-
-              {/* Create-template form */}
-              {showTplForm && (
-                <div style={{ marginTop: 12, background: '#161616', border: '1px solid #2E2E2E', borderRadius: 12, padding: 14 }}>
-                  <input value={tplName} onChange={e => setTplName(e.target.value)} placeholder="Template name (e.g. My Daily Routine)"
-                    style={{ width: '100%', boxSizing: 'border-box', background: '#242424', border: '1px solid #3A3A3A', borderRadius: 8, color: '#F0F0F0', padding: '9px 12px', fontSize: '0.85rem', outline: 'none', marginBottom: 8 }} />
-                  <textarea value={tplBody} onChange={e => setTplBody(e.target.value)} rows={7}
-                    placeholder={"Write your template. Use {date} where you want the day's date inserted.\n\nExample:\nBias:\nKey levels:\nMy plan:"}
-                    style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', background: '#151515', border: '1px solid #2E2E2E', borderRadius: 8, color: '#E0E0E0', padding: '11px 13px', fontSize: '0.85rem', lineHeight: 1.6, fontFamily: 'Inter, sans-serif', outline: 'none' }} />
-                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                    <button onClick={saveTemplate} disabled={!tplName.trim() || !tplBody.trim()}
-                      style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: (tplName.trim() && tplBody.trim()) ? BLUE : '#242424', color: (tplName.trim() && tplBody.trim()) ? '#fff' : '#5E5E5E', fontSize: '0.83rem', fontWeight: 700, cursor: (tplName.trim() && tplBody.trim()) ? 'pointer' : 'not-allowed' }}>
-                      Save template
-                    </button>
-                    <button onClick={() => { setShowTplForm(false); setTplName(''); setTplBody('') }}
-                      style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid #3A3A3A', background: 'transparent', color: '#A0A0A0', fontSize: '0.83rem', cursor: 'pointer' }}>
-                      Cancel
-                    </button>
-                  </div>
+                  ))}
                 </div>
               )}
             </div>
-          )}
 
-          <textarea
-            value={entry.text}
-            onChange={e => setText(e.target.value)}
-            placeholder="How did the day go? What did you see, feel, learn? Even a no-trade day is worth writing down…"
-            rows={14}
-            style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', background: '#151515', border: '1px solid #2E2E2E', borderRadius: 12,
-              padding: '15px 17px', color: '#E4E4E4', fontSize: '0.9rem', lineHeight: 1.7, fontFamily: 'Inter, sans-serif', outline: 'none' }}
-          />
-          <div style={{ color: '#4A4A4A', fontSize: '0.72rem', marginTop: 6 }}>{entry.text.trim() ? 'Saved automatically' : ''}</div>
-        </div>
+            <EditorToolbar
+              cmd={cmd} fontSize={fontSize} onFontSize={setFontSize}
+              onFullscreen={() => editorElRef.current?.requestFullscreen?.()}
+              onMic={() => {}} listening={false}
+            />
 
-        {/* Past entries */}
-        <div style={{ flex: 1, minWidth: 260 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, color: '#9A9A9A', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            <Calendar size={13} /> Past entries
+            <Editor html={active.body} onChange={body => patchActive({ body })} fontSize={fontSize}
+              bind={el => { editorElRef.current = el }} />
           </div>
-          {pastDays.length === 0 ? (
-            <p style={{ color: '#5E5E5E', fontSize: '0.82rem' }}>No entries yet. Start with today.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {pastDays.map(k => {
-                const m = MOODS.find(x => x.key === entries[k]?.mood)
-                return (
-                  <button key={k} onClick={() => setDay(k)}
-                    style={{ textAlign: 'left', background: k === day ? 'rgba(59,130,246,0.1)' : '#1C1C1C', border: `1px solid ${k === day ? 'rgba(59,130,246,0.4)' : '#2A2A2A'}`,
-                      borderRadius: 10, padding: '11px 13px', cursor: 'pointer' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {m && <span style={{ width: 8, height: 8, borderRadius: '50%', background: m.color, flexShrink: 0 }} />}
-                      <span style={{ color: '#D0D0D0', fontSize: '0.8rem', fontWeight: 600 }}>{prettyDate(k)}</span>
-                    </div>
-                    <div style={{ color: '#6E6E6E', fontSize: '0.76rem', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {(entries[k].text || '').trim().slice(0, 60)}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
         </div>
       </div>
+
+      <style>{`[contenteditable][data-placeholder]:empty:before{content:attr(data-placeholder);color:${T.textDim};}`}</style>
     </div>
   )
 }
 
-const navBtn = {
-  width: 32, height: 32, borderRadius: 8, border: '1px solid #333', background: '#1E1E1E',
-  color: '#A0A0A0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-}
-
-const tplChip = {
-  display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 999,
-  border: '1px solid #333', background: '#1C1C1C', color: '#C8C8C8', fontSize: '0.8rem', cursor: 'pointer',
-}
+const shell = { display: 'flex', height: 'calc(100vh - 128px)', minHeight: 460, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 14, overflow: 'hidden' }
+const ghostBtn = { display: 'flex', alignItems: 'center', gap: 7, background: T.panel, border: `1px solid ${T.border}`, borderRadius: 9, color: T.text, padding: '8px 14px', fontSize: '0.82rem', cursor: 'pointer' }
+const ghostIcon = { background: 'none', border: 'none', cursor: 'pointer', padding: 5, display: 'flex', borderRadius: 7 }
+const primaryBtn = { display: 'flex', alignItems: 'center', gap: 7, background: T.accent, border: 'none', borderRadius: 9, color: '#fff', padding: '9px 18px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }
