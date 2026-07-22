@@ -9,7 +9,7 @@ import {
   LayoutDashboard, PlusCircle, BarChart2, BookOpen, Cross, Settings,
   LogOut, Menu, X, CalendarDays, TrendingUp, FileBarChart2, ListChecks,
   Trophy, Save, CheckCircle, ShieldAlert, Sparkles, Newspaper, FlaskConical,
-  Cloud, CloudOff, Loader2, Home, ArrowLeft, Upload, Target, RotateCcw, GraduationCap, Flame,
+  Cloud, CloudOff, Loader2, Home, ArrowLeft, Upload, Target, RotateCcw, GraduationCap, Flame, NotebookPen,
 } from 'lucide-react'
 
 /* Course Material sections. */
@@ -73,6 +73,7 @@ const TRADING_ITEMS = [
   { to: '/app/playbook', label: 'Strategy', icon: BookOpen },
   { to: '/app/goals', label: 'Daily Goals', icon: ListChecks },
   { to: '/app/faith', label: 'Faith Journal', icon: Cross },
+  { to: '/app/notebook', label: 'Notebook', icon: NotebookPen },
   { to: '/app/settings', label: 'Settings', icon: Settings },
 ]
 
