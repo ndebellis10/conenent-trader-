@@ -179,6 +179,7 @@ export const COURSE_MODULES = [
       { id: 'ms-vault-3', title: 'Rejection Blocks for Stronger Covenant Trades', video: 'https://www.loom.com/share/93a0dbec11824fa296e44738615a7be1' },
       { id: 'ms-vault-4', title: 'Spotting Rejection Blocks and Stop Loss', video: 'https://www.loom.com/share/871f1c23e8634483b9451ed69b2e5448' },
       { id: 'ms-vault-5', title: 'Using Pre-Market Conditions for Trading Bias', video: 'https://www.loom.com/share/95d0d6b0bcb949bb85622737ad4921df' },
+      { id: 'ms-vault-6', title: 'Advanced Vault Walkthrough', video: 'https://www.loom.com/share/c99e059ba06d415586b56752ccb2f0fb' },
     ],
   },
   {
