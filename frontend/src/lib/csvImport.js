@@ -116,6 +116,24 @@ export function parseTradeCSV(text) {
 
   const debug = `Row ${headerIdx+1}: [${rawHeaders.slice(0,8).join(' | ')}] action:${actionCol} price:${priceCol} entry:${entryCol} exit:${exitCol} netPnl:${netPnlCol} grossPnl:${grossPnlCol}`
 
+  // Every column NOT already mapped to a trade field gets appended to the notes,
+  // so no information in the CSV is lost on import.
+  const usedCols = new Set(
+    [dateCol, symCol, actionCol, qtyCol, priceCol, entryCol, exitCol,
+     netPnlCol, grossPnlCol, commCol, notesCol, entryTimeCol, exitTimeCol]
+      .filter(i => i !== -1)
+  )
+  const extraInfo = (r) => {
+    const parts = []
+    for (let i = 0; i < rawHeaders.length; i++) {
+      if (usedCols.has(i)) continue
+      const key = String(rawHeaders[i] ?? '').trim()
+      const val = String(r[i] ?? '').trim()
+      if (key && val) parts.push(`${key}: ${val}`)
+    }
+    return parts.join(' | ').slice(0, 1500)
+  }
+
   const dataLines = allLines.slice(headerIdx + 1)
   const rows = dataLines.map(parseCsvLine).filter(r => r.some(c => c))
   if (!rows.length) return { trades: [], error: 'No data rows found after headers.', debug }
@@ -177,7 +195,7 @@ export function parseTradeCSV(text) {
         entryTime:    toTimeInput(entryRaw),
         exitTime:     toTimeInput(exitRaw),
         timeframe:    'Day Trade',
-        tradeNotes:   'Imported from Tradovate',
+        tradeNotes:   ['Imported from Tradovate', extraInfo(r)].filter(Boolean).join(' | '),
         followedPlan: '', movedStop: '', overRisked: '', strategyName: '',
         source:       'tradovate-csv',
       })
@@ -246,7 +264,7 @@ export function parseTradeCSV(text) {
       exitTime:     toTimeInput(get(r, exitTimeCol)),
       positionSize: String(qty),
       commission:   String(comm),
-      tradeNotes:   get(r, notesCol) || 'Imported from CSV',
+      tradeNotes:   [get(r, notesCol) || 'Imported from CSV', extraInfo(r)].filter(Boolean).join(' | '),
       timeframe: 'Day Trade', followedPlan: '', movedStop: '', overRisked: '',
       strategyName: '', source: 'csv',
     }
