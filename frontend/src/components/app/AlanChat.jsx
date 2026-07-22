@@ -90,6 +90,7 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
   const bottomRef = useRef(null)
   const sentSeedRef = useRef(0)
   const fileRef     = useRef(null)
+  const taRef       = useRef(null)
   const [attached, setAttached] = useState(null)   // data URL of a chart to send
   const [speaking, setSpeaking] = useState(null)   // index of the message being read aloud
 
@@ -97,6 +98,14 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
   const recogRef = useRef(null)
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+
+  // Grow the composer with the text, then shrink back (incl. after send clears it)
+  useEffect(() => {
+    const ta = taRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = Math.min(ta.scrollHeight, 150) + 'px'
+  }, [input])
 
   // Keep the thread so closing the panel doesn't lose the conversation
   useEffect(() => { saveHistory(email, lessonMode, messages) }, [messages, email, lessonMode])
@@ -224,16 +233,18 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
         /* Composer */
         .alanchat-composer { padding: 14px 24px 18px; }
         .alanchat-inputwrap {
-          max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 8px;
+          max-width: 760px; margin: 0 auto; display: flex; align-items: flex-end; gap: 8px;
           background: #141414; border: 1px solid #2F2F2F; border-radius: 14px; padding: 5px 5px 5px 6px;
           transition: border-color .18s, box-shadow .18s;
         }
         .alanchat-inputwrap:focus-within { border-color: rgba(59,130,246,0.55); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-        .alanchat-inputwrap input {
+        .alanchat-inputwrap textarea {
           flex: 1; background: none; border: none; outline: none; min-width: 0;
-          color: #F0F0F0; font-size: 0.9rem; font-family: Inter, sans-serif; padding: 11px 0;
+          color: #F0F0F0; font-size: 0.9rem; font-family: Inter, sans-serif;
+          padding: 10px 0; resize: none; line-height: 1.5;
+          max-height: 150px; overflow-y: auto; display: block;
         }
-        .alanchat-inputwrap input::placeholder { color: #575757; }
+        .alanchat-inputwrap textarea::placeholder { color: #575757; }
         .alanchat-send {
           width: 38px; height: 38px; border-radius: 10px; border: none; flex-shrink: 0;
           display: flex; align-items: center; justify-content: center; transition: all .15s;
@@ -349,11 +360,13 @@ export default function AlanChat({ trades, stats, goals, completions, settings, 
               <Mic size={17} />
             </button>
           )}
-          <input
+          <textarea
+            ref={taRef}
+            rows={1}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-            placeholder="Ask Alan anything about your trading…"
+            placeholder="Ask Alan anything about your trading…  (Shift+Enter for a new line)"
             disabled={loading}
           />
           <button type="button" onClick={() => send()} disabled={(!input.trim() && !attached) || loading}
