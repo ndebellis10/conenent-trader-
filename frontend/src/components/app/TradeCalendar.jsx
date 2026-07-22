@@ -191,7 +191,7 @@ export default function TradeCalendar({ trades }) {
                       outline: todayDay ? '2px solid #3B82F6' : 'none',
                       outlineOffset: '-2px',
                       padding: '10px 12px',
-                      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                      display: 'flex', flexDirection: 'column', justifyContent: 'flex-start',
                       opacity: inMonth ? 1 : 0.25,
                       minHeight: '110px',
                       transition: 'background 0.1s',
@@ -206,7 +206,7 @@ export default function TradeCalendar({ trades }) {
                         {format(day, 'd')}
                       </div>
                       {data && inMonth && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'center', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', textAlign: 'center', marginTop: '2px' }}>
                           <div style={{ fontFamily: 'JetBrains Mono, monospace', fontWeight: 800, fontSize: '1.05rem', color: data.pnl >= 0 ? '#4CAF7D' : '#E05252', letterSpacing: '-0.01em' }}>
                             {data.pnl >= 0 ? '+' : ''}${Math.abs(data.pnl).toFixed(0)}
                           </div>

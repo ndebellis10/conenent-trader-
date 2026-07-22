@@ -124,6 +124,27 @@ export default function Notebook() {
   })
   const [day, setDay] = useState(todayKey)
 
+  // Custom templates the trader writes themselves, saved per account
+  const tplKey = `${nbKey(email)}__templates`
+  const [customTpls, setCustomTpls] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(tplKey) || '[]') } catch { return [] }
+  })
+  useEffect(() => {
+    try { localStorage.setItem(tplKey, JSON.stringify(customTpls)) } catch { /* private mode */ }
+  }, [customTpls, tplKey])
+  const [showTplForm, setShowTplForm] = useState(false)
+  const [tplName, setTplName] = useState('')
+  const [tplBody, setTplBody] = useState('')
+
+  const saveTemplate = () => {
+    const name = tplName.trim()
+    if (!name || !tplBody.trim()) return
+    setCustomTpls(prev => [...prev.filter(t => t.name !== name), { name, body: tplBody }])
+    setTplName(''); setTplBody(''); setShowTplForm(false)
+  }
+  // {date} in a custom template becomes the selected day's date
+  const applyTemplate = (body) => setText(body.replace(/\{date\}/gi, prettyDate(day)))
+
   // Persist on any change
   useEffect(() => {
     try { localStorage.setItem(nbKey(email), JSON.stringify(entries)) } catch { /* private mode */ }
@@ -187,14 +208,48 @@ export default function Notebook() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {TEMPLATES.map(t => (
                   <button key={t.name} onClick={() => setText(t.build(day))}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 999,
-                      border: '1px solid #333', background: '#1C1C1C', color: '#C8C8C8', fontSize: '0.8rem', cursor: 'pointer' }}
+                    style={tplChip}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(59,130,246,0.5)'; e.currentTarget.style.color = '#fff' }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#C8C8C8' }}>
                     <span>{t.emoji}</span> {t.name}
                   </button>
                 ))}
+                {/* the trader's own templates */}
+                {customTpls.map(t => (
+                  <span key={t.name} style={{ ...tplChip, paddingRight: 6 }}>
+                    <button onClick={() => applyTemplate(t.body)} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', font: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span>⭐</span> {t.name}
+                    </button>
+                    <button onClick={() => setCustomTpls(prev => prev.filter(x => x.name !== t.name))} title="Delete template"
+                      style={{ background: 'none', border: 'none', color: '#6A6A6A', cursor: 'pointer', padding: '0 2px', fontSize: 12 }}>✕</button>
+                  </span>
+                ))}
+                <button onClick={() => setShowTplForm(v => !v)}
+                  style={{ ...tplChip, borderStyle: 'dashed', color: BLUE }}>
+                  + Create template
+                </button>
               </div>
+
+              {/* Create-template form */}
+              {showTplForm && (
+                <div style={{ marginTop: 12, background: '#161616', border: '1px solid #2E2E2E', borderRadius: 12, padding: 14 }}>
+                  <input value={tplName} onChange={e => setTplName(e.target.value)} placeholder="Template name (e.g. My Daily Routine)"
+                    style={{ width: '100%', boxSizing: 'border-box', background: '#242424', border: '1px solid #3A3A3A', borderRadius: 8, color: '#F0F0F0', padding: '9px 12px', fontSize: '0.85rem', outline: 'none', marginBottom: 8 }} />
+                  <textarea value={tplBody} onChange={e => setTplBody(e.target.value)} rows={7}
+                    placeholder={"Write your template. Use {date} where you want the day's date inserted.\n\nExample:\nBias:\nKey levels:\nMy plan:"}
+                    style={{ width: '100%', boxSizing: 'border-box', resize: 'vertical', background: '#151515', border: '1px solid #2E2E2E', borderRadius: 8, color: '#E0E0E0', padding: '11px 13px', fontSize: '0.85rem', lineHeight: 1.6, fontFamily: 'Inter, sans-serif', outline: 'none' }} />
+                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                    <button onClick={saveTemplate} disabled={!tplName.trim() || !tplBody.trim()}
+                      style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: (tplName.trim() && tplBody.trim()) ? BLUE : '#242424', color: (tplName.trim() && tplBody.trim()) ? '#fff' : '#5E5E5E', fontSize: '0.83rem', fontWeight: 700, cursor: (tplName.trim() && tplBody.trim()) ? 'pointer' : 'not-allowed' }}>
+                      Save template
+                    </button>
+                    <button onClick={() => { setShowTplForm(false); setTplName(''); setTplBody('') }}
+                      style={{ padding: '8px 18px', borderRadius: 8, border: '1px solid #3A3A3A', background: 'transparent', color: '#A0A0A0', fontSize: '0.83rem', cursor: 'pointer' }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -245,4 +300,9 @@ export default function Notebook() {
 const navBtn = {
   width: 32, height: 32, borderRadius: 8, border: '1px solid #333', background: '#1E1E1E',
   color: '#A0A0A0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+}
+
+const tplChip = {
+  display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 999,
+  border: '1px solid #333', background: '#1C1C1C', color: '#C8C8C8', fontSize: '0.8rem', cursor: 'pointer',
 }
