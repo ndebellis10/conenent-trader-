@@ -169,9 +169,15 @@ export function parseTradeCSV(text) {
       // Only closing fills have non-zero P&L
       if (rawPnl === null || rawPnl === 0) continue
       const rawAction = get(r, actionCol).toUpperCase()
-      // Closing fill: S = was Long (sold to close), B = was Short (bought to close)
-      const isSell = rawAction === 'S' || rawAction.startsWith('SE') || rawAction === 'SELL'
-      const direction = isSell ? 'Long' : 'Short'
+      // Prefer a column that literally states the position; otherwise infer from
+      // the closing fill: S = was Long (sold to close), B = was Short (bought to close)
+      let direction
+      if (rawAction.includes('LONG')) direction = 'Long'
+      else if (rawAction.includes('SHORT')) direction = 'Short'
+      else {
+        const isSell = rawAction === 'S' || rawAction.startsWith('SE') || rawAction === 'SELL'
+        direction = isSell ? 'Long' : 'Short'
+      }
       const sym = cleanSymbol(get(r, symCol))
       const comm = parseMoney(get(r, commCol)) ?? 0
       // Exit time = this closing fill; entry time = the matching opening fill
@@ -324,8 +330,10 @@ export function tradesFromMapping(rawRows, mapping) {
         trades: closing.map(r => {
           const netPnl = parseMoney(get(r, pnlIdx)) || 0
           const rawA = get(r, actionIdx).toUpperCase()
-          const isSell = rawA === 'S' || rawA.startsWith('SE') || rawA === 'SELL'
-          const direction = isSell ? 'Long' : 'Short'
+          let direction
+          if (rawA.includes('LONG')) direction = 'Long'
+          else if (rawA.includes('SHORT')) direction = 'Short'
+          else { const isSell = rawA === 'S' || rawA.startsWith('SE') || rawA === 'SELL'; direction = isSell ? 'Long' : 'Short' }
           const sym = cleanSymbol(get(r, symIdx))
           const comm = parseMoney(get(r, commIdx)) ?? 0
           return {

@@ -1,11 +1,12 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
-import { CheckCircle, Loader2, Star, ImagePlus, X, Plus, Upload } from 'lucide-react'
+import { CheckCircle, Loader2, Star, ImagePlus, X, Plus, Upload, FileText } from 'lucide-react'
 import { useTradeStore } from '../../store/tradeStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { compressImage } from '../../lib/imageUtils'
 import { getCustomQuestions } from '../../lib/customQuestions'
 import { toTimeInput, extractCsvData, buildAutoMapping, tradesFromMapping, parseTradeCSV, mergePartials } from '../../lib/csvImport'
+import { pdfToCsvText, isPdf } from '../../lib/pdfImport'
 import { tradeDurationMs, formatDuration } from '../../lib/tradeTime'
 import TradeChartAnnotator from '../../components/app/TradeChartAnnotator'
 import TradeProjectionView from '../../components/app/TradeProjectionView'
@@ -198,6 +199,7 @@ export default function LogTrade() {
   const [csvImporting,  setCsvImporting]  = useState(false)
   const [csvDragOver,   setCsvDragOver]   = useState(false)
   const csvFileRef = useRef(null)
+  const pdfFileRef = useRef(null)
 
   // The rows we'll actually import — collapsed into single trades when the user
   // says the fills were partials (scale-outs) of one position.
@@ -394,50 +396,73 @@ export default function LogTrade() {
     setCsvParsed([]); setCsvError(null)
   }
 
-  function handleCsvFile(file) {
-    if (!file) return
-    if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv') {
-      setCsvError('Please upload a .csv file'); return
+  // Shared by the CSV and PDF importers — takes reconstructed text and routes
+  // it through the same auto-detect → preview → manual-map fallback.
+  function parseTextIntoPreview(text) {
+    setCsvMode('separate')
+    // 1) Fully automatic — parseTradeCSV auto-detects Tradovate fills and
+    //    common formats. If it finds trades, go straight to the preview list
+    //    (all trades shown, one "Import Trades" button) — no column mapping.
+    const auto = parseTradeCSV(text)
+    if (!auto.error && auto.trades.length) {
+      setCsvParsed(auto.trades)
+      setCsvError(null)
+      setCsvStep('preview')
+      return
     }
-    const reader = new FileReader()
-    reader.onload = e => {
-      const text = e.target.result
 
-      // 1) Fully automatic — parseTradeCSV auto-detects Tradovate fills and
-      //    common formats. If it finds trades, go straight to the preview list
-      //    (all trades shown, one "Import Trades" button) — no column mapping.
-      const auto = parseTradeCSV(text)
-      if (!auto.error && auto.trades.length) {
-        setCsvParsed(auto.trades)
-        setCsvError(null)
-        setCsvStep('preview')
+    const data = extractCsvData(text)
+    if (!data || !data.rawHeaders.length) {
+      setCsvError('Could not read the file — no table rows were found.'); return
+    }
+
+    // 2) Generic table — if the P&L and symbol columns are auto-found, skip the
+    //    manual mapping and jump to the preview too.
+    const mapping = buildAutoMapping(data.normHeaders)
+    if (mapping.pnlIdx >= 0 && mapping.symIdx >= 0) {
+      const { trades, error } = tradesFromMapping(data.rawRows, mapping)
+      if (!error && trades.length) {
+        setCsvRawData(data); setCsvMapping(mapping)
+        setCsvParsed(trades); setCsvError(null); setCsvStep('preview')
         return
       }
-
-      const data = extractCsvData(text)
-      if (!data || !data.rawHeaders.length) {
-        setCsvError('Could not read CSV — is the file empty?'); return
-      }
-
-      // 2) Generic CSV — if the P&L and symbol columns are auto-found, skip the
-      //    manual mapping and jump to the preview too.
-      const mapping = buildAutoMapping(data.normHeaders)
-      if (mapping.pnlIdx >= 0 && mapping.symIdx >= 0) {
-        const { trades, error } = tradesFromMapping(data.rawRows, mapping)
-        if (!error && trades.length) {
-          setCsvRawData(data); setCsvMapping(mapping)
-          setCsvParsed(trades); setCsvError(null); setCsvStep('preview')
-          return
-        }
-      }
-
-      // 3) Fallback — couldn't auto-detect; ask which columns once.
-      setCsvRawData(data)
-      setCsvMapping(mapping)
-      setCsvStep('map')
-      setCsvError(null)
     }
+
+    // 3) Fallback — couldn't auto-detect; ask which columns once.
+    setCsvRawData(data)
+    setCsvMapping(mapping)
+    setCsvStep('map')
+    setCsvError(null)
+  }
+
+  function handleCsvFile(file) {
+    if (!file) return
+    if (isPdf(file)) { handlePdfFile(file); return }
+    if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv') {
+      setCsvError('Please upload a .csv or .pdf file'); return
+    }
+    const reader = new FileReader()
+    reader.onload = e => parseTextIntoPreview(e.target.result)
     reader.readAsText(file)
+  }
+
+  async function handlePdfFile(file) {
+    if (!isPdf(file)) { setCsvError('Please upload a .pdf file'); return }
+    setCsvError(null)
+    setCsvImporting(true)
+    try {
+      const text = await pdfToCsvText(file)
+      if (!text || !text.trim()) {
+        setCsvError('Could not read any text from that PDF — it may be a scanned image.')
+        return
+      }
+      parseTextIntoPreview(text)
+    } catch (err) {
+      console.error('PDF import failed', err)
+      setCsvError('Could not read that PDF. If it keeps failing, export a CSV instead.')
+    } finally {
+      setCsvImporting(false)
+    }
   }
 
   function applyMapping() {
@@ -450,6 +475,25 @@ export default function LogTrade() {
     setCsvParsed(trades)
     setCsvError(null)
     setCsvStep('preview')
+  }
+
+  // Direction safety net — if the import reads Long/Short backwards for a
+  // format we haven't seen, let the user flip it right here in the preview.
+  const flipDir = d => (d === 'Long' ? 'Short' : 'Long')
+  function toggleTradeDirection(idx) {
+    const shown = importTrades[idx]
+    if (!shown) return
+    setCsvParsed(prev => prev.map(t => {
+      const inGroup = csvMode === 'partials'
+        ? String(t.symbol || '').toUpperCase() === String(shown.symbol || '').toUpperCase()
+          && t.direction === shown.direction
+          && String(t.date || '').slice(0, 10) === String(shown.date || '').slice(0, 10)
+        : t === shown
+      return inGroup ? { ...t, direction: flipDir(t.direction) } : t
+    }))
+  }
+  function flipAllDirections() {
+    setCsvParsed(prev => prev.map(t => ({ ...t, direction: flipDir(t.direction) })))
   }
 
   function handleCsvImport() {
@@ -680,6 +724,29 @@ export default function LogTrade() {
             {/* ── Step 1: Upload ── */}
             {csvStep === 'upload' && (
               <>
+                {/* PDF import — sits above the CSV import */}
+                <div
+                  onDragOver={e => { e.preventDefault() }}
+                  onDrop={e => { e.preventDefault(); handlePdfFile(e.dataTransfer.files[0]) }}
+                  onClick={() => !csvImporting && pdfFileRef.current?.click()}
+                  style={{ border: '2px dashed #3A3A3A', borderRadius: 10, padding: '24px', textAlign: 'center', cursor: csvImporting ? 'wait' : 'pointer', transition: 'all 0.2s', marginBottom: 12 }}>
+                  {csvImporting
+                    ? <Loader2 size={22} color="#3B82F6" style={{ margin: '0 auto 8px', display: 'block', animation: 'spin 0.8s linear infinite' }} />
+                    : <FileText size={22} color="#B98CE0" style={{ margin: '0 auto 8px', display: 'block' }} />}
+                  <p style={{ color: '#A0A0A0', fontSize: '0.86rem', margin: '0 0 4px' }}>
+                    {csvImporting ? 'Reading your PDF…' : <>Import a <span style={{ color: '#B98CE0', fontWeight: 600 }}>PDF statement</span> — drop it here or click to browse</>}
+                  </p>
+                  <p style={{ color: '#555', fontSize: '0.74rem', margin: 0 }}>Broker statement / trade report as PDF</p>
+                  <input ref={pdfFileRef} type="file" accept=".pdf,application/pdf" style={{ display: 'none' }}
+                    onChange={e => { handlePdfFile(e.target.files[0]); e.target.value = '' }} />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 0 12px' }}>
+                  <span style={{ flex: 1, height: 1, background: '#2A2A2A' }} />
+                  <span style={{ color: '#555', fontSize: '0.72rem' }}>or</span>
+                  <span style={{ flex: 1, height: 1, background: '#2A2A2A' }} />
+                </div>
+
                 <div
                   onDragOver={e => { e.preventDefault(); setCsvDragOver(true) }}
                   onDragLeave={() => setCsvDragOver(false)}
@@ -791,11 +858,16 @@ export default function LogTrade() {
             {/* ── Step 3: Preview & Import ── */}
             {csvStep === 'preview' && importTrades.length > 0 && (
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', gap: 10, flexWrap: 'wrap' }}>
                   <span style={{ color: '#A0A0A0', fontSize: '0.82rem' }}>{importTrades.length} trade{importTrades.length !== 1 ? 's' : ''} ready to import</span>
-                  <button type="button" onClick={() => { setCsvParsed([]); setCsvMode('separate'); setCsvStep('map'); setCsvError(null) }}
-                    style={{ background: 'transparent', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: '0.8rem' }}>← Edit Mapping</button>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <button type="button" onClick={flipAllDirections} title="Flip Long/Short on every trade"
+                      style={{ background: 'transparent', border: '1px solid #3A3A3A', borderRadius: 7, color: '#B0B0B0', cursor: 'pointer', fontSize: '0.76rem', padding: '4px 9px' }}>⇄ Flip all directions</button>
+                    <button type="button" onClick={() => { setCsvParsed([]); setCsvMode('separate'); setCsvStep('map'); setCsvError(null) }}
+                      style={{ background: 'transparent', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: '0.8rem' }}>← Edit Mapping</button>
+                  </div>
                 </div>
+                <p style={{ color: '#666', fontSize: '0.74rem', margin: '0 0 10px' }}>Direction wrong? Click any <strong style={{ color: '#888' }}>Long/Short</strong> to flip just that trade.</p>
 
                 {/* Separate trades or partials? Only asked when the fills actually
                     look like they could be scale-outs of one position. */}
@@ -841,7 +913,12 @@ export default function LogTrade() {
                         <tr key={i} style={{ borderBottom: '1px solid #222' }}>
                           <td style={{ padding: '7px 12px', color: '#A0A0A0', whiteSpace: 'nowrap' }}>{t.date}</td>
                           <td style={{ padding: '7px 12px', color: '#F5F5F5', fontWeight: 600 }}>{t.symbol}</td>
-                          <td style={{ padding: '7px 12px', color: t.direction === 'Long' ? '#4CAF7D' : '#E05252' }}>{t.direction}</td>
+                          <td style={{ padding: '7px 12px' }}>
+                            <button type="button" onClick={() => toggleTradeDirection(i)} title="Click to flip Long/Short"
+                              style={{ background: t.direction === 'Long' ? 'rgba(76,175,125,0.14)' : 'rgba(224,82,82,0.14)', border: '1px solid transparent', borderRadius: 6, color: t.direction === 'Long' ? '#4CAF7D' : '#E05252', cursor: 'pointer', fontSize: '0.76rem', fontWeight: 600, padding: '3px 9px' }}>
+                              {t.direction} ⇄
+                            </button>
+                          </td>
                           <td style={{ padding: '7px 12px', color: '#888', whiteSpace: 'nowrap' }}>{t.entryTime && t.exitTime ? `${t.entryTime}–${t.exitTime}` : '—'}</td>
                           <td style={{ padding: '7px 12px', color: parseFloat(t.netPnl) > 0 ? '#4CAF7D' : parseFloat(t.netPnl) < 0 ? '#E05252' : '#A0A0A0', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
                             {parseFloat(t.netPnl) >= 0 ? '+' : ''}${Math.abs(parseFloat(t.netPnl) || 0).toFixed(2)}
