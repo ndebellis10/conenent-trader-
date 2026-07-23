@@ -43,6 +43,22 @@ export function saveNotebook(email, data) {
   try { localStorage.setItem(key(email), JSON.stringify(data)) } catch { /* private mode */ }
 }
 
+/* Custom templates the user builds and saves — stored per account, separate
+   from notes so they persist independently. Each is { id, name, html }. */
+const tplKey = email => `ct-notebook-templates__${String(email || 'guest').replace(/[^a-z0-9]/gi, '_').toLowerCase()}`
+
+export function loadTemplates(email) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(tplKey(email)) || 'null')
+    if (Array.isArray(raw)) return raw
+  } catch { /* fall through */ }
+  return []
+}
+
+export function saveTemplates(email, templates) {
+  try { localStorage.setItem(tplKey(email), JSON.stringify(templates)) } catch { /* private mode */ }
+}
+
 export function newNote(folderId = 'daily') {
   const now = new Date()
   const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
@@ -54,7 +70,9 @@ export function newNote(folderId = 'daily') {
     body: '',
     favorite: false,
     tags: [],
-    dateKey: folderId === 'daily' ? dateKey : null,
+    // Always stamp the day so the note shows that day's P&L + trade recap,
+    // no matter which folder it lives in.
+    dateKey,
     created: now.toISOString(),
     updated: now.toISOString(),
   }

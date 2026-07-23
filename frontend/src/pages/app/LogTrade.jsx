@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { compressImage } from '../../lib/imageUtils'
 import { getCustomQuestions } from '../../lib/customQuestions'
-import { toTimeInput, extractCsvData, buildAutoMapping, tradesFromMapping, parseTradeCSV } from '../../lib/csvImport'
+import { toTimeInput, extractCsvData, buildAutoMapping, tradesFromMapping, parseTradeCSV, mergePartials } from '../../lib/csvImport'
 import { tradeDurationMs, formatDuration } from '../../lib/tradeTime'
 import TradeChartAnnotator from '../../components/app/TradeChartAnnotator'
 import TradeProjectionView from '../../components/app/TradeProjectionView'
@@ -192,10 +192,24 @@ export default function LogTrade() {
   const [csvRawData,    setCsvRawData]    = useState(null)     // { rawHeaders, normHeaders, rawRows }
   const [csvMapping,    setCsvMapping]    = useState({})
   const [csvParsed,     setCsvParsed]     = useState([])
+  // 'separate' = keep each row as its own trade; 'partials' = combine scale-outs
+  const [csvMode,       setCsvMode]       = useState('separate')
   const [csvError,      setCsvError]      = useState(null)
   const [csvImporting,  setCsvImporting]  = useState(false)
   const [csvDragOver,   setCsvDragOver]   = useState(false)
   const csvFileRef = useRef(null)
+
+  // The rows we'll actually import — collapsed into single trades when the user
+  // says the fills were partials (scale-outs) of one position.
+  const importTrades = useMemo(
+    () => (csvMode === 'partials' ? mergePartials(csvParsed) : csvParsed),
+    [csvMode, csvParsed],
+  )
+  // Only worth asking the partials question if merging would actually collapse rows.
+  const canBePartials = useMemo(
+    () => csvParsed.length > 1 && mergePartials(csvParsed).length < csvParsed.length,
+    [csvParsed],
+  )
 
   // Backtest mode (arrived from the Backtesting page) — auto-open the CSV importer
   useEffect(() => { if (isBacktest) setShowCsvImport(true) }, [isBacktest])
@@ -439,11 +453,11 @@ export default function LogTrade() {
   }
 
   function handleCsvImport() {
-    if (!csvParsed.length) return
+    if (!importTrades.length) return
     setCsvImporting(true)
-    csvParsed.forEach(t => addTrade(isBacktest ? { ...t, tags: [...(t.tags || []), 'Backtest'] } : t))
-    toast.success(`✅ ${csvParsed.length} ${isBacktest ? 'backtest ' : ''}trade${csvParsed.length !== 1 ? 's' : ''} imported!`)
-    setCsvParsed([]); setShowCsvImport(false); setCsvImporting(false)
+    importTrades.forEach(t => addTrade(isBacktest ? { ...t, tags: [...(t.tags || []), 'Backtest'] } : t))
+    toast.success(`✅ ${importTrades.length} ${isBacktest ? 'backtest ' : ''}trade${importTrades.length !== 1 ? 's' : ''} imported!`)
+    setCsvParsed([]); setCsvMode('separate'); setShowCsvImport(false); setCsvImporting(false)
     navigate('/app/history')
   }
 
@@ -775,50 +789,82 @@ export default function LogTrade() {
             )}
 
             {/* ── Step 3: Preview & Import ── */}
-            {csvStep === 'preview' && csvParsed.length > 0 && (
+            {csvStep === 'preview' && importTrades.length > 0 && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <span style={{ color: '#A0A0A0', fontSize: '0.82rem' }}>{csvParsed.length} trade{csvParsed.length !== 1 ? 's' : ''} ready to import</span>
-                  <button type="button" onClick={() => { setCsvParsed([]); setCsvStep('map'); setCsvError(null) }}
+                  <span style={{ color: '#A0A0A0', fontSize: '0.82rem' }}>{importTrades.length} trade{importTrades.length !== 1 ? 's' : ''} ready to import</span>
+                  <button type="button" onClick={() => { setCsvParsed([]); setCsvMode('separate'); setCsvStep('map'); setCsvError(null) }}
                     style={{ background: 'transparent', border: 'none', color: '#3B82F6', cursor: 'pointer', fontSize: '0.8rem' }}>← Edit Mapping</button>
                 </div>
+
+                {/* Separate trades or partials? Only asked when the fills actually
+                    look like they could be scale-outs of one position. */}
+                {canBePartials && (
+                  <div style={{ background: '#151515', border: '1px solid #2E2E2E', borderRadius: 10, padding: '12px 14px', marginBottom: 12 }}>
+                    <p style={{ color: '#E8E8E8', fontSize: '0.84rem', fontWeight: 600, margin: '0 0 3px' }}>
+                      This file has multiple fills on the same setup — were those separate trades, or partials?
+                    </p>
+                    <p style={{ color: '#888', fontSize: '0.76rem', margin: '0 0 10px', lineHeight: 1.5 }}>
+                      Pick <strong style={{ color: '#B0B0B0' }}>partials</strong> if you scaled out of one position (it'll combine them into a single trade with your full time-in-trade and total P&amp;L).
+                    </p>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {[
+                        ['separate', 'Separate trades', `${csvParsed.length} trades`],
+                        ['partials', 'These were partials', `combine → ${mergePartials(csvParsed).length}`],
+                      ].map(([mode, label, sub]) => (
+                        <button key={mode} type="button" onClick={() => setCsvMode(mode)}
+                          style={{
+                            flex: '1 1 160px', padding: '9px 12px', borderRadius: 9, cursor: 'pointer', textAlign: 'left',
+                            border: `1px solid ${csvMode === mode ? '#3B82F6' : '#3A3A3A'}`,
+                            background: csvMode === mode ? 'rgba(59,130,246,0.12)' : 'transparent',
+                            color: csvMode === mode ? '#EAF2FF' : '#A0A0A0',
+                          }}>
+                          <div style={{ fontSize: '0.83rem', fontWeight: 700 }}>{label}</div>
+                          <div style={{ fontSize: '0.72rem', color: '#777', marginTop: 2 }}>{sub}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div style={{ overflowX: 'auto', borderRadius: 8, border: '1px solid #2E2E2E', marginBottom: 14 }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
                     <thead>
                       <tr style={{ background: '#1A1A1A' }}>
-                        {['Date','Symbol','Direction','Net P&L','Contracts'].map(h => (
+                        {['Date','Symbol','Direction','Time','Net P&L','Contracts'].map(h => (
                           <th key={h} style={{ padding: '8px 12px', color: '#777', fontWeight: 600, textAlign: 'left', borderBottom: '1px solid #2E2E2E', whiteSpace: 'nowrap' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {csvParsed.slice(0, 10).map((t, i) => (
+                      {importTrades.slice(0, 10).map((t, i) => (
                         <tr key={i} style={{ borderBottom: '1px solid #222' }}>
                           <td style={{ padding: '7px 12px', color: '#A0A0A0', whiteSpace: 'nowrap' }}>{t.date}</td>
                           <td style={{ padding: '7px 12px', color: '#F5F5F5', fontWeight: 600 }}>{t.symbol}</td>
                           <td style={{ padding: '7px 12px', color: t.direction === 'Long' ? '#4CAF7D' : '#E05252' }}>{t.direction}</td>
+                          <td style={{ padding: '7px 12px', color: '#888', whiteSpace: 'nowrap' }}>{t.entryTime && t.exitTime ? `${t.entryTime}–${t.exitTime}` : '—'}</td>
                           <td style={{ padding: '7px 12px', color: parseFloat(t.netPnl) > 0 ? '#4CAF7D' : parseFloat(t.netPnl) < 0 ? '#E05252' : '#A0A0A0', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
                             {parseFloat(t.netPnl) >= 0 ? '+' : ''}${Math.abs(parseFloat(t.netPnl) || 0).toFixed(2)}
                           </td>
                           <td style={{ padding: '7px 12px', color: '#A0A0A0' }}>{t.positionSize}</td>
                         </tr>
                       ))}
-                      {csvParsed.length > 10 && (
-                        <tr><td colSpan={5} style={{ padding: '8px 12px', color: '#555', textAlign: 'center', fontStyle: 'italic' }}>+ {csvParsed.length - 10} more trades…</td></tr>
+                      {importTrades.length > 10 && (
+                        <tr><td colSpan={6} style={{ padding: '8px 12px', color: '#555', textAlign: 'center', fontStyle: 'italic' }}>+ {importTrades.length - 10} more trades…</td></tr>
                       )}
                     </tbody>
                   </table>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {/* Load first trade into the form so the user can journal it, then save */}
-                  <button type="button" onClick={() => loadTradeIntoForm(csvParsed[0], csvParsed.slice(1), csvParsed.length)} disabled={csvImporting} className="btn-gold"
+                  <button type="button" onClick={() => loadTradeIntoForm(importTrades[0], importTrades.slice(1), importTrades.length)} disabled={csvImporting} className="btn-gold"
                     style={{ width: '100%', padding: '12px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                    <Plus size={16} /> Journal {csvParsed.length > 1 ? `all ${csvParsed.length} trades, one at a time` : 'this trade'}
+                    <Plus size={16} /> Journal {importTrades.length > 1 ? `all ${importTrades.length} trades, one at a time` : 'this trade'}
                   </button>
                   {/* Bulk import all rows straight to history (no journaling) */}
                   <button type="button" onClick={handleCsvImport} disabled={csvImporting}
                     style={{ width: '100%', padding: '11px', borderRadius: 10, border: '1px solid #3A3A3A', background: 'transparent', color: '#A0A0A0', cursor: csvImporting ? 'not-allowed' : 'pointer', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: csvImporting ? 0.7 : 1 }}>
-                    {csvImporting ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Importing…</> : <><Upload size={16} /> Save all {csvParsed.length} to history (skip journaling)</>}
+                    {csvImporting ? <><Loader2 size={16} style={{ animation: 'spin 0.8s linear infinite' }} /> Importing…</> : <><Upload size={16} /> Save all {importTrades.length} to history (skip journaling)</>}
                   </button>
                 </div>
               </div>

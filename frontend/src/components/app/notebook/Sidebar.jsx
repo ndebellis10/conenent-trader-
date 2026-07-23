@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   Search, SlidersHorizontal, ChevronDown, ChevronRight, Plus, MoreHorizontal,
-  FileText, Star, LineChart, CalendarDays, Clock, NotebookPen, TrendingUp, Tag,
+  FileText, Star, LineChart, CalendarDays, Clock, NotebookPen, TrendingUp, Tag, Trash2,
 } from 'lucide-react'
 import { FOLDERS, NB_THEME as T, relativeTime } from '../../../lib/notebookStore'
 
@@ -10,7 +10,7 @@ const ICONS = { FileText, Star, LineChart, CalendarDays, Clock, NotebookPen, Tre
 /* Left sidebar: wordmark, search, collapsible folders with counts, and the
    nested note list under an expanded folder. */
 export default function Sidebar({
-  notes, counts, activeId, onSelect, onNewNote,
+  notes, counts, activeId, onSelect, onNewNote, onDelete,
   search, onSearch, openFolders, onToggleFolder,
 }) {
   const [showAll, setShowAll] = useState({})
@@ -69,7 +69,8 @@ export default function Sidebar({
                     <div style={{ color: T.textDim, fontSize: '0.75rem', padding: '4px 12px 6px 34px' }}>No notes yet</div>
                   )}
                   {shown.map(n => (
-                    <NoteRow key={n.id} note={n} active={n.id === activeId} onClick={() => onSelect(n.id)} />
+                    <NoteRow key={n.id} note={n} active={n.id === activeId} onClick={() => onSelect(n.id)}
+                      onDelete={onDelete ? () => onDelete(n.id) : null} />
                   ))}
                   {list.length > 18 && !showAll[f.id] && (
                     <button onClick={() => setShowAll(s => ({ ...s, [f.id]: true }))}
@@ -115,24 +116,32 @@ function FolderHeader({ Icon, label, count, open, onToggle, onAdd }) {
   )
 }
 
-function NoteRow({ note, active, onClick }) {
+function NoteRow({ note, active, onClick, onDelete }) {
   const [hover, setHover] = useState(false)
   return (
-    <button
+    <div
       onClick={onClick}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
-        width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer',
-        display: 'block', padding: '8px 12px 8px 22px', borderRadius: 8,
+        width: '100%', cursor: 'pointer', position: 'relative',
+        display: 'flex', alignItems: 'center', gap: 6, padding: '8px 10px 8px 22px', borderRadius: 8,
         borderLeft: `2px solid ${active ? T.accent : 'transparent'}`,
         background: active ? 'rgba(59,130,246,0.12)' : hover ? 'rgba(255,255,255,0.03)' : 'transparent',
       }}
     >
-      <div style={{ color: active ? T.text : '#c7c7cc', fontSize: '0.82rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {note.title || 'Untitled'}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ color: active ? T.text : '#c7c7cc', fontSize: '0.82rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {note.title || 'Untitled'}
+        </div>
+        <div style={{ color: T.textDim, fontSize: '0.72rem', marginTop: 2 }}>{relativeTime(note.updated)}</div>
       </div>
-      <div style={{ color: T.textDim, fontSize: '0.72rem', marginTop: 2 }}>{relativeTime(note.updated)}</div>
-    </button>
+      {onDelete && hover && (
+        <button onClick={e => { e.stopPropagation(); onDelete() }} title="Delete note"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex', borderRadius: 5, flexShrink: 0 }}>
+          <Trash2 size={14} color={T.red} />
+        </button>
+      )}
+    </div>
   )
 }
 

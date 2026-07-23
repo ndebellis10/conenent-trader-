@@ -1,16 +1,18 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import {
   CalendarDays, Check, Star, Share2, MoreHorizontal, ChevronDown,
-  Sparkles, LayoutTemplate, Plus,
+  Sparkles, LayoutTemplate, Plus, X, Trash2,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTradeStore } from '../../store/tradeStore'
 import { useAdminStore } from '../../store/adminStore'
 import {
   NB_THEME as T, loadNotebook, saveNotebook, newNote, countsByFolder,
+  loadTemplates, saveTemplates,
 } from '../../lib/notebookStore'
 import Sidebar from '../../components/app/notebook/Sidebar'
 import SummaryCard from '../../components/app/notebook/SummaryCard'
+import TradeRecap from '../../components/app/notebook/TradeRecap'
 import EditorToolbar from '../../components/app/notebook/EditorToolbar'
 import Editor from '../../components/app/notebook/Editor'
 
@@ -36,6 +38,7 @@ export default function Notebook() {
   const [saved, setSaved] = useState(true)
   const [fontSize, setFontSize] = useState(14)
   const [showTemplates, setShowTemplates] = useState(false)
+  const [customTemplates, setCustomTemplates] = useState(() => loadTemplates(email))
 
   const editorElRef = useRef(null)
   const saveTimer = useRef(null)
@@ -66,19 +69,39 @@ export default function Notebook() {
     setOpenFolders(prev => new Set(prev).add(folderId))
   }
 
+  const deleteNote = (id) => {
+    const note = notes.find(n => n.id === id)
+    if (!note) return
+    // Only nag if there's actual writing in it — strip tags to check for text
+    const hasWriting = String(note.body || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length > 0
+    if (hasWriting && !window.confirm('Are you sure you want to delete this note? This can’t be undone.')) return
+    const remaining = notes.filter(n => n.id !== id)
+    setData(d => ({ ...d, notes: d.notes.filter(n => n.id !== id) }))
+    if (activeId === id) setActiveId(remaining[0]?.id || null)
+  }
+
   const toggleFolder = id => setOpenFolders(prev => {
     const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next
   })
 
-  // P&L for the active note's day, from the trades store
+  // The day this note belongs to — fall back to the created date so even notes
+  // saved before dateKey existed still resolve a day (and thus show P&L).
+  const dayKey = active?.dateKey || String(active?.created || '').slice(0, 10) || null
+
+  // Every trade logged on this note's day — powers both the P&L card and the
+  // full log-trade recap below it.
+  const dayTrades = useMemo(() => {
+    if (!dayKey) return []
+    return trades.filter(t => String(t.date || t.createdAt || t.created || '').slice(0, 10) === dayKey)
+  }, [dayKey, trades])
+
   const dayStats = useMemo(() => {
-    if (!active?.dateKey) return null
-    const day = trades.filter(t => String(t.date || t.createdAt || '').slice(0, 10) === active.dateKey)
-    if (!day.length) return { pnl: 0, trades: 0, winRate: 0 }
-    const pnl = day.reduce((s, t) => s + (parseFloat(t.netPnl) || 0), 0)
-    const wins = day.filter(t => t.result === 'Win').length
-    return { pnl, trades: day.length, winRate: Math.round((wins / day.length) * 100) }
-  }, [active, trades])
+    if (!dayKey) return null
+    if (!dayTrades.length) return { pnl: 0, trades: 0, winRate: 0 }
+    const pnl = dayTrades.reduce((s, t) => s + (parseFloat(t.netPnl) || 0), 0)
+    const wins = dayTrades.filter(t => t.result === 'Win').length
+    return { pnl, trades: dayTrades.length, winRate: Math.round((wins / dayTrades.length) * 100) }
+  }, [dayKey, dayTrades])
 
   // execCommand on the editor selection
   const cmd = useCallback((name, value) => {
@@ -93,11 +116,29 @@ export default function Notebook() {
     patchActive({ body: (active?.body || '') + html })
   }
 
+  // Save the current note's content as a reusable template
+  const saveAsTemplate = () => {
+    const body = active?.body || ''
+    if (!body.trim()) return
+    const name = window.prompt('Name this template')
+    if (!name) return
+    const next = [...customTemplates, { id: `${Date.now()}`, name: name.trim(), html: body }]
+    setCustomTemplates(next)
+    saveTemplates(email, next)
+    setShowTemplates(false)
+  }
+
+  const deleteTemplate = (id) => {
+    const next = customTemplates.filter(t => t.id !== id)
+    setCustomTemplates(next)
+    saveTemplates(email, next)
+  }
+
   if (!active) {
     return (
       <div style={{ ...shell }}>
         <Sidebar notes={notes} counts={counts} activeId={activeId} onSelect={setActiveId}
-          onNewNote={createNote} search={search} onSearch={setSearch}
+          onNewNote={createNote} onDelete={deleteNote} search={search} onSearch={setSearch}
           openFolders={openFolders} onToggleFolder={toggleFolder} />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textDim, flexDirection: 'column', gap: 14 }}>
           <p>No note selected.</p>
@@ -113,7 +154,7 @@ export default function Notebook() {
   return (
     <div style={shell}>
       <Sidebar notes={notes} counts={counts} activeId={activeId} onSelect={setActiveId}
-        onNewNote={createNote} search={search} onSearch={setSearch}
+        onNewNote={createNote} onDelete={deleteNote} search={search} onSearch={setSearch}
         openFolders={openFolders} onToggleFolder={toggleFolder} />
 
       {/* Main pane */}
@@ -138,6 +179,9 @@ export default function Notebook() {
               <Star size={17} color={active.favorite ? '#eab308' : T.textDim} fill={active.favorite ? '#eab308' : 'none'} />
             </button>
             <button style={{ ...ghostBtn }}><Share2 size={14} /> Share</button>
+            <button onClick={() => deleteNote(activeId)} title="Delete note" style={ghostIcon}>
+              <Trash2 size={16} color={T.red} />
+            </button>
             <button title="More" style={ghostIcon}><MoreHorizontal size={17} color={T.textDim} /></button>
             <button style={{ ...ghostBtn, gap: 6 }}>{accountLabel} <ChevronDown size={13} /></button>
           </div>
@@ -148,14 +192,37 @@ export default function Notebook() {
           <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
             {dayStats && <SummaryCard pnl={dayStats.pnl} trades={dayStats.trades} winRate={dayStats.winRate} />}
 
+            {/* Everything logged on this day — a refresher of the log-trade form */}
+            <TradeRecap trades={dayTrades} />
+
             {/* Control row */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, position: 'relative', flexWrap: 'wrap' }}>
               <button onClick={() => setShowTemplates(s => !s)} style={ghostBtn}><LayoutTemplate size={14} /> Templates</button>
+              <button onClick={saveAsTemplate} style={ghostBtn}><Plus size={14} /> Save as template</button>
               <button style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 7, background: T.accent, border: 'none', borderRadius: 9, color: '#fff', padding: '8px 16px', fontSize: '0.83rem', fontWeight: 600, cursor: 'pointer' }}>
                 <Sparkles size={15} /> Write with AI
               </button>
               {showTemplates && (
-                <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 20, background: T.panel, border: `1px solid ${T.border}`, borderRadius: 10, padding: 6, minWidth: 200, boxShadow: '0 12px 30px rgba(0,0,0,0.5)' }}>
+                <div style={{ position: 'absolute', top: '110%', left: 0, zIndex: 20, background: T.panel, border: `1px solid ${T.border}`, borderRadius: 10, padding: 6, minWidth: 220, boxShadow: '0 12px 30px rgba(0,0,0,0.5)', maxHeight: 320, overflowY: 'auto' }}>
+                  {customTemplates.length > 0 && (
+                    <>
+                      <div style={{ color: T.textDim, fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '6px 10px 4px' }}>My templates</div>
+                      {customTemplates.map(t => (
+                        <div key={t.id} style={{ display: 'flex', alignItems: 'center' }}>
+                          <button onClick={() => insertTemplate(t.html)}
+                            style={{ flex: 1, textAlign: 'left', background: 'none', border: 'none', color: T.text, fontSize: '0.83rem', padding: '8px 10px', borderRadius: 7, cursor: 'pointer' }}>
+                            {t.name}
+                          </button>
+                          <button onClick={() => deleteTemplate(t.id)} title="Delete template"
+                            style={{ background: 'none', border: 'none', color: T.textDim, cursor: 'pointer', padding: '6px 8px', display: 'flex' }}>
+                            <X size={13} />
+                          </button>
+                        </div>
+                      ))}
+                      <div style={{ height: 1, background: T.border, margin: '5px 0' }} />
+                      <div style={{ color: T.textDim, fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', padding: '2px 10px 4px' }}>Built-in</div>
+                    </>
+                  )}
                   {TEMPLATES.map(t => (
                     <button key={t.name} onClick={() => insertTemplate(t.html)}
                       style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', color: T.text, fontSize: '0.83rem', padding: '8px 10px', borderRadius: 7, cursor: 'pointer' }}>

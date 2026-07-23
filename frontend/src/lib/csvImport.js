@@ -382,3 +382,60 @@ export function tradesFromMapping(rawRows, mapping) {
   if (!trades.length) return { trades: [], error: 'No trades found. Try adjusting the column mapping.' }
   return { trades, error: null }
 }
+
+/* Merge rows that are really partial exits (scale-outs) of ONE position into a
+   single combined trade. Groups by symbol + direction + day, then sums P&L /
+   contracts, size-weights the entry & exit prices, keeps the earliest entry
+   time and latest exit time (so time-in-trade spans the whole position), and
+   re-derives Win/Loss from the combined P&L. Rows that stand alone are
+   returned untouched. Used when the importer asks "separate trades or
+   partials?" and the user picks partials. */
+export function mergePartials(trades) {
+  if (!Array.isArray(trades) || trades.length < 2) return trades || []
+  const num = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n }
+  const groups = new Map()
+  const order = []
+  for (const t of trades) {
+    const key = `${String(t.symbol || '').toUpperCase()}|${t.direction || ''}|${String(t.date || '').slice(0, 10)}`
+    if (!groups.has(key)) { groups.set(key, []); order.push(key) }
+    groups.get(key).push(t)
+  }
+  const out = []
+  for (const key of order) {
+    const g = groups.get(key)
+    if (g.length === 1) { out.push(g[0]); continue }
+
+    const qty       = g.reduce((s, t) => s + num(t.positionSize), 0)
+    const netPnl    = g.reduce((s, t) => s + num(t.netPnl), 0)
+    const grossPnl  = g.reduce((s, t) => s + (t.grossPnl != null ? num(t.grossPnl) : num(t.netPnl)), 0)
+    const commission = g.reduce((s, t) => s + num(t.commission), 0)
+
+    // size-weighted average price across the partials
+    const wavg = field => {
+      let n = 0, d = 0
+      for (const t of g) {
+        const p = num(t[field]); const w = num(t.positionSize) || 1
+        if (p) { n += p * w; d += w }
+      }
+      return d ? (n / d).toFixed(2) : ''
+    }
+    const entryTimes = g.map(t => t.entryTime).filter(Boolean).sort()
+    const exitTimes  = g.map(t => t.exitTime).filter(Boolean).sort()
+    const notes = g.map(t => t.tradeNotes).filter(Boolean)
+
+    out.push({
+      ...g[0],
+      positionSize: String(qty || g.length),
+      netPnl,
+      grossPnl,
+      commission: commission ? String(commission) : (g[0].commission || ''),
+      entryPrice: wavg('entryPrice') || g[0].entryPrice || '',
+      exitPrice:  wavg('exitPrice')  || g[g.length - 1].exitPrice || '',
+      entryTime: entryTimes[0] || g[0].entryTime || '',
+      exitTime:  exitTimes[exitTimes.length - 1] || g[g.length - 1].exitTime || '',
+      result: netPnl > 0 ? 'Win' : netPnl < 0 ? 'Loss' : 'Breakeven',
+      tradeNotes: [`Combined ${g.length} partial fills into one trade.`, ...notes].join(' | ').slice(0, 1800),
+    })
+  }
+  return out
+}
